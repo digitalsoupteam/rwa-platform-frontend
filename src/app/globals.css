@@ -1,5 +1,39 @@
 @import 'tailwindcss';
 
+@theme {
+    --color-whote: #fff;
+    --color-black: #020305;
+
+    --color-grey-dark: #4A5363;
+    --color-grey: #959EB5;
+    --color-grey-light: #E4EAFA;
+    --color-grey-transparent: #02030533;
+
+    --color-blue: #1D58E9;
+    --color-blue-accent: #6DBDFF;
+    --color-blue-dark: #202E46;
+    --color-blue-light: #EDF2FF;
+    --color-blue-dim: #D6DEF5;
+    --color-blue-hover: #455879;
+    --color-blue-ultra: #7DFFF2;
+    --color-blue-transparent: #8192FF40;
+
+    --color-green: #18E53A;
+
+    --color-red: #BE142A;
+
+    --shadow-button: inset 0 -2px 0 0 rgba(255, 255, 255, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
+    --background-image-button: linear-gradient(90deg, #1d58e9 0%, #49dce0 50%, #1d58e9 100%);
+}
+
+.tr-d-all {
+    transition: 0.3s ease-in-out all;
+}
+
+.tr-d {
+    transition: 0.3s ease-in-out;
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
