@@ -1,4 +1,4 @@
-import { Button, Title } from '@/components/ui';
+import { Button, Socials, Title } from '@/components/ui';
 
 export default function Home() {
   return (
@@ -60,6 +60,14 @@ export default function Home() {
               </Title>
             </div>
           </div>
+        </div>
+      </section>
+      <section className={'p-4'}>
+        <div className={'bg-grey-dark p-4 text-white rounded-md'}>
+          <Title className={'mb-2'} size={'xl'} level={1}>
+            Socials
+          </Title>
+          <Socials />
         </div>
       </section>
     </>
