@@ -33,3 +33,7 @@
 .tr-d {
     transition: 0.3s ease-in-out;
 }
+
+html, body {
+    color: var(--color-black);
+}
