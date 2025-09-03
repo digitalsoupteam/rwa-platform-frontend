@@ -34,6 +34,38 @@
     transition: 0.3s ease-in-out;
 }
 
-html, body {
-    color: var(--color-black);
+html {
+    @apply
+    text-black
+    h-full
+    scroll-smooth
+    scroll-pt-20
+    min-w-[360px]
+    bg-blue-light
+}
+
+body {
+    @apply
+    flex
+    flex-col
+    h-full
+    bg-[#f5f7f9]
+}
+
+body main {
+    @apply
+    flex-grow
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    white-space: nowrap;
+    clip-path: inset(100%);
+    clip: rect(0 0 0 0);
+    overflow: hidden;
 }
