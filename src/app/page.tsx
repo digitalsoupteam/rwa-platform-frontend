@@ -1,11 +1,12 @@
 import { FC } from 'react';
 
-import { Hero } from '@/components/home';
+import { Hero, HowItWorks } from '@/components/home';
 
 const Home: FC = () => {
   return (
     <>
       <Hero />
+      <HowItWorks/>
     </>
   );
 };
