@@ -11,7 +11,7 @@ const Title: FC<TitleProps> = ({ className, children, level = 1, size }) => {
     sm: 'text-2xl leading-[1.2]',
     md: 'text-xl tracking-[-0.02em] leading-[1.2] md:leading-none md:text-[2rem] md:tracking-tighter',
     lg: 'text-[2rem] leading-none tracking-tighter md:text-[3.25rem] md:tracking-[-0.04em]',
-    xl: 'text-[2.875rem] tracking-[-0.04em] md:text-[4.625rem]',
+    xl: 'text-[2.875rem] leading-none tracking-[-0.04em] md:text-[4.625rem]',
   };
 
   const Tag = `h${level}` as keyof JSX.IntrinsicElements;
