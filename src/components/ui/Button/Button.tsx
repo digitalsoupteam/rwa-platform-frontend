@@ -10,7 +10,7 @@ type IButtonProps = ButtonProps & {
   visualType: 'primary' | 'secondary' | 'tertiary';
 };
 
-const Button: FC<IButtonProps> = ({ children, href, visualType, ...props }) => {
+const Button: FC<IButtonProps> = ({ children, className, href, visualType, ...props }) => {
   const VISUAL_TYPES = {
     primary: clsx(
       'shadow-button bg-button bg-size-[200%_auto] text-white',
@@ -26,19 +26,20 @@ const Button: FC<IButtonProps> = ({ children, href, visualType, ...props }) => {
     ),
   };
 
-  const className = clsx(
+  const commonClassName = clsx(
     'not-disabled:cursor-pointer inline-flex items-center justify-center px-6 py-4 text-base/[1.5] font-semibold rounded-2xl tr-d-all',
-    VISUAL_TYPES[visualType]
+    VISUAL_TYPES[visualType],
+      className
   );
   if (href)
     return (
-      <Link className={className} href={href} {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}>
+      <Link className={commonClassName} href={href} {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}>
         children
       </Link>
     );
 
   return (
-    <button className={className} {...(props as ButtonHTMLAttributes<HTMLButtonElement>)}>
+    <button className={commonClassName} {...(props as ButtonHTMLAttributes<HTMLButtonElement>)}>
       {children}
     </button>
   );
