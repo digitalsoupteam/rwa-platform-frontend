@@ -34,12 +34,12 @@ const Header: FC = () => {
       <div
         aria-hidden={!opened}
         className={clsx(
-          'z-2 fixed w-full h-screen bg-[url(/images/menu-bg.png)] bg-grey bg-cover tr-d-all',
-          opened ? 'top-0' : '-top-full'
+          'z-2 fixed w-full h-dvh bg-[url(/images/menu-bg.png)] bg-grey bg-cover tr-d-all',
+          opened ? 'top-0' : '-top-[120%]'
         )}
       >
         <Wrapper>
-          <div className={'py-10 flex flex-col items-center justify-center min-h-screen'}>
+          <div className={'pt-30 pb-10 flex flex-col items-center justify-center gap-5 h-dvh'}>
             <ul className={'flex flex-col gap-10 items-center my-auto'}>
               {navLinks &&
                 navLinks.length > 0 &&
