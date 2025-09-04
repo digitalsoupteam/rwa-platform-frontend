@@ -69,3 +69,7 @@ body main {
     clip: rect(0 0 0 0);
     overflow: hidden;
 }
+
+.scrollbar-hidden {
+    scrollbar-width: none;
+}

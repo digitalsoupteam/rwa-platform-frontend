@@ -54,7 +54,7 @@ const Hero: FC = () => {
 
           <div
             className={
-              'w-screen px-3 flex gap-5 mb-21 max-md:overflow-x-scroll md:px-0 md:max-w-[670px] md:flex-wrap md:justify-center'
+              'w-screen px-3 flex gap-5 mb-21 max-md:overflow-x-scroll scrollbar-hidden md:px-0 md:max-w-[670px] md:flex-wrap md:justify-center'
             }
           >
             {projectBadges &&
