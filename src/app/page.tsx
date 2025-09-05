@@ -153,8 +153,166 @@ const Home: FC = () => {
           </Button>
         </Wrapper>
       </section>
-      <section>
-        <Wrapper></Wrapper>
+      <section className={'mb-25 md:mb-50'}>
+        <Wrapper>
+          <Title className={'mb-10 md:mb-20'} size={'lg'} level={2}>
+            Four tools for high level of reliability
+          </Title>
+          <div className={'grid gap-3 lg:grid-cols-2'}>
+            <Card
+              className={'flex flex-col text-white bg-[url(/images/bg-card-glow.png)] bg-cover lg:row-span-2'}
+              size={'xl'}
+              color={'blueDim'}
+            >
+              <Title
+                className={
+                  'flex items-center gap-4 mb-3 before:size-8 before:bg-white before:mask-[url(/icons/sparkles.svg)] before:mask-contain md:mb-3'
+                }
+                size={'md'}
+                level={4}
+              >
+                Transparent risk level
+              </Title>
+              <p className={'text-base/[1.4] font-medium mb-4 lg:mb-auto'}>
+                AI assigns a personal risk level to each project based on:
+              </p>
+              <div className={'grid gap-3 md:gap-8'}>
+                <Card
+                  className={
+                    'flex gap-3 bg-white/16 before:shrink-0 before:size-6 before:bg-white before:mask-[url(/icons/star.svg)] before:mask-contain lg:max-w-[460px]'
+                  }
+                  size={'xs'}
+                  color={'white'}
+                >
+                  <p>
+                    <strong>Business Plan</strong> — documentation, roadmap, investment presentation and project summary
+                  </p>
+                </Card>
+                <Card
+                  className={
+                    'flex gap-3 bg-white/16 before:shrink-0 before:size-6 before:bg-white before:mask-[url(/icons/star.svg)] before:mask-contain lg:max-w-[460px] lg:ml-auto'
+                  }
+                  size={'xs'}
+                  color={'white'}
+                >
+                  <p>
+                    <strong>Financial Model</strong> — pool structure and economic viability evaluation
+                  </p>
+                </Card>
+                <Card
+                  className={
+                    'flex gap-3 bg-white/16 before:shrink-0 before:size-6 before:bg-white before:mask-[url(/icons/star.svg)] before:mask-contain lg:max-w-[460px]'
+                  }
+                  size={'xs'}
+                  color={'white'}
+                >
+                  <p>
+                    <strong>Project owner reliability</strong> — project owner’s score based on previous projects
+                  </p>
+                </Card>
+              </div>
+            </Card>
+            <Card size={'xl'} color={'greyLight'}>
+              <Title className={'mb-5 md:mb-8'} size={'md'} level={4}>
+                Decentralized platform
+              </Title>
+              <p className={'text-grey-dark text-base/[1.4] mb-4 md:mb-6'}>
+                Slices, as a DEX platform, is secure from common crypto-investing risks:
+              </p>
+              <ul className={'overflow-hidden flex flex-col gap-3'}>
+                <li
+                  className={
+                    'flex gap-3 text-grey-dark text-base/[1.4] before:shrink-0 before:size-5 before:bg-blue before:mask-[url(/icons/star.svg)] before:mask-contain'
+                  }
+                >
+                  Independent of third-party interests
+                </li>
+                <li
+                  className={
+                    'flex gap-3 whitespace-pre-wrap text-grey-dark text-base/[1.4] before:shrink-0 before:size-5 before:bg-blue before:mask-[url(/icons/star.svg)] before:mask-contain'
+                  }
+                >
+                  Low risk of hacking
+                </li>
+                <li
+                  className={
+                    'flex gap-3 whitespace-pre-wrap text-grey-dark text-base/[1.4] before:shrink-0 before:size-5 before:bg-blue before:mask-[url(/icons/star.svg)] before:mask-contain'
+                  }
+                >
+                  Only you have access to your private key
+                </li>
+              </ul>
+            </Card>
+            <Card size={'xl'} color={'greyLight'}>
+              <Title className={'mb-5 md:mb-8'} size={'md'} level={4}>
+                Money-guarding system
+              </Title>
+              <p className={'text-grey-dark text-base/[1.4] mb-4 md:mb-6'}>
+                We transfer money to project owners only when all DAO-holders agree:
+              </p>
+              <ul className={'overflow-hidden flex flex-col gap-3'}>
+                <li
+                  className={
+                    'flex gap-3 text-grey-dark text-base/[1.4] before:shrink-0 before:size-5 before:bg-blue before:mask-[url(/icons/star.svg)] before:mask-contain'
+                  }
+                >
+                  Voting for every tranche
+                </li>
+                <li
+                  className={
+                    'flex gap-3 whitespace-pre-wrap text-grey-dark text-base/[1.4] before:shrink-0 before:size-5 before:bg-blue before:mask-[url(/icons/star.svg)] before:mask-contain'
+                  }
+                >
+                  Regular monitoring of project obligation compliance
+                </li>
+                <li
+                  className={
+                    'flex gap-3 whitespace-pre-wrap text-grey-dark text-base/[1.4] before:shrink-0 before:size-5 before:bg-blue before:mask-[url(/icons/star.svg)] before:mask-contain'
+                  }
+                >
+                  Refund in case of pool failure
+                </li>
+              </ul>
+            </Card>
+            <Card className={'lg:col-span-2'} size={'xl'} color={'greyLight'}>
+              <Title className={'mb-5 md:mb-8'} size={'md'} level={4}>
+                Verification system for every incoming business
+              </Title>
+              <div className={'grid gap-3 md:gap-5 lg:grid-cols-3'}>
+                <Card
+                  className={
+                    'flex items-center gap-4 text-xl/[1.2] tracking-tight font-semibold ' +
+                    'before:shrink-0 before:size-8 before:bg-blue-gradient before:mask-[url(/icons/proven.svg)] before:mask-contain'
+                  }
+                  size={'xxs'}
+                  color={'blueDim'}
+                >
+                  KYC verification
+                </Card>
+                <Card
+                  className={
+                    'flex items-center gap-4 text-xl/[1.2] tracking-tight font-medium md:font-semibold ' +
+                    'before:shrink-0 before:size-8 before:bg-blue-gradient before:mask-[url(/icons/proven.svg)] before:mask-contain'
+                  }
+                  size={'xxs'}
+                  color={'blueDim'}
+                >
+                  AML compliance check
+                </Card>
+                <Card
+                  className={
+                    'flex items-center gap-4 text-xl/[1.2] tracking-tight font-semibold ' +
+                    'before:shrink-0 before:size-8 before:bg-blue-gradient before:mask-[url(/icons/proven.svg)] before:mask-contain'
+                  }
+                  size={'xxs'}
+                  color={'blueDim'}
+                >
+                  100 USDT admission fee
+                </Card>
+              </div>
+            </Card>
+          </div>
+        </Wrapper>
       </section>
       <section className={'mb-25 md:mb-50'}>
         <Wrapper>
@@ -164,7 +322,7 @@ const Home: FC = () => {
           </Title>
           <div className={'grid gap-3 mb-10 md:mb-15 md:grid-cols-2 md:gap-5'}>
             <Card size={'xl'} color={'white'}>
-              <div className={'size-9 bg-blue-gradient mask-[url(/icons/rocket.svg)] mask-contain] mb-10'} />
+              <div className={'size-9 bg-blue-gradient mask-[url(/icons/rocket.svg)] mask-contain mb-10'} />
               <Title className={'mb-3'} size={'md'} level={4}>
                 For early buyers
               </Title>
@@ -173,7 +331,7 @@ const Home: FC = () => {
               </p>
             </Card>
             <Card size={'xl'} color={'greyLight'}>
-              <div className={'size-9 bg-blue-gradient mask-[url(/icons/finish.svg)] mask-contain] mb-10'} />
+              <div className={'size-9 bg-blue-gradient mask-[url(/icons/finish.svg)] mask-contain mb-10'} />
               <Title className={'mb-3'} size={'md'} level={4}>
                 For late buyers
               </Title>
@@ -198,7 +356,7 @@ const Home: FC = () => {
       <HowToStart />
       <section className={'mb-25 md:mb-50'}>
         <Wrapper>
-          <div className={'grid-cols-[min-content_1fr] justify-between gap-5 md:grid lg:grid-cols-[min-content_784px]'}>
+          <div className={'grid-cols-[min-content_1fr] justify-between gap-5 md:grid lg:gap-35'}>
             <Title className={'mb-10'} size={'lg'} level={2}>
               Tokenize&nbsp;your business
             </Title>
