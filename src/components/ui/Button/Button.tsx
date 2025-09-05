@@ -34,7 +34,7 @@ const Button: FC<IButtonProps> = ({ children, className, href, visualType, ...pr
   if (href)
     return (
       <Link className={commonClassName} href={href} {...(props as AnchorHTMLAttributes<HTMLAnchorElement>)}>
-        children
+        {children}
       </Link>
     );
 
