@@ -51,7 +51,10 @@ const UIPage: FC = () => {
                 </Title>
                 <div className={'flex flex-col gap-2 items-start'}>
                     <Title className={'mb-2'} size={'sm'} level={3}>
-                        sm - H4 Heading
+                        xs - H4 Heading
+                    </Title>
+                    <Title className={'mb-2'} size={'sm'} level={3}>
+                        sm - H4/H3 Heading
                     </Title>
                     <Title className={'mb-2'} size={'md'} level={3}>
                         md - H5/H3 Heading

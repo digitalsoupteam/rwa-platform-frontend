@@ -66,7 +66,7 @@ const FAQ: FC = () => {
                     className={'cursor-pointer w-full flex justify-between gap-4'}
                     onClick={() => setCurrentItemIndex(index === currentItemIndex ? -1 : index)}
                   >
-                    <Title className={'text-start'} size={'sm'} level={3}>
+                    <Title className={'text-start'} size={'xs'} level={3}>
                       {question}
                     </Title>
                     <div className={'shrink-0 relative size-7'}>
