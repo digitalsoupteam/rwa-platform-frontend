@@ -153,6 +153,9 @@ const Home: FC = () => {
           </Button>
         </Wrapper>
       </section>
+      <section>
+        <Wrapper></Wrapper>
+      </section>
       <section className={'mb-25 md:mb-50'}>
         <Wrapper>
           <Title className={'text-center mb-10 md:mb-20'} size={'lg'} level={2}>
@@ -185,16 +188,36 @@ const Home: FC = () => {
           <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
             {projects &&
               projects.length > 0 &&
-              projects.slice(0,4).map((project) => (
-                <ProjectCard project={project} key={'rdy2earn' + project.id} />
-              ))}
+              projects.slice(0, 4).map(project => <ProjectCard project={project} key={'rdy2earn' + project.id} />)}
           </div>
           <Button className={'w-full'} visualType={'secondary'} href={'#'}>
             See 999 more projects
           </Button>
         </Wrapper>
       </section>
-      <HowToStart/>
+      <HowToStart />
+      <section className={'mb-25 md:mb-50'}>
+        <Wrapper>
+          <div className={'grid-cols-[min-content_1fr] justify-between gap-5 md:grid lg:grid-cols-[min-content_784px]'}>
+            <Title className={'mb-10'} size={'lg'} level={2}>
+              Tokenize&nbsp;your business
+            </Title>
+            <Card size={'xl'}>
+              <Title className={'mb-3'} size={'md'} level={4}>
+                Issue a token
+              </Title>
+              <p className={'text-grey-dark text-base/[1.4] mb-10'}>
+                Make your real world assets liquid and make a profit
+              </p>
+              <span
+                className={
+                  'inline-flex items-center justify-center bg-grey-light size-13 rounded-2xl before:size-9 before:bg-blue before:mask-[url(/icons/tick.svg)] before:mask-contain'
+                }
+              />
+            </Card>
+          </div>
+        </Wrapper>
+      </section>
       <FAQ />
     </>
   );
