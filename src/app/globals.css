@@ -24,6 +24,7 @@
 
     --shadow-button: inset 0 -2px 0 0 rgba(255, 255, 255, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
     --background-image-button: linear-gradient(90deg, #1d58e9 0%, #49dce0 50%, #1d58e9 100%);
+    --background-image-blue-gradient: linear-gradient(90deg, #1d58e9 0%, #49dce0 100%);
 }
 
 .tr-d-all {

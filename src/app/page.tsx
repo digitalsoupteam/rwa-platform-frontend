@@ -1,11 +1,10 @@
 import React, { FC } from 'react';
+import clsx from 'clsx';
 
 import { Hero, HowItWorks } from '@/components/home';
 import { FAQ } from '@/components/common';
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
-import Image from 'next/image';
-import clsx from 'clsx';
 import { ProjectCard } from '@/components/project';
 
 const Home: FC = () => {
@@ -142,11 +141,52 @@ const Home: FC = () => {
             </Title>
             <p className={'text-grey-dark text-base/[1.4]'}>Find assets that meet your goals</p>
           </div>
-          <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 md:grid-cols-2 lg:grid-cols-3 '}>
+          <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 sm:grid-cols-2 lg:grid-cols-3'}>
             {projects &&
               projects.length > 0 &&
               projects.map((project, index) => (
-                <ProjectCard className={clsx(index > 3 && 'max-md:hidden')} project={project} key={project.id}/>
+                <ProjectCard className={clsx(index > 3 && 'max-md:hidden')} project={project} key={project.id} />
+              ))}
+          </div>
+          <Button className={'w-full'} visualType={'secondary'} href={'#'}>
+            See 999 more projects
+          </Button>
+        </Wrapper>
+      </section>
+      <section className={'mb-25 md:mb-50'}>
+        <Wrapper>
+          <Title className={'text-center mb-10 md:mb-20'} size={'lg'} level={2}>
+            Ready to earn more? <br />
+            Trade your assets
+          </Title>
+          <div className={'grid gap-3 mb-10 md:mb-15 md:grid-cols-2 md:gap-5'}>
+            <Card size={'xl'} color={'white'}>
+              <div className={'size-9 bg-blue-gradient mask-[url(/icons/rocket.svg)] mask-contain] mb-10'} />
+              <Title className={'mb-3'} size={'md'} level={4}>
+                For early buyers
+              </Title>
+              <p className={'text-grey-dark text-base[1.4] font-medium'}>
+                Sell your tokens to late buyers at a profit up to 300% without waiting for payments
+              </p>
+            </Card>
+            <Card size={'xl'} color={'greyLight'}>
+              <div className={'size-9 bg-blue-gradient mask-[url(/icons/finish.svg)] mask-contain] mb-10'} />
+              <Title className={'mb-3'} size={'md'} level={4}>
+                For late buyers
+              </Title>
+              <p className={'text-grey-dark text-base[1.4] font-medium'}>
+                Buy project tokens even after the fundraising has ended and get payments in the future
+              </p>
+            </Card>
+          </div>
+          <Title className={'text-center mb-7 md:mb-10 lg:text-start'} size={'sm'}>
+            Join most active projects
+          </Title>
+          <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
+            {projects &&
+              projects.length > 0 &&
+              projects.slice(0,4).map((project) => (
+                <ProjectCard project={project} key={'rdy2earn' + project.id} />
               ))}
           </div>
           <Button className={'w-full'} visualType={'secondary'} href={'#'}>
