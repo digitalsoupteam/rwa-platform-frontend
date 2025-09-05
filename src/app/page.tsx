@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import clsx from 'clsx';
 
-import { Hero, HowItWorks } from '@/components/home';
+import { Hero, HowItWorks, HowToStart } from '@/components/home';
 import { FAQ } from '@/components/common';
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
@@ -194,6 +194,7 @@ const Home: FC = () => {
           </Button>
         </Wrapper>
       </section>
+      <HowToStart/>
       <FAQ />
     </>
   );
