@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import clsx from 'clsx';
 
-import { Hero, HowItWorks, HowToStart } from '@/components/home';
+import { Hero, HowItWorks, HowToStart, PoolProgress } from '@/components/home';
 import { FAQ } from '@/components/common';
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
@@ -153,6 +153,7 @@ const Home: FC = () => {
           </Button>
         </Wrapper>
       </section>
+      <PoolProgress />
       <section className={'mb-25 md:mb-50'}>
         <Wrapper>
           <Title className={'mb-10 md:mb-20'} size={'lg'} level={2}>
