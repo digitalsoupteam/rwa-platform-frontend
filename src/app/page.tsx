@@ -6,6 +6,7 @@ import { FAQ, Gallery } from '@/components/common';
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
 import { ProjectCard } from '@/components/project';
+import AppDemo from '@/components/home/AppDemo/AppDemo';
 
 const Home: FC = () => {
   const projects = [
@@ -364,6 +365,19 @@ const Home: FC = () => {
         </Wrapper>
       </section>
       <HowToStart />
+      <AppDemo
+        slides={[
+          { image: '/images/app-demo-1.png', title: 'Buy and sell tokens \nto get more points' },
+          {
+            image: '/images/app-demo-2.png',
+            title: 'Become a product owner: create your own pools\u00a0and get even more\u00a0points',
+          },
+          {
+            image: '/images/app-demo-3.png',
+            title: 'Stake your PLTs and get rewards \nfor helping the ecosystem',
+          },
+        ]}
+      />
       <section className={'mb-25 md:mb-50'}>
         <Wrapper>
           <div className={'grid-cols-[min-content_1fr] justify-between gap-5 md:grid lg:gap-35'}>

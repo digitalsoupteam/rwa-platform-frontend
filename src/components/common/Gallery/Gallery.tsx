@@ -7,12 +7,12 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 
 import { Wrapper } from '@/components/layout';
+import { SwiperControls, Title } from '@/components/ui';
 
 import 'swiper/css';
 import 'swiper/css/autoplay';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { SwiperControls, Title } from '@/components/ui';
 
 interface GalleryProps {
   images: string[];
