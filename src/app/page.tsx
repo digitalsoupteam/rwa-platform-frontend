@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import clsx from 'clsx';
 
 import { Hero, HowItWorks, HowToStart, PoolProgress } from '@/components/home';
-import { FAQ } from '@/components/common';
+import { FAQ, Gallery } from '@/components/common';
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
 import { ProjectCard } from '@/components/project';
@@ -153,6 +153,15 @@ const Home: FC = () => {
           </Button>
         </Wrapper>
       </section>
+      <Gallery
+        title={'See detailed info about the\u00a0token \non the project page'}
+        images={[
+          '/images/gallery-mock.png',
+          '/images/gallery-mock.png',
+          '/images/gallery-mock.png',
+          '/images/gallery-mock.png',
+        ]}
+      />
       <PoolProgress />
       <section className={'mb-25 md:mb-50'}>
         <Wrapper>

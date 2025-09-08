@@ -1,0 +1,15 @@
+.swiper-controls {
+    .swiper-pagination-bullet {
+        width: 15px;
+        height: 11px;
+        border-radius: 20px;
+        background: var(--color-blue-dim);
+    }
+
+    .swiper-pagination-bullet-active {
+        border-radius: 20px;
+        width: 45px;
+        height: 11px;
+        background: linear-gradient(90deg, #1d58e9 0%, #49dce0 100%);
+    }
+}
