@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import React, { FC } from 'react';
 
-import TwitterSVG from '/public/icons/twitter.svg';
-import TelegramSVG from '/public/icons/telegram.svg';
-import DiscordSVG from '/public/icons/discord.svg';
+import TwitterSVG from '../../../assets/icons/twitter.svg';
+import TelegramSVG from '../../../assets/icons/telegram.svg';
+import DiscordSVG from '../../../assets/icons/discord.svg';
 
 const Socials: FC = () => {
   return (
