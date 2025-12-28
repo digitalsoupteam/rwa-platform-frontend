@@ -1,11 +1,15 @@
-import React, { FC } from 'react';
+'use client';
+
+import clsx from 'clsx';
+import React, { FC, useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 import { Wrapper } from '@/components/layout';
-import Link from 'next/link';
 import { ButtonLink, Socials } from '@/components/ui';
 
 const Footer: FC = () => {
+  const [isNotFound, setIsNotFound] = useState(false);
   const links = [
     {
       text: 'Marketplace',
@@ -45,29 +49,40 @@ const Footer: FC = () => {
     },
   ];
 
+  useEffect(() => {
+    setIsNotFound(!!document.querySelector('[data-not-found-page]'));
+  }, []);
+
   return (
     <footer className={'relative'}>
       <picture>
-        <source
-            srcSet="/images/footer-bg-d.png"
-            media="(min-width: 1024px)"
-        />
+        <source srcSet='/images/footer-bg-d.png' media='(min-width: 1024px)' />
         <Image
-            className={'absolute bottom-0 w-full h-[729px] object-cover object-center lg:h-[577px]'}
-            src={'/images/footer-bg.png'}
-            width={'1920'}
-            height={'729'}
-            alt={''}
-            priority
-
+          className={clsx(
+            'absolute bottom-0 w-full h-[729px] object-cover object-center lg:h-[577px]',
+            isNotFound && 'hidden'
+          )}
+          src={'/images/footer-bg.png'}
+          width={'1920'}
+          height={'729'}
+          alt={''}
+          priority
         />
       </picture>
       <Wrapper>
-        <div className={'z-1 relative py-10 flex flex-col items-center gap-8 lg:grid lg:grid-cols-[max-content_max-content_max-content] justify-between'}>
+        <div
+          className={
+            'z-1 relative py-10 flex flex-col items-center gap-8 lg:grid lg:grid-cols-[max-content_max-content_max-content] justify-between'
+          }
+        >
           <Link className={'flex items-center justify-center w-30 lg:order-1'} href={'/'}>
             <Image className={'w-full h-auto'} src={'/images/logo.svg'} width={'120'} height={'34'} alt={''} />
           </Link>
-          <ul className={'flex flex-col items-center gap-3 lg:grid lg:grid-cols-3 lg:gap-y-4 lg:gap-x-10 lg:row-span-2 lg:order-2 xl:gap-x-22 '}>
+          <ul
+            className={
+              'flex flex-col items-center gap-3 lg:grid lg:grid-cols-3 lg:gap-y-4 lg:gap-x-10 lg:row-span-2 lg:order-2 xl:gap-x-22 '
+            }
+          >
             {links &&
               links.length > 0 &&
               links.map(({ text, link }) => (
@@ -80,7 +95,9 @@ const Footer: FC = () => {
             <Socials />
           </div>
           <div className={'text-blue-dim text-xs/[1.3] font-normal lg:order-5'}>Design by OUT.AGENCY</div>
-          <div className={'text-blue-dim text-xs/[1.3] font-normal max-md:-mt-3 lg:order-4'}>Copyright © 2025 Slices</div>
+          <div className={'text-blue-dim text-xs/[1.3] font-normal max-md:-mt-3 lg:order-4'}>
+            Copyright © 2025 Slices
+          </div>
         </div>
       </Wrapper>
     </footer>

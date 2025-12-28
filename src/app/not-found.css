@@ -1,0 +1,16 @@
+body {
+    background-color: #020305;
+    background-image: url('/images/404-bg-d.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    @media (max-width: 767px) {
+        background-image: url('/images/404-bg-m.png');
+    }
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
