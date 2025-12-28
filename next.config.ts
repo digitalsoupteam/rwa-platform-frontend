@@ -4,23 +4,23 @@ const nextConfig: NextConfig = {
   output: 'export',
   distDir: 'build',
   images: {
-      unoptimized: true,
+    unoptimized: true,
   },
   trailingSlash: true,
-  webpack: config => {
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: [
-        {
-          loader: '@svgr/webpack',
-          options: {
-            icon: true,
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: [
+          {
+            loader: '@svgr/webpack',
+            options: {
+              icon: true,
+            },
           },
-        },
-      ],
-    });
-
-    return config;
+        ],
+        as: '*.js',
+      },
+    },
   },
 };
 
