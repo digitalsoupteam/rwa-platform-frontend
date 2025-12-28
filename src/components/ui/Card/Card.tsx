@@ -7,7 +7,7 @@ interface ICardProps extends HTMLAttributes<HTMLDivElement> {
   color?: 'white' | 'greyLight' | 'blueDim';
 }
 
-const Card: FC<ICardProps> = ({ children, className, size = 'md', color = 'white' }) => {
+const Card: FC<ICardProps> = ({ children, className, size = 'md', color = 'white', style }) => {
   const SIZES = {
     xxs: 'p-3 rounded-xl md:p-8 md:rounded-[1.25rem]',
     xs: 'p-4 rounded-2xl md:p-6 md:-rounded-[1.25rem]',
@@ -22,7 +22,11 @@ const Card: FC<ICardProps> = ({ children, className, size = 'md', color = 'white
     blueDim: 'bg-blue-dim',
   };
 
-  return <div className={clsx(SIZES[size], COLORS[color], className)}>{children}</div>;
+  return (
+    <div className={clsx(SIZES[size], COLORS[color], className)} style={style}>
+      {children}
+    </div>
+  );
 };
 
 export default Card;

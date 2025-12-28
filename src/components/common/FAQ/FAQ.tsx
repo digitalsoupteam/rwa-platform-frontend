@@ -6,49 +6,12 @@ import { Card, Title } from '@/components/ui';
 import clsx from 'clsx';
 import { CallbackForm } from '@/components/common';
 
-const FAQ: FC = () => {
+interface FAQProps {
+  faqList: { question: string; answer: React.ReactNode }[];
+}
+
+const FAQ: FC<FAQProps> = ({ faqList }) => {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
-  const faqList = [
-    {
-      question: 'How am I protected from fraud?',
-      answer: (
-        <>
-          <p>We aim to create a safe and secure environment for all users by combining these measures:</p>
-          <ul>
-            <li>We use Know Your Client (KYC) protocols to verify every project</li>
-            <li>Our platform uses audited smart contracts to ensure that transactions are secure and tamper-proof</li>
-            <li>We provide resources to educate users on common scams and best practices for online security</li>
-            <li>
-              Our platform has a dispute resolution system in place to handle any issues that may arise during
-              transactions
-            </li>
-          </ul>
-        </>
-      ),
-    },
-    {
-      question: 'Can I get investing advice?',
-      answer: (
-        <>
-          <p>
-            Every project on Slices is evaluated by AI and our users - you can check the rating on each project card and
-            make an informed decision.
-          </p>
-        </>
-      ),
-    },
-    {
-      question: 'Is RWA investing risky?',
-      answer: (
-        <>
-          <p>
-            As any other investment, RWA investments depend on market volatility. However, they can also offer higher
-            returns if managed well, as they tap into the value of real-world assets.
-          </p>
-        </>
-      ),
-    },
-  ];
 
   return (
     <section className={'z-1 relative'}>
@@ -103,8 +66,12 @@ const FAQ: FC = () => {
             ))}
         </ul>
         <Card size={'xl'} color={'white'}>
-          <Title className={'mb-3'} size={'md'}>Got a question?</Title>
-          <p className={'text-grey-dark text-base/[1.4] mb-5 md:mb-6'}>Submit it in this form, and we will send a reply to your e-mail in 1-2 days</p>
+          <Title className={'mb-3'} size={'md'}>
+            Got a question?
+          </Title>
+          <p className={'text-grey-dark text-base/[1.4] mb-5 md:mb-6'}>
+            Submit it in this form, and we will send a reply to your e-mail in 1-2 days
+          </p>
           <CallbackForm />
         </Card>
       </Wrapper>

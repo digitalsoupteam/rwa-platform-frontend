@@ -7,7 +7,7 @@ const ToS: FC = () => {
   return (
     <section
       className={
-        'bg-blue-light bg-[url(/images/tos-bg-m.png)] bg-size-[100%_2455px] bg-no-repeat pt-[128px] pb-25 md:bg-size-[100%_923px] md:bg-[url(/images/tos-bg-d.png)] md:pb-50 md:pt-[184px]'
+        'bg-[url(/images/tos-bg-m.png)] bg-size-[100%_2455px] bg-no-repeat pt-[128px] pb-25 md:bg-size-[100%_923px] md:bg-[url(/images/tos-bg-d.png)] md:pb-50 md:pt-[184px]'
       }
     >
       <Wrapper>
