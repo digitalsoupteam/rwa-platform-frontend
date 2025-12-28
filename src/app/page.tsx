@@ -155,6 +155,7 @@ const Home: FC = () => {
         </Wrapper>
       </section>
       <Gallery
+        id={'detailed-info'}
         title={'See detailed info about the\u00a0token \non the project page'}
         images={[
           '/images/gallery-mock.png',
@@ -400,7 +401,51 @@ const Home: FC = () => {
           </div>
         </Wrapper>
       </section>
-      <FAQ />
+      <FAQ
+        faqList={[
+          {
+            question: 'How am I protected from fraud?',
+            answer: (
+              <>
+                <p>We aim to create a safe and secure environment for all users by combining these measures:</p>
+                <ul>
+                  <li>We use Know Your Client (KYC) protocols to verify every project</li>
+                  <li>
+                    Our platform uses audited smart contracts to ensure that transactions are secure and tamper-proof
+                  </li>
+                  <li>We provide resources to educate users on common scams and best practices for online security</li>
+                  <li>
+                    Our platform has a dispute resolution system in place to handle any issues that may arise during
+                    transactions
+                  </li>
+                </ul>
+              </>
+            ),
+          },
+          {
+            question: 'Can I get investing advice?',
+            answer: (
+              <>
+                <p>
+                  Every project on Slices is evaluated by AI and our users - you can check the rating on each project
+                  card and make an informed decision.
+                </p>
+              </>
+            ),
+          },
+          {
+            question: 'Is RWA investing risky?',
+            answer: (
+              <>
+                <p>
+                  As any other investment, RWA investments depend on market volatility. However, they can also offer
+                  higher returns if managed well, as they tap into the value of real-world assets.
+                </p>
+              </>
+            ),
+          },
+        ]}
+      />
     </>
   );
 };
