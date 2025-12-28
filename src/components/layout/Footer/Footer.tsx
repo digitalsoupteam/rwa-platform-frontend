@@ -33,7 +33,7 @@ const Footer: FC = () => {
     },
     {
       text: 'Terms of service',
-      link: '#',
+      link: '/terms-of-service/',
     },
     {
       text: 'FAQ',
