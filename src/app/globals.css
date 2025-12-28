@@ -23,8 +23,8 @@
     --color-red: #BE142A;
 
     --shadow-button: inset 0 -2px 0 0 rgba(255, 255, 255, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
-    --background-image-button: linear-gradient(90deg, #1d58e9 0%, #49dce0 50%, #1d58e9 100%);
-    --background-image-blue-gradient: linear-gradient(90deg, #1d58e9 0%, #49dce0 100%);
+    --background-image-button: linear-gradient(90deg, #1d58e9 0%, #38abe3 50%, #1d58e9 100%);
+    --background-image-blue-gradient: linear-gradient(90deg, #1d58e9 0%, #38abe3 100%);
 }
 
 .tr-d-all {
@@ -38,7 +38,6 @@
 html {
     @apply
     text-black
-    h-full
     scroll-smooth
     scroll-pt-20
     min-w-[360px]
@@ -49,7 +48,7 @@ body {
     @apply
     flex
     flex-col
-    h-full
+    min-h-screen
     bg-[#f5f7f9]
 }
 
