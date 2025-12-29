@@ -13,13 +13,13 @@ const Header: FC = () => {
   const navLinks = [
     {
       text: 'Marketplace',
-      link: '#',
+      link: '/marketplace/',
     },
     {
       text: 'Tokenize a business',
       link: '/tokenization/',
     },
-    { text: 'AirDrop', link: '#' },
+    { text: 'AirDrop', link: '/testnet/' },
     { text: 'Support', link: '#' },
   ];
 

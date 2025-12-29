@@ -13,7 +13,7 @@ const Footer: FC = () => {
   const links = [
     {
       text: 'Marketplace',
-      link: '#',
+      link: '/marketplace/',
     },
     {
       text: 'Community',

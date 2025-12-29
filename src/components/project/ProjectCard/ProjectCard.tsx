@@ -2,20 +2,22 @@ import React, { FC, HTMLAttributes } from 'react';
 import { Card } from '@/components/ui';
 import Image from 'next/image';
 
+export type ProjectCardType = {
+  id: string;
+  name: string;
+  logo: string;
+  network: string;
+  relativeProfitUSDT: number;
+  profit: number;
+  pool: {
+    current: number;
+    target: number;
+    dueDate: string;
+  };
+};
+
 interface ProjectCardProps extends HTMLAttributes<HTMLDivElement> {
-  project: {
-    id: string;
-    name: string;
-    logo: string;
-    network: string;
-    relativeProfitUSDT: number;
-    profit: number;
-    pool: {
-      current: number;
-      target: number;
-      dueDate: string;
-    }
-  }
+  project: ProjectCardType;
 }
 
 const ProjectCard: FC<ProjectCardProps> = ({ className, project }) => {
