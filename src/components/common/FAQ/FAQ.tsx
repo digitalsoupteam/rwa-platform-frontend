@@ -7,17 +7,18 @@ import clsx from 'clsx';
 import { CallbackForm } from '@/components/common';
 
 interface FAQProps {
+  title?: string;
   faqList: { question: string; answer: React.ReactNode }[];
 }
 
-const FAQ: FC<FAQProps> = ({ faqList }) => {
+const FAQ: FC<FAQProps> = ({ title, faqList }) => {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
   return (
     <section className={'z-1 relative'}>
       <Wrapper>
         <Title className={'text-center mb-10 md:mb-20'} size={'lg'}>
-          You might want to know
+          {title || 'You might want to know'}
         </Title>
         <ul className={'grid gap-3 mb-3'}>
           {faqList &&
