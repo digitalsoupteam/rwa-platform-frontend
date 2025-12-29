@@ -6,7 +6,7 @@ import Image from 'next/image';
 import clsx from 'clsx';
 
 import { Wrapper } from '@/components/layout';
-import {Button, ButtonLink} from '@/components/ui';
+import { Button, ButtonLink } from '@/components/ui';
 
 const Header: FC = () => {
   const [opened, setOpened] = useState(false);
@@ -17,7 +17,7 @@ const Header: FC = () => {
     },
     {
       text: 'Tokenize a business',
-      link: '#',
+      link: '/tokenization/',
     },
     { text: 'AirDrop', link: '#' },
     { text: 'Support', link: '#' },
@@ -77,20 +77,18 @@ const Header: FC = () => {
               />
             </button>
           </div>
-            <ul className={'max-lg:hidden flex flex-wrap items-center gap-8'}>
-              {navLinks &&
-                navLinks.length > 0 &&
-                navLinks.map(({ text, link }) => (
-                  <li key={text + 'menu'}>
-                    <ButtonLink
-                      href={link}
-                    >
-                      {text}
-                    </ButtonLink>
-                  </li>
-                ))}
-            </ul>
-            <Button className={'max-lg:hidden'} visualType={'secondary'}>Sign In</Button>
+          <ul className={'max-lg:hidden flex flex-wrap items-center gap-8'}>
+            {navLinks &&
+              navLinks.length > 0 &&
+              navLinks.map(({ text, link }) => (
+                <li key={text + 'menu'}>
+                  <ButtonLink href={link}>{text}</ButtonLink>
+                </li>
+              ))}
+          </ul>
+          <Button className={'max-lg:hidden'} visualType={'secondary'}>
+            Sign In
+          </Button>
         </div>
       </Wrapper>
     </header>

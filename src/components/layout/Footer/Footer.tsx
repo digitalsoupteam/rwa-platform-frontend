@@ -21,7 +21,7 @@ const Footer: FC = () => {
     },
     {
       text: 'Tokenize your business',
-      link: '#',
+      link: '/tokenization/',
     },
     {
       text: 'Whitepaper',
