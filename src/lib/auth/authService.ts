@@ -1,11 +1,34 @@
 import { apolloClient } from '../apollo/client';
 import { AUTHENTICATE, REFRESH_TOKEN, REVOKE_TOKENS } from './operations';
-import { AuthenticateInput, AuthTokens, EIP712TypedData, RefreshTokenInput, RevokeTokensInput } from './types';
+import {
+  AuthenticateInput,
+  AuthenticateMutation,
+  AuthTokens,
+  RefreshTokenMutation,
+  RevokeTokensInput,
+  RevokeTokensMutation,
+} from '@/gql/graphql';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const USER_ID_KEY = 'userId';
 const WALLET_KEY = 'wallet';
+
+interface EIP712TypedData {
+  types: {
+    Message: Array<{ name: string; type: string }>;
+  };
+  primaryType: string;
+  domain: {
+    name: string;
+    version: string;
+  };
+  message: {
+    wallet: string;
+    timestamp: number;
+    message: string;
+  };
+}
 
 export const authService = {
   createTypedData(wallet: string): EIP712TypedData {
@@ -34,59 +57,54 @@ export const authService = {
   },
 
   async authenticate(input: AuthenticateInput): Promise<AuthTokens> {
-    try {
-      const { data, error } = await apolloClient.mutate({
-        mutation: AUTHENTICATE,
-        variables: { input },
-      });
-      console.log(data, error);
+    const { data, error } = await apolloClient.mutate<AuthenticateMutation>({
+      mutation: AUTHENTICATE,
+      variables: { input },
+    });
 
-      const tokens = data.authenticate;
-      this.saveTokens(tokens);
-      return tokens;
-    } catch (error) {
-      console.error('Authentication error:', error);
-      throw error;
+    if (error) throw new Error(`Authentication error: ${error.message}`);
+
+    if (!data?.authenticate) {
+      throw new Error('Authentication failed: no tokens returned');
     }
+
+    const tokens: AuthTokens = data.authenticate;
+    this.saveTokens(tokens);
+    return tokens;
   },
 
   async refreshTokens(): Promise<AuthTokens | null> {
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
-    if (!refreshToken) {
-      return null;
-    }
+    if (!refreshToken) return null;
 
-    try {
-      const input: RefreshTokenInput = { refreshToken };
-      const { data } = await apolloClient.mutate({
-        mutation: REFRESH_TOKEN,
-        variables: { input },
-      });
+    const { data, error } = await apolloClient.mutate<RefreshTokenMutation>({
+      mutation: REFRESH_TOKEN,
+      variables: { refreshToken },
+    });
 
-      const tokens = data.refreshToken;
-      this.saveTokens(tokens);
-      return tokens;
-    } catch (error) {
-      console.error('Token refresh error:', error);
+    if (error) {
       this.clearTokens();
-      return null;
+      throw new Error(`Token refresh error: ${error.message}`);
     }
+
+    if (!data?.refreshToken) throw new Error('Refresh failed: no tokens returned');
+
+    const tokens = data?.refreshToken;
+    this.saveTokens(tokens);
+    return tokens;
   },
 
-  async revokeTokens(tokenHashes: string[]): Promise<number> {
-    try {
-      const input: RevokeTokensInput = { tokenHashes };
-      const { data } = await apolloClient.mutate({
-        mutation: REVOKE_TOKENS,
-        variables: { input },
-      });
+  async revokeTokens(tokenHashes: RevokeTokensInput): Promise<number> {
+    const { data, error } = await apolloClient.mutate<RevokeTokensMutation>({
+      mutation: REVOKE_TOKENS,
+      variables: { tokenHashes },
+    });
 
-      return data.revokeTokens.revokedCount;
-    } catch (error) {
-      console.error('Token revocation error:', error);
-      throw error;
-    }
+    if (error) throw new Error(`Token revocation error: ${error.message}`);
+    if (!data?.revokeTokens) throw new Error('Token revocation failed');
+
+    return data?.revokeTokens?.revokedCount || 0;
   },
 
   logout(): void {

@@ -4,7 +4,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { useAccount, useDisconnect, useConnections, useWalletClient } from 'wagmi';
 import { signTypedData } from 'viem/actions';
 import { authService } from './authService';
-import { AuthTokens, User } from './types';
+import { AuthTokens, User } from '@/gql/graphql';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const { disconnect } = useDisconnect();
   const { data: walletClient } = useWalletClient();
   const connections = useConnections();
+  const router = useRouter();
 
   const login = useCallback(async () => {
     if (!address) {
@@ -73,7 +75,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         updatedAt: 0, // We don't have this info from the tokens
       });
 
-      window.location.href = '/dashboard/';
+      console.log('router replace after login');
+      router.push('/dashboard/');
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -84,6 +87,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const checkAuth = () => {
+      if (!address || !walletClient) return null;
+
       const isAuth = authService.isAuthenticated();
       setIsAuthenticated(isAuth);
 
@@ -122,6 +127,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshTokens = async () => {
     try {
+      if (!address) return null;
+
       setIsLoading(true);
       const tokens = await authService.refreshTokens();
 

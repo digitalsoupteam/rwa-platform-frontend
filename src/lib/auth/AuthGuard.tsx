@@ -13,9 +13,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/');
-    }
+    if (!isLoading && !isAuthenticated) router.push('/');
   }, [isAuthenticated, isLoading, router]);
 
   if (isLoading || !isAuthenticated) {
