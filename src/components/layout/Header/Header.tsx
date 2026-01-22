@@ -4,12 +4,17 @@ import React, { FC, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import clsx from 'clsx';
+import { useConnectModal, useAccountModal } from '@rainbow-me/rainbowkit';
 
 import { Wrapper } from '@/components/layout';
 import { Button, ButtonLink } from '@/components/ui';
+import { useAccount } from 'wagmi';
 
 const Header: FC = () => {
+  const { openConnectModal } = useConnectModal();
+  const { address } = useAccount();
   const [opened, setOpened] = useState(false);
+
   const navLinks = [
     {
       text: 'Marketplace',
@@ -63,7 +68,13 @@ const Header: FC = () => {
             <Image className={'w-full h-auto'} src={'/images/logo.svg'} width={'85'} height={'24'} alt={' '} />
           </Link>
           <div className={'flex gap-4 items-center lg:hidden'}>
-            <button className={'text-white text-base/[1.2] font-semibold'}>Sign in</button>
+            <div className='lg:hidden'>
+              {!address && (
+                <button className={'text-white text-base/[1.2] font-semibold'} onClick={openConnectModal}>
+                  Sign in
+                </button>
+              )}
+            </div>
             <button
               className={'cursor-pointer flex flex-col items-center justify-center gap-[3.5px] size-8 lg:hidden'}
               onClick={() => setOpened(!opened)}
@@ -86,9 +97,18 @@ const Header: FC = () => {
                 </li>
               ))}
           </ul>
-          <Button className={'max-lg:hidden'} visualType={'secondary'}>
-            Sign In
-          </Button>
+          <div className={'max-lg:hidden'}>
+            {!address && (
+              <Button visualType={'secondary'} onClick={openConnectModal}>
+                Sign In
+              </Button>
+            )}
+            {address && (
+              <Button visualType={'primary'} href={'/dashboard/'}>
+                Dashboard
+              </Button>
+            )}
+          </div>
         </div>
       </Wrapper>
     </header>
