@@ -75,7 +75,7 @@ const Footer: FC = () => {
             'z-1 relative py-10 flex flex-col items-center gap-8 lg:grid lg:grid-cols-[max-content_max-content_max-content] justify-between'
           }
         >
-          <Link className={'flex items-center justify-center w-30 lg:order-1'} href={'/'}>
+          <Link className={'flex items-center justify-center w-30 lg:order-1'} href={'/public'}>
             <Image className={'w-full h-auto'} src={'/images/logo.svg'} width={'120'} height={'34'} alt={''} />
           </Link>
           <ul

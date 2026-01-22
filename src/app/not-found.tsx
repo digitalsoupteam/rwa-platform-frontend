@@ -1,13 +1,13 @@
 import React, { FC } from 'react';
 
-import { Wrapper } from '@/components/layout';
+import { CommonLayout, Wrapper } from '@/components/layout';
 import { Title, Button } from '@/components/ui';
 
 import './not-found.css';
 
 const notFound: FC = () => {
   return (
-    <>
+    <CommonLayout>
       <section className={'pt-30 pb-25 [&>div]:h-full'} data-not-found-page={true}>
         <Wrapper>
           <div className={'flex flex-col justify-center items-center h-full text-center'}>
@@ -21,7 +21,7 @@ const notFound: FC = () => {
           </div>
         </Wrapper>
       </section>
-    </>
+    </CommonLayout>
   );
 };
 
