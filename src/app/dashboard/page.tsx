@@ -5,9 +5,7 @@ import { DashboardLayout } from '@/components/layout';
 const page: FC = () => {
   return (
     <AuthGuard>
-      <DashboardLayout>
-        <div className={'h-screen bg-black text-white pt-100 text-center'}>Dashboard</div>;
-      </DashboardLayout>
+      <DashboardLayout>welcome</DashboardLayout>
     </AuthGuard>
   );
 };

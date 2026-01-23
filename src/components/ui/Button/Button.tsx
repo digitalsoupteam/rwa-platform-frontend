@@ -7,7 +7,7 @@ type ButtonProps =
   | (ButtonHTMLAttributes<HTMLButtonElement> & { href?: undefined });
 
 type IButtonProps = ButtonProps & {
-  visualType: 'primary' | 'secondary' | 'tertiary';
+  visualType: 'primary' | 'secondary' | 'tertiary' | 'quaternary';
 };
 
 const Button: FC<IButtonProps> = ({ children, className, href, visualType, ...props }) => {
@@ -24,12 +24,13 @@ const Button: FC<IButtonProps> = ({ children, className, href, visualType, ...pr
       'bg-white text-blue',
       'hover:not-disabled:bg-blue-light focus-visible:not-disabled:blue-light active:bg-blue-dim disabled:opacity-50 disabled:bg-white disabled:text-grey'
     ),
+    quaternary: clsx('bg-blue py-3 px-4 font-semibold text-white text-sm/1 rounded-lg'),
   };
 
   const commonClassName = clsx(
-    'not-disabled:cursor-pointer inline-flex items-center justify-center px-6 py-4 text-base/[1.5] font-semibold rounded-2xl tr-d-all',
+    'not-disabled:cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-4 text-base/[1.5] font-semibold rounded-2xl tr-d-all',
     VISUAL_TYPES[visualType],
-      className
+    className
   );
   if (href)
     return (
