@@ -7,6 +7,8 @@
     --color-bg-tertiary: #F0F4FE;
     --color-bg-primary: #FDFEFF;
 
+    --color-label-tertiary: #9B9BA5;
+
     --color-grey-dark: #4A5363;
     --color-grey: #959EB5;
     --color-grey-light: #E4EAFA;
@@ -67,4 +69,8 @@ html {
 
 .scrollbar-hidden {
     scrollbar-width: none;
+}
+
+.locked {
+    overflow: hidden;
 }

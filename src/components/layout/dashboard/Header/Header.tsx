@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -16,7 +16,7 @@ const Header: FC = () => {
   const profileContainerRef = useRef<HTMLDivElement | null>(null);
   const { logout } = useAuth();
 
-  const menuOutSideClick: React.MouseEventHandler<HTMLDivElement> = evt => {
+  const menuOutSideClick: MouseEventHandler<HTMLDivElement> = evt => {
     if (evt.currentTarget === evt.target) setIsMenuOpened(false);
   };
 
@@ -78,12 +78,12 @@ const Header: FC = () => {
                 </button>
                 <div
                   className={clsx(
-                    'absolute top-full right-0 mt-2 w-max rounded-lg border-1 border-stroke-primary pt-2 shadow-base',
+                    'absolute top-full right-0 mt-2 w-max rounded-lg border-1 border-stroke-primary pt-2 bg-white shadow-base',
                     isProfileOpened ? 'block' : 'hidden'
                   )}
                 >
                   <div className={'flex flex-col gap-0.5 text-sm font-regular'}>
-                    <Link className={'px-3 py-1.5'} href={'/'}>
+                    <Link className={'px-3 py-1.5'} href={'/dashboard/'}>
                       My companies
                     </Link>
                     <Link className={'px-3 py-1.5'} href={'/'}>

@@ -4,17 +4,22 @@ import React, { FC, HTMLAttributes, useState } from 'react';
 import { Button, Input } from '@/components/ui';
 import clsx from 'clsx';
 
-const CallbackForm: FC<HTMLAttributes<HTMLFormElement>> = ({onSubmit, className}) => {
+const CallbackForm: FC<HTMLAttributes<HTMLFormElement>> = ({ onSubmit, className }) => {
   const [emailValue, setEmailValue] = useState('');
   const [questionValue, setQuestionValue] = useState('');
 
   return (
-    <form className={clsx('flex flex-col gap-3 md:grid md:grid-cols-[260px_1fr_max-content]', className)} onSubmit={onSubmit}>
+    <form
+      className={clsx('flex flex-col gap-3 md:grid md:grid-cols-[260px_1fr_max-content]', className)}
+      onSubmit={onSubmit}
+    >
       <Input
         placeholder={'Email'}
         name={'email'}
         type={'email'}
         value={emailValue}
+        size={'md'}
+        colorScheme={'dark'}
         onChange={evt => setEmailValue(evt.target.value)}
       />
       <Input
@@ -22,6 +27,8 @@ const CallbackForm: FC<HTMLAttributes<HTMLFormElement>> = ({onSubmit, className}
         name={'question'}
         type={'text'}
         value={questionValue}
+        size={'md'}
+        colorScheme={'dark'}
         onChange={evt => setQuestionValue(evt.target.value)}
       />
       <Button visualType={'secondary'}>Submit</Button>

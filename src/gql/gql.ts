@@ -18,12 +18,16 @@ type Documents = {
     "\n  mutation RefreshToken($input: RefreshTokenInput!) {\n    refreshToken(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": typeof types.RefreshTokenDocument,
     "\n  mutation RevokeTokens($input: RevokeTokensInput!) {\n    revokeTokens(input: $input) {\n      revokedCount\n    }\n  }\n": typeof types.RevokeTokensDocument,
     "\n  query GetUserTokens {\n    getUserTokens {\n      tokenId\n      userId\n      tokenHash\n      expiresAt\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetUserTokensDocument,
+    "\n  mutation CreateCompany($input: CreateCompanyInput!) {\n    createCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.CreateCompanyDocument,
+    "\n  query GetCompanies($input: GetCompaniesInput) {\n    getCompanies(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetCompaniesDocument,
 };
 const documents: Documents = {
     "\n  mutation Authenticate($input: AuthenticateInput!) {\n    authenticate(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": types.AuthenticateDocument,
     "\n  mutation RefreshToken($input: RefreshTokenInput!) {\n    refreshToken(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": types.RefreshTokenDocument,
     "\n  mutation RevokeTokens($input: RevokeTokensInput!) {\n    revokeTokens(input: $input) {\n      revokedCount\n    }\n  }\n": types.RevokeTokensDocument,
     "\n  query GetUserTokens {\n    getUserTokens {\n      tokenId\n      userId\n      tokenHash\n      expiresAt\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetUserTokensDocument,
+    "\n  mutation CreateCompany($input: CreateCompanyInput!) {\n    createCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": types.CreateCompanyDocument,
+    "\n  query GetCompanies($input: GetCompaniesInput) {\n    getCompanies(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetCompaniesDocument,
 };
 
 /**
@@ -56,6 +60,14 @@ export function graphql(source: "\n  mutation RevokeTokens($input: RevokeTokensI
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetUserTokens {\n    getUserTokens {\n      tokenId\n      userId\n      tokenHash\n      expiresAt\n      createdAt\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  query GetUserTokens {\n    getUserTokens {\n      tokenId\n      userId\n      tokenHash\n      expiresAt\n      createdAt\n      updatedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateCompany($input: CreateCompanyInput!) {\n    createCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCompany($input: CreateCompanyInput!) {\n    createCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetCompanies($input: GetCompaniesInput) {\n    getCompanies(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  query GetCompanies($input: GetCompaniesInput) {\n    getCompanies(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

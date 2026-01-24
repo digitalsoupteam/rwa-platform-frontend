@@ -6,6 +6,10 @@ import ButtonLink from './ButtonLink/ButtonLink';
 import Input from './Input/Input';
 import SwiperControls from './SwiperControls/SwiperControls';
 import Icon from './Icon/Icon';
+import ButtonBorderDash from './ButtonBorderDash/ButtonBorderDash';
+import TextArea from './TextArea/TextArea';
+
 import type { IconType } from './Icon/Icon';
 
-export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, IconType };
+export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea };
+export type { IconType };
