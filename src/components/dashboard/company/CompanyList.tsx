@@ -104,6 +104,7 @@ const CompanyList: FC = () => {
                   ? 'min-h-[98px]'
                   : 'min-h-[297px] max-w-110'
               )}
+              id={'createCompanyButton'}
               onClick={() => setIsCreateModalOpened(true)}
             >
               Create company

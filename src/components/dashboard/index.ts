@@ -1,3 +1,4 @@
 import CompanyList from './company/CompanyList';
+import Onboarding from './Onboarding';
 
-export { CompanyList };
+export { CompanyList, Onboarding };
