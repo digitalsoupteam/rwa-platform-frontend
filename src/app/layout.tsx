@@ -2,7 +2,6 @@ import './globals.css';
 import React from 'react';
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Footer, Header } from '@/components/layout';
 import { Providers } from '@/lib/providers';
 import '@rainbow-me/rainbowkit/styles.css';
 
@@ -21,11 +20,7 @@ export default function RootLayout({
   return (
     <html lang='en' className={inter.className}>
       <body>
-        <Providers>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

@@ -4,10 +4,16 @@
     --color-whote: #fff;
     --color-black: #020305;
 
+    --color-bg-tertiary: #F0F4FE;
+    --color-bg-primary: #FDFEFF;
+
     --color-grey-dark: #4A5363;
     --color-grey: #959EB5;
     --color-grey-light: #E4EAFA;
     --color-grey-transparent: #02030533;
+
+    --color-stroke-primary: #C2D0EB;
+    --color-stroke-secondary: #9DBDF9;
 
     --color-blue: #1D58E9;
     --color-blue-accent: #6DBDFF;
@@ -21,8 +27,10 @@
     --color-green: #18E53A;
 
     --color-red: #BE142A;
+    --color-red-bright: #F51532;
 
     --shadow-button: inset 0 -2px 0 0 rgba(255, 255, 255, 0.32), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
+    --shadow-base: 0 2px 13px 0 rgba(0, 0, 0, 0.2);
     --background-image-button: linear-gradient(90deg, #1d58e9 0%, #38abe3 50%, #1d58e9 100%);
     --background-image-blue-gradient: linear-gradient(90deg, #1d58e9 0%, #38abe3 100%);
 }
@@ -42,18 +50,6 @@ html {
     scroll-pt-20
     min-w-[360px]
     bg-blue-light
-}
-
-body {
-    @apply
-    flex
-    flex-col
-    min-h-screen
-}
-
-body main {
-    @apply
-    flex-grow
 }
 
 .visually-hidden {

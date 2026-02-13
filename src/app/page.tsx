@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 import { Hero, HowItWorks, HowToStart, PoolProgress } from '@/components/home';
 import { FAQ, Gallery } from '@/components/common';
-import { Wrapper } from '@/components/layout';
+import { CommonLayout, Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
 import { ProjectCard } from '@/components/project';
 import AppDemo from '@/components/home/AppDemo/AppDemo';
@@ -130,7 +130,7 @@ const Home: FC = () => {
   ];
 
   return (
-    <>
+    <CommonLayout>
       <Hero />
       <HowItWorks />
       <section className={'mb-25 md:mb-50'}>
@@ -446,7 +446,7 @@ const Home: FC = () => {
           },
         ]}
       />
-    </>
+    </CommonLayout>
   );
 };
 

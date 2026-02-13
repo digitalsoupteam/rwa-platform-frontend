@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Wrapper } from '@/components/layout';
+import { CommonLayout, Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
 import Image from 'next/image';
 import { FAQ, Gallery, TokenizeAnyBusiness, WideGallery } from '@/components/common';
@@ -8,7 +8,7 @@ import { HowToStart } from '@/components/home';
 
 const Tokenization: FC = () => {
   return (
-    <>
+    <CommonLayout>
       <section
         className={
           'bg-[url(/images/tokenization-bg-m.png)] bg-top bg-cover bg-no-repeat pt-[96px] mb-25 md:bg-size-[100%_838px] md:mb-50 md:pt-[184px] md:bg-[url(/images/tokenization-bg-d.png)]'
@@ -261,7 +261,7 @@ const Tokenization: FC = () => {
           },
         ]}
       />
-    </>
+    </CommonLayout>
   );
 };
 
