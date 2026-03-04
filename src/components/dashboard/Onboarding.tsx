@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui';
 
 const Onboarding: FC = () => {
-  const [onboardingStep, setOnboardingStep] = useState<number>(0);
+  const [onboardingStep, setOnboardingStep] = useState<number>(-1);
   const [isNarrow, setIsNarrow] = useState(true);
   const [coordinates, setCoordinates] = useState({
     top: 0,

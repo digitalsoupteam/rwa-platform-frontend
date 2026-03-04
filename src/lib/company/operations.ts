@@ -25,3 +25,45 @@ export const GET_COMPANIES = graphql(`
     }
   }
 `);
+
+export const GET_COMPANY = graphql(`
+  query GetCompany($id: ID!) {
+    getCompany(id: $id) {
+      id
+      name
+      description
+      ownerId
+      users {
+        id
+        userId
+        name
+        permissions {
+          id
+          permission
+          entity
+        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`);
+
+export const UPDATE_COMPANY = graphql(`
+  mutation UpdateCompany($input: UpdateCompanyInput!) {
+    updateCompany(input: $input) {
+      id
+      name
+      description
+      ownerId
+      createdAt
+      updatedAt
+    }
+  }
+`);
+
+export const DELETE_COMPANY = graphql(`
+  mutation DeleteCompany($id: ID!) {
+    deleteCompany(id: $id)
+  }
+`);
