@@ -4,20 +4,24 @@ import { useParams, useRouter } from 'next/navigation';
 import React, { ChangeEventHandler, FC, FormEventHandler, useEffect, useState } from 'react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
-import { Button, Input, TextArea, Title, toast } from '@/components/ui';
+import { Button, ButtonBorderDash, Icon, Input, TextArea, Title, toast } from '@/components/ui';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/operations';
+import { CREATE_BUSINESS, GET_BUSINESSES } from '@/lib/business/operations';
 import { Modal } from '@/components/common';
+import { BusinessOwnerType } from '@/gql/graphql';
 
 const CompanyPage: FC = () => {
   const [isEditModalOpened, setIsEditModalOpened] = useState(false);
   const [deletingCompanyStatus, setDeletingCompanyStatus] = useState<'idle' | 'approve' | 'pending'>('idle');
   const [nameValue, setNameValue] = useState('');
   const [aboutValue, setAboutValue] = useState('');
-  const [errors, setErrors] = useState({
-    name: '',
-    about: '',
-  });
+  const [errors, setErrors] = useState({ name: '', about: '' });
+
+  const [isCreateProjectModalOpened, setIsCreateProjectModalOpened] = useState(false);
+  const [projectNameValue, setProjectNameValue] = useState('');
+  const [projectAboutValue, setProjectAboutValue] = useState('');
+  const [projectErrors, setProjectErrors] = useState({ name: '', about: '' });
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
@@ -30,8 +34,17 @@ const CompanyPage: FC = () => {
   });
 
   const [updateCompany, { data: updatedCompany, loading: updatingCompany }] = useMutation(UPDATE_COMPANY);
-
   const [deleteCompany] = useMutation(DELETE_COMPANY);
+
+  const {
+    data: businessesData,
+    refetch: refetchBusinesses,
+  } = useQuery(GET_BUSINESSES, {
+    variables: { input: { filter: { ownerId: id, ownerType: BusinessOwnerType.Company } } },
+    skip: !id,
+  });
+
+  const [createBusiness, { loading: creatingBusiness }] = useMutation(CREATE_BUSINESS);
 
   const validateName = (value?: string) => (value || nameValue).length > 2;
   const validateAbout = (value?: string) => (value || aboutValue).length > 2;
@@ -102,6 +115,54 @@ const CompanyPage: FC = () => {
     }
   };
 
+  const validateProjectName = (value?: string) => (value ?? projectNameValue).length > 2;
+  const validateProjectAbout = (value?: string) => (value ?? projectAboutValue).length > 2;
+
+  const projectNameChangeHandler: ChangeEventHandler<HTMLInputElement> = evt => {
+    if (validateProjectName(evt.target.value)) setProjectErrors(prev => ({ ...prev, name: '' }));
+    setProjectNameValue(evt.target.value);
+  };
+  const projectAboutChangeHandler: ChangeEventHandler<HTMLTextAreaElement> = evt => {
+    if (validateProjectAbout(evt.target.value)) setProjectErrors(prev => ({ ...prev, about: '' }));
+    setProjectAboutValue(evt.target.value);
+  };
+
+  const createProjectSubmitHandler: FormEventHandler<HTMLFormElement> = async evt => {
+    evt.preventDefault();
+
+    const currentErrors = { ...projectErrors };
+    const isNameValid = validateProjectName();
+    const isAboutValid = validateProjectAbout();
+
+    if (!isNameValid) currentErrors.name = 'Enter project name';
+    if (!isAboutValid) currentErrors.about = 'Enter description';
+
+    setProjectErrors(currentErrors);
+    if (!isNameValid || !isAboutValid) return;
+
+    try {
+      await createBusiness({
+        variables: {
+          input: {
+            name: projectNameValue,
+            description: projectAboutValue,
+            ownerId: id,
+            ownerType: BusinessOwnerType.Company,
+            chainId: '97',
+          },
+        },
+      });
+
+      await refetchBusinesses();
+      setIsCreateProjectModalOpened(false);
+      setProjectNameValue('');
+      setProjectAboutValue('');
+      toast('Project successfully created!');
+    } catch {
+      toast('Failed to create project. Please try again.', 'error');
+    }
+  };
+
   useEffect(() => {
     if (!companyData) return;
 
@@ -153,6 +214,84 @@ const CompanyPage: FC = () => {
           )}
         </Wrapper>
       </section>
+      <section className={'mb-12'}>
+        <Wrapper>
+          <div className={'flex items-center justify-between mb-6'}>
+            <Title size={'xs'} level={2}>
+              Projects
+            </Title>
+            {businessesData?.getBusinesses && businessesData.getBusinesses.length > 0 && (
+              <Button
+                className={'rounded-xl'}
+                visualType={'quaternary'}
+                onClick={() => setIsCreateProjectModalOpened(true)}
+              >
+                <Icon name={'plus'} />
+                Create project
+              </Button>
+            )}
+          </div>
+          <div className={'grid lg:grid-cols-2 gap-4'}>
+            {businessesData?.getBusinesses.map(business => (
+              <div key={business.id} className={'p-4 border-1 border-stroke-primary rounded-xl'}>
+                <div className={'text-xl font-semibold mb-3'}>{business.name}</div>
+                <div className={'text-base'}>{business.description}</div>
+              </div>
+            ))}
+            {(!businessesData?.getBusinesses || businessesData.getBusinesses.length === 0) && (
+              <ButtonBorderDash
+                className={'min-h-[297px] max-w-110'}
+                onClick={() => setIsCreateProjectModalOpened(true)}
+              >
+                Create project
+              </ButtonBorderDash>
+            )}
+          </div>
+        </Wrapper>
+      </section>
+
+      <Modal isOpened={isCreateProjectModalOpened} closeModal={() => setIsCreateProjectModalOpened(false)}>
+        <div className={'text-base font-medium pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-6'}>
+          Add new project
+        </div>
+        <form onSubmit={createProjectSubmitHandler}>
+          <div className={'px-4 mb-6'}>
+            <div className={'text-sm font-medium mb-3'}>
+              Project name<span className={'text-red-bright'}>*</span>
+            </div>
+            <Input
+              placeholder={'For example, «Green Fund Series A»'}
+              size={'sm'}
+              colorScheme={'light'}
+              errorMessage={projectErrors.name}
+              type={'text'}
+              name={'projectName'}
+              value={projectNameValue}
+              onChange={projectNameChangeHandler}
+            />
+          </div>
+          <div className={'px-4 mb-6'}>
+            <div className={'text-sm font-medium mb-3'}>
+              Description<span className={'text-red-bright'}>*</span>
+            </div>
+            <TextArea
+              className={'h-[110px]'}
+              maxLength={250}
+              errorMessage={projectErrors.about}
+              placeholder={'Write a short description for your project'}
+              name={'projectAbout'}
+              value={projectAboutValue}
+              onChange={projectAboutChangeHandler}
+            />
+          </div>
+          <div className={'px-4 flex justify-end'}>
+            <Button visualType={'quaternary'} type={'submit'} disabled={creatingBusiness}>
+              Apply
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       <Modal isOpened={isEditModalOpened} closeModal={() => setIsEditModalOpened(false)}>
         <div className={'text-base font-medium pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-6'}>
           Edit company
