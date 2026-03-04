@@ -71,7 +71,7 @@ const ICONS: Record<ToastVariant, React.ReactNode> = {
 
 function Toast({ id, message, variant = 'success' }: ToastProps) {
   return (
-    <div className='flex items-center gap-4 w-full max-w-[432px] bg-black rounded-xl px-4 py-3 shadow-lg'>
+    <div className='flex items-center gap-4 w-full max-w-[432px] bg-black rounded-xl px-4 py-3 shadow-lg  md:w-[432px]'>
       {ICONS[variant]}
       <p className='flex-1 text-white text-base leading-snug'>{message}</p>
       <button

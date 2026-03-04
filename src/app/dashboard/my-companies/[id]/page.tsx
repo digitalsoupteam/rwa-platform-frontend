@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import React, { ChangeEventHandler, FC, FormEventHandler, useEffect, useState } from 'react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
-import { Button, Input, TextArea, Title } from '@/components/ui';
+import { Button, Input, TextArea, Title, toast } from '@/components/ui';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/operations';
 import { Modal } from '@/components/common';
@@ -25,16 +25,13 @@ const CompanyPage: FC = () => {
   const {
     data: companyData,
     loading: companyDataLoading,
-    error: userCompaniesLoadingError,
   } = useQuery(GET_COMPANY, {
     variables: { id },
   });
 
-  const [updateCompany, { data: updatedCompany, loading: updatingCompany, error: updatingCompanyError }] =
-    useMutation(UPDATE_COMPANY);
+  const [updateCompany, { data: updatedCompany, loading: updatingCompany }] = useMutation(UPDATE_COMPANY);
 
-  const [deleteCompany, { data: deletedCompany, loading: deletingCompany, error: deletingCompanyError }] =
-    useMutation(DELETE_COMPANY);
+  const [deleteCompany] = useMutation(DELETE_COMPANY);
 
   const validateName = (value?: string) => (value || nameValue).length > 2;
   const validateAbout = (value?: string) => (value || aboutValue).length > 2;
@@ -77,8 +74,9 @@ const CompanyPage: FC = () => {
       });
 
       setIsEditModalOpened(false);
+      toast('Company successfully updated!');
     } catch (err) {
-      console.error('ERROR', err);
+      toast('Failed to update company. Please try again.', 'error');
     }
   };
 
@@ -94,10 +92,12 @@ const CompanyPage: FC = () => {
           },
         });
 
+        toast('Company deleted.');
         setIsEditModalOpened(false);
         router.push('/dashboard/');
       } catch (err) {
-        console.error('ERROR', err);
+        setDeletingCompanyStatus('approve');
+        toast('Failed to delete company. Please try again.', 'error');
       }
     }
   };

@@ -6,6 +6,7 @@ import { signTypedData } from 'viem/actions';
 import { authService } from './authService';
 import { AuthTokens, User } from '@/gql/graphql';
 import { useRouter } from 'next/navigation';
+import { toast } from '@/components/ui/Toast/Toast';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -75,10 +76,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         updatedAt: 0, // We don't have this info from the tokens
       });
 
-      console.log('router replace after login');
+      toast('Signed in successfully!');
       router.push('/dashboard/');
     } catch (error) {
-      console.error('Login error:', error);
+      toast('Sign in failed. Please try again.', 'error');
       throw error;
     } finally {
       setIsLoading(false);
@@ -123,6 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     disconnect();
     setIsAuthenticated(false);
     setUser(null);
+    toast('Signed out successfully.');
   };
 
   const refreshTokens = async () => {
@@ -147,7 +149,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return null;
       }
     } catch (error) {
-      console.error('Token refresh error:', error);
+      toast('Session expired. Please sign in again.', 'error');
       setIsAuthenticated(false);
       setUser(null);
       return null;
