@@ -8,8 +8,9 @@ import SwiperControls from './SwiperControls/SwiperControls';
 import Icon from './Icon/Icon';
 import ButtonBorderDash from './ButtonBorderDash/ButtonBorderDash';
 import TextArea from './TextArea/TextArea';
+import { Toast, toast } from './Toast/Toast';
 
 import type { IconType } from './Icon/Icon';
 
-export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea };
+export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast };
 export type { IconType };
