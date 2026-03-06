@@ -10,6 +10,7 @@ import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/opera
 import { CREATE_BUSINESS, GET_BUSINESSES } from '@/lib/business/operations';
 import { Modal } from '@/components/common';
 import { BusinessOwnerType } from '@/gql/graphql';
+import Link from 'next/link';
 
 const CompanyPage: FC = () => {
   const [isEditModalOpened, setIsEditModalOpened] = useState(false);
@@ -233,10 +234,14 @@ const CompanyPage: FC = () => {
           </div>
           <div className={'grid lg:grid-cols-2 gap-4'}>
             {businessesData?.getBusinesses.map(business => (
-              <div key={business.id} className={'p-4 border-1 border-stroke-primary rounded-xl'}>
+              <Link
+                key={business.id}
+                href={`/dashboard/my-companies/${id}/projects/${business.id}`}
+                className={'p-4 border-1 border-stroke-primary rounded-xl'}
+              >
                 <div className={'text-xl font-semibold mb-3'}>{business.name}</div>
                 <div className={'text-base'}>{business.description}</div>
-              </div>
+              </Link>
             ))}
             {(!businessesData?.getBusinesses || businessesData.getBusinesses.length === 0) && (
               <ButtonBorderDash
