@@ -30,6 +30,16 @@ export const CREATE_BUSINESS = graphql(`
   }
 `);
 
+export const EDIT_BUSINESS = graphql(`
+  mutation EditBusiness($input: EditBusinessInput!) {
+    editBusiness(input: $input) {
+      id
+      name
+      description
+    }
+  }
+`);
+
 export const GET_BUSINESSES = graphql(`
   query GetBusinesses($input: FilterInput!) {
     getBusinesses(input: $input) {

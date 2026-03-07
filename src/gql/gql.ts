@@ -27,6 +27,7 @@ type Documents = {
     "\n  query GetPost($id: ID!) {\n    getPost(id: $id) {\n      id\n      blogId\n      title\n      content\n      images\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetPostDocument,
     "\n  query GetBusiness($id: ID!) {\n    getBusiness(id: $id) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetBusinessDocument,
     "\n  mutation CreateBusiness($input: CreateBusinessInput!) {\n    createBusiness(input: $input) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.CreateBusinessDocument,
+    "\n  mutation EditBusiness($input: EditBusinessInput!) {\n    editBusiness(input: $input) {\n      id\n      name\n      description\n    }\n  }\n": typeof types.EditBusinessDocument,
     "\n  query GetBusinesses($input: FilterInput!) {\n    getBusinesses(input: $input) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetBusinessesDocument,
     "\n  mutation CreateCompany($input: CreateCompanyInput!) {\n    createCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.CreateCompanyDocument,
     "\n  query GetCompanies($input: GetCompaniesInput) {\n    getCompanies(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetCompaniesDocument,
@@ -50,6 +51,7 @@ const documents: Documents = {
     "\n  query GetPost($id: ID!) {\n    getPost(id: $id) {\n      id\n      blogId\n      title\n      content\n      images\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetPostDocument,
     "\n  query GetBusiness($id: ID!) {\n    getBusiness(id: $id) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetBusinessDocument,
     "\n  mutation CreateBusiness($input: CreateBusinessInput!) {\n    createBusiness(input: $input) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n": types.CreateBusinessDocument,
+    "\n  mutation EditBusiness($input: EditBusinessInput!) {\n    editBusiness(input: $input) {\n      id\n      name\n      description\n    }\n  }\n": types.EditBusinessDocument,
     "\n  query GetBusinesses($input: FilterInput!) {\n    getBusinesses(input: $input) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetBusinessesDocument,
     "\n  mutation CreateCompany($input: CreateCompanyInput!) {\n    createCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": types.CreateCompanyDocument,
     "\n  query GetCompanies($input: GetCompaniesInput) {\n    getCompanies(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetCompaniesDocument,
@@ -126,6 +128,10 @@ export function graphql(source: "\n  query GetBusiness($id: ID!) {\n    getBusin
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateBusiness($input: CreateBusinessInput!) {\n    createBusiness(input: $input) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  mutation CreateBusiness($input: CreateBusinessInput!) {\n    createBusiness(input: $input) {\n      id\n      name\n      description\n      ownerId\n      ownerType\n      chainId\n      createdAt\n      updatedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation EditBusiness($input: EditBusinessInput!) {\n    editBusiness(input: $input) {\n      id\n      name\n      description\n    }\n  }\n"): (typeof documents)["\n  mutation EditBusiness($input: EditBusinessInput!) {\n    editBusiness(input: $input) {\n      id\n      name\n      description\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
