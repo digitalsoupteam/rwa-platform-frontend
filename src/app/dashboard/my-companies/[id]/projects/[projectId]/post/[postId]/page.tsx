@@ -12,7 +12,7 @@ import { GET_POST } from '@/lib/blog/operations';
 import Image from 'next/image';
 
 type TextBlock = { type: 'text'; content: string };
-type ImageBlock = { type: 'image'; link: string };
+type ImageBlock = { type: 'image'; link: string; external?: boolean };
 type Block = TextBlock | ImageBlock;
 
 function parseContent(content: string): Block[] {
@@ -85,7 +85,7 @@ const ReadPostPage: FC = () => {
                 block.type === 'image' ? (
                   <div key={i} className={'rounded-xl overflow-hidden my-2'}>
                     <Image
-                      src={filesBase + block.link.split('/').pop()}
+                      src={block.external ? block.link : filesBase + block.link.split('/').pop()}
                       alt={`Post image ${i + 1}`}
                       width={800}
                       height={450}

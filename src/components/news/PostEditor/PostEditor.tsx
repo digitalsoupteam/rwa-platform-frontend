@@ -1,16 +1,16 @@
 'use client';
 
-import React, { ChangeEventHandler, forwardRef, KeyboardEvent, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, KeyboardEvent, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { CREATE_GALLERY, GET_GALLERIES } from '@/lib/gallery/operations';
 import { GalleryParentTypes } from '@/gql/graphql';
-import { Button, Icon, toast } from '@/components/ui';
-import { Modal } from '@/components/common';
+import { Icon, toast } from '@/components/ui';
 import clsx from 'clsx';
+import UploadMediaModal from './UploadMediaModal';
 import Image from 'next/image';
 
 type TextBlock = { type: 'text'; id: string; content: string };
-type ImageBlock = { type: 'image'; id: string; link: string };
+type ImageBlock = { type: 'image'; id: string; link: string; external?: boolean };
 type Block = TextBlock | ImageBlock;
 
 let blockIdCounter = 0;
@@ -67,7 +67,7 @@ function parseBlocks(content: string): Block[] {
     if (Array.isArray(parsed)) {
       return parsed.map(b =>
         b.type === 'image'
-          ? ({ type: 'image', id: nextId(), link: b.link } as ImageBlock)
+          ? ({ type: 'image', id: nextId(), link: b.link, external: b.external } as ImageBlock)
           : ({ type: 'text', id: nextId(), content: b.content ?? '' } as TextBlock)
       );
     }
@@ -83,7 +83,6 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
   const [uploading, setUploading] = useState(false);
   const [focusBlockId, setFocusBlockId] = useState<string | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const textareaRefs = useRef<Map<string, HTMLTextAreaElement>>(new Map());
 
@@ -126,7 +125,9 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
       if (!isTitleValid || !isContentValid) return null;
 
       const serializedBlocks = blocks.map(b =>
-        b.type === 'image' ? { type: 'image', link: b.link } : { type: 'text', content: b.content }
+        b.type === 'image'
+          ? { type: 'image', link: b.link, external: b.external }
+          : { type: 'text', content: b.content }
       );
 
       return {
@@ -200,9 +201,23 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
     return result.data!.createGallery.id;
   };
 
-  const handleFileChange: ChangeEventHandler<HTMLInputElement> = async evt => {
-    const file = evt.target.files?.[0];
-    if (!file || !uploadModalBlockId) return;
+  const handleEmbedLink = (url: string) => {
+    if (!uploadModalBlockId) return;
+    const insertAfterBlockId = uploadModalBlockId;
+    setUploadModalBlockId(null);
+    const newTextId = nextId();
+    setBlocks(prev => {
+      const idx = prev.findIndex(b => b.id === insertAfterBlockId);
+      if (idx === -1) return prev;
+      const imageBlock: ImageBlock = { type: 'image', id: nextId(), link: url, external: true };
+      const textBlock: TextBlock = { type: 'text', id: newTextId, content: '' };
+      return [...prev.slice(0, idx + 1), imageBlock, textBlock, ...prev.slice(idx + 1)];
+    });
+    setFocusBlockId(newTextId);
+  };
+
+  const handleFileSelected = async (file: File) => {
+    if (!uploadModalBlockId) return;
 
     const insertAfterBlockId = uploadModalBlockId;
     setUploadModalBlockId(null);
@@ -225,7 +240,6 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
       toast('Failed to upload image.', 'error');
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -261,7 +275,7 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
             return (
               <div key={block.id} className={'group relative rounded-xl overflow-hidden my-2'}>
                 <Image
-                  src={(process.env.NEXT_PUBLIC_FILES_BASE_URL ?? 'https://192.168.100.20/files/') + block.link.split('/').pop()}
+                  src={block.external ? block.link : (process.env.NEXT_PUBLIC_FILES_BASE_URL ?? 'https://192.168.100.20/files/') + block.link.split('/').pop()}
                   alt={'Post image'}
                   width={800}
                   height={450}
@@ -283,7 +297,7 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
               <button
                 type={'button'}
                 disabled={uploading}
-                onClick={() => setUploadModalBlockId(block.id)}
+                onClick={() => setUploadModalBlockId(prev => prev === block.id ? null : block.id)}
                 className={'absolute top-0 -left-11.5 size-9.5 flex items-center justify-center rounded text-label-tertiary opacity-0 group-hover:opacity-100 hover:bg-gray-100 hover:text-black transition-all disabled:cursor-not-allowed text-sm leading-none select-none'}
               >
                 <Icon className={'size-5'} name={'plus'}/>
@@ -301,35 +315,19 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
                 }}
                 onKeyDown={e => handleKeyDown(e, block, blockIndex)}
               />
+              {uploadModalBlockId === block.id && (
+                <UploadMediaModal
+                  uploading={uploading}
+                  onClose={() => setUploadModalBlockId(null)}
+                  onFileSelected={handleFileSelected}
+                  onEmbedLink={handleEmbedLink}
+                />
+              )}
             </div>
           );
         })}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type={'file'}
-        accept={'image/*'}
-        className={'hidden'}
-        onChange={handleFileChange}
-      />
-
-      <Modal isOpened={!!uploadModalBlockId} closeModal={() => setUploadModalBlockId(null)}>
-        <div className={'text-base font-medium pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-4'}>
-          Add image
-        </div>
-        <div className={'px-4 pb-4'}>
-          <Button
-            type={'button'}
-            visualType={'quaternary'}
-            className={'w-full'}
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {uploading ? 'Uploading...' : 'Choose image'}
-          </Button>
-        </div>
-      </Modal>
     </div>
   );
 });
