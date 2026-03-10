@@ -1,3 +1,3 @@
-import ProjectCard from './ProjectCard/ProjectCard';
+import ProjectCard from './ProjectCard';
 
-export { ProjectCard };
+export { ProjectCard, TeamSection };

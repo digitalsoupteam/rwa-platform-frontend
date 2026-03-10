@@ -9,6 +9,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/operations';
 import { CREATE_BUSINESS, GET_BUSINESSES } from '@/lib/business/operations';
 import { Modal } from '@/components/common';
+import { TeamSection } from '@/components/dashboard';
 import { BusinessOwnerType } from '@/gql/graphql';
 import Link from 'next/link';
 
@@ -252,6 +253,12 @@ const CompanyPage: FC = () => {
               </ButtonBorderDash>
             )}
           </div>
+        </Wrapper>
+      </section>
+
+      <section className={'mb-12'}>
+        <Wrapper>
+          <TeamSection companyId={id} />
         </Wrapper>
       </section>
 

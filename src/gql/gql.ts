@@ -34,6 +34,8 @@ type Documents = {
     "\n  query GetCompany($id: ID!) {\n    getCompany(id: $id) {\n      id\n      name\n      description\n      ownerId\n      users {\n        id\n        userId\n        name\n        permissions {\n          id\n          permission\n          entity\n        }\n      }\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetCompanyDocument,
     "\n  mutation UpdateCompany($input: UpdateCompanyInput!) {\n    updateCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.UpdateCompanyDocument,
     "\n  mutation DeleteCompany($id: ID!) {\n    deleteCompany(id: $id)\n  }\n": typeof types.DeleteCompanyDocument,
+    "\n  mutation AddMember($input: AddMemberInput!) {\n    addMember(input: $input) {\n      id\n      userId\n      name\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.AddMemberDocument,
+    "\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n": typeof types.RemoveMemberDocument,
     "\n  query GetGalleries($input: GetGalleriesFilterInput) {\n    getGalleries(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.GetGalleriesDocument,
     "\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.CreateGalleryDocument,
 };
@@ -58,6 +60,8 @@ const documents: Documents = {
     "\n  query GetCompany($id: ID!) {\n    getCompany(id: $id) {\n      id\n      name\n      description\n      ownerId\n      users {\n        id\n        userId\n        name\n        permissions {\n          id\n          permission\n          entity\n        }\n      }\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetCompanyDocument,
     "\n  mutation UpdateCompany($input: UpdateCompanyInput!) {\n    updateCompany(input: $input) {\n      id\n      name\n      description\n      ownerId\n      createdAt\n      updatedAt\n    }\n  }\n": types.UpdateCompanyDocument,
     "\n  mutation DeleteCompany($id: ID!) {\n    deleteCompany(id: $id)\n  }\n": types.DeleteCompanyDocument,
+    "\n  mutation AddMember($input: AddMemberInput!) {\n    addMember(input: $input) {\n      id\n      userId\n      name\n      createdAt\n      updatedAt\n    }\n  }\n": types.AddMemberDocument,
+    "\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n": types.RemoveMemberDocument,
     "\n  query GetGalleries($input: GetGalleriesFilterInput) {\n    getGalleries(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.GetGalleriesDocument,
     "\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.CreateGalleryDocument,
 };
@@ -156,6 +160,14 @@ export function graphql(source: "\n  mutation UpdateCompany($input: UpdateCompan
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteCompany($id: ID!) {\n    deleteCompany(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCompany($id: ID!) {\n    deleteCompany(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AddMember($input: AddMemberInput!) {\n    addMember(input: $input) {\n      id\n      userId\n      name\n      createdAt\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  mutation AddMember($input: AddMemberInput!) {\n    addMember(input: $input) {\n      id\n      userId\n      name\n      createdAt\n      updatedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n"): (typeof documents)["\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -7,6 +7,7 @@ import PersonSVG from '../../../../public/icons/person.svg';
 import LogoutSVG from '../../../../public/icons/logout.svg';
 import EditSVG from '../../../../public/icons/edit.svg';
 import TickSVG from '../../../../public/icons/tick.svg';
+import TrashSVG from '../../../../public/icons/trash.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -16,6 +17,7 @@ const ICONS = {
   logout: LogoutSVG,
   edit: EditSVG,
   tick: TickSVG,
+  trash: TrashSVG,
 } as const;
 
 export type IconType = keyof typeof ICONS;
