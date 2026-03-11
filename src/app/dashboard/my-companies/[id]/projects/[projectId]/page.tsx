@@ -3,7 +3,7 @@
 import React, { ChangeEventHandler, FC, FormEventHandler, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Breadcrumbs } from '@/components/dashboard';
+import { Breadcrumbs, DocumentsSection } from '@/components/dashboard';
 import { Button, Input, TextArea, Title, toast } from '@/components/ui';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { EDIT_BUSINESS, GET_BUSINESS } from '@/lib/business/operations';
@@ -136,6 +136,12 @@ const ProjectPage: FC = () => {
       <section className={'mb-12'}>
         <Wrapper>
           <NewsList projectId={projectId} projectName={project?.name} />
+        </Wrapper>
+      </section>
+
+      <section className={'mb-12'}>
+        <Wrapper>
+          <DocumentsSection projectId={projectId} companyId={companyId} />
         </Wrapper>
       </section>
 
