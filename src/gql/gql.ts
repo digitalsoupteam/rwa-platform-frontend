@@ -36,6 +36,18 @@ type Documents = {
     "\n  mutation DeleteCompany($id: ID!) {\n    deleteCompany(id: $id)\n  }\n": typeof types.DeleteCompanyDocument,
     "\n  mutation AddMember($input: AddMemberInput!) {\n    addMember(input: $input) {\n      id\n      userId\n      name\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.AddMemberDocument,
     "\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n": typeof types.RemoveMemberDocument,
+    "\n  query GetFoldersForDocs($input: GetFoldersFilterInput) {\n    getFolders(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n": typeof types.GetFoldersForDocsDocument,
+    "\n  mutation CreateFolderForDocs($input: CreateFolderInput!) {\n    createFolder(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n": typeof types.CreateFolderForDocsDocument,
+    "\n  query GetDocuments($input: GetDocumentsFilterInput) {\n    getDocuments(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.GetDocumentsDocument,
+    "\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n": typeof types.DeleteDocumentDocument,
+    "\n  mutation UpdateDocumentMeta($input: UpdateDocumentInput!) {\n    updateDocument(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n": typeof types.UpdateDocumentMetaDocument,
+    "\n  query GetFaqTopics($input: GetFaqTopicsFilterInput) {\n    getFaqTopics(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.GetFaqTopicsDocument,
+    "\n  mutation CreateFaqTopic($input: CreateFaqTopicInput!) {\n    createFaqTopic(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.CreateFaqTopicDocument,
+    "\n  query GetFaqAnswers($input: GetFaqAnswersFilterInput) {\n    getFaqAnswers(input: $input) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n": typeof types.GetFaqAnswersDocument,
+    "\n  query GetFaqAnswer($id: ID!) {\n    getFaqAnswer(id: $id) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n": typeof types.GetFaqAnswerDocument,
+    "\n  mutation CreateFaqAnswer($input: CreateFaqAnswerInput!) {\n    createFaqAnswer(input: $input) {\n      id\n      topicId\n      question\n      answer\n      createdAt\n    }\n  }\n": typeof types.CreateFaqAnswerDocument,
+    "\n  mutation UpdateFaqAnswer($input: UpdateFaqAnswerInput!) {\n    updateFaqAnswer(input: $input) {\n      id\n      question\n      answer\n      updatedAt\n    }\n  }\n": typeof types.UpdateFaqAnswerDocument,
+    "\n  mutation DeleteFaqAnswer($id: ID!) {\n    deleteFaqAnswer(id: $id)\n  }\n": typeof types.DeleteFaqAnswerDocument,
     "\n  query GetGalleries($input: GetGalleriesFilterInput) {\n    getGalleries(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.GetGalleriesDocument,
     "\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.CreateGalleryDocument,
 };
@@ -62,6 +74,18 @@ const documents: Documents = {
     "\n  mutation DeleteCompany($id: ID!) {\n    deleteCompany(id: $id)\n  }\n": types.DeleteCompanyDocument,
     "\n  mutation AddMember($input: AddMemberInput!) {\n    addMember(input: $input) {\n      id\n      userId\n      name\n      createdAt\n      updatedAt\n    }\n  }\n": types.AddMemberDocument,
     "\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n": types.RemoveMemberDocument,
+    "\n  query GetFoldersForDocs($input: GetFoldersFilterInput) {\n    getFolders(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n": types.GetFoldersForDocsDocument,
+    "\n  mutation CreateFolderForDocs($input: CreateFolderInput!) {\n    createFolder(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n": types.CreateFolderForDocsDocument,
+    "\n  query GetDocuments($input: GetDocumentsFilterInput) {\n    getDocuments(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n": types.GetDocumentsDocument,
+    "\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n": types.DeleteDocumentDocument,
+    "\n  mutation UpdateDocumentMeta($input: UpdateDocumentInput!) {\n    updateDocument(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n": types.UpdateDocumentMetaDocument,
+    "\n  query GetFaqTopics($input: GetFaqTopicsFilterInput) {\n    getFaqTopics(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.GetFaqTopicsDocument,
+    "\n  mutation CreateFaqTopic($input: CreateFaqTopicInput!) {\n    createFaqTopic(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.CreateFaqTopicDocument,
+    "\n  query GetFaqAnswers($input: GetFaqAnswersFilterInput) {\n    getFaqAnswers(input: $input) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n": types.GetFaqAnswersDocument,
+    "\n  query GetFaqAnswer($id: ID!) {\n    getFaqAnswer(id: $id) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n": types.GetFaqAnswerDocument,
+    "\n  mutation CreateFaqAnswer($input: CreateFaqAnswerInput!) {\n    createFaqAnswer(input: $input) {\n      id\n      topicId\n      question\n      answer\n      createdAt\n    }\n  }\n": types.CreateFaqAnswerDocument,
+    "\n  mutation UpdateFaqAnswer($input: UpdateFaqAnswerInput!) {\n    updateFaqAnswer(input: $input) {\n      id\n      question\n      answer\n      updatedAt\n    }\n  }\n": types.UpdateFaqAnswerDocument,
+    "\n  mutation DeleteFaqAnswer($id: ID!) {\n    deleteFaqAnswer(id: $id)\n  }\n": types.DeleteFaqAnswerDocument,
     "\n  query GetGalleries($input: GetGalleriesFilterInput) {\n    getGalleries(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.GetGalleriesDocument,
     "\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.CreateGalleryDocument,
 };
@@ -168,6 +192,54 @@ export function graphql(source: "\n  mutation AddMember($input: AddMemberInput!)
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n"): (typeof documents)["\n  mutation RemoveMember($input: RemoveMemberInput!) {\n    removeMember(input: $input)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetFoldersForDocs($input: GetFoldersFilterInput) {\n    getFolders(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n"): (typeof documents)["\n  query GetFoldersForDocs($input: GetFoldersFilterInput) {\n    getFolders(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateFolderForDocs($input: CreateFolderInput!) {\n    createFolder(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n"): (typeof documents)["\n  mutation CreateFolderForDocs($input: CreateFolderInput!) {\n    createFolder(input: $input) {\n      id\n      name\n      parentId\n      ownerId\n      ownerType\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetDocuments($input: GetDocumentsFilterInput) {\n    getDocuments(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  query GetDocuments($input: GetDocumentsFilterInput) {\n    getDocuments(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteDocument($id: ID!) {\n    deleteDocument(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateDocumentMeta($input: UpdateDocumentInput!) {\n    updateDocument(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateDocumentMeta($input: UpdateDocumentInput!) {\n    updateDocument(input: $input) {\n      id\n      folderId\n      name\n      link\n      ownerId\n      ownerType\n      creator\n      parentId\n      grandParentId\n      createdAt\n      updatedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetFaqTopics($input: GetFaqTopicsFilterInput) {\n    getFaqTopics(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n"): (typeof documents)["\n  query GetFaqTopics($input: GetFaqTopicsFilterInput) {\n    getFaqTopics(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateFaqTopic($input: CreateFaqTopicInput!) {\n    createFaqTopic(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n"): (typeof documents)["\n  mutation CreateFaqTopic($input: CreateFaqTopicInput!) {\n    createFaqTopic(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetFaqAnswers($input: GetFaqAnswersFilterInput) {\n    getFaqAnswers(input: $input) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n"): (typeof documents)["\n  query GetFaqAnswers($input: GetFaqAnswersFilterInput) {\n    getFaqAnswers(input: $input) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetFaqAnswer($id: ID!) {\n    getFaqAnswer(id: $id) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n"): (typeof documents)["\n  query GetFaqAnswer($id: ID!) {\n    getFaqAnswer(id: $id) {\n      id\n      topicId\n      question\n      answer\n      order\n      createdAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateFaqAnswer($input: CreateFaqAnswerInput!) {\n    createFaqAnswer(input: $input) {\n      id\n      topicId\n      question\n      answer\n      createdAt\n    }\n  }\n"): (typeof documents)["\n  mutation CreateFaqAnswer($input: CreateFaqAnswerInput!) {\n    createFaqAnswer(input: $input) {\n      id\n      topicId\n      question\n      answer\n      createdAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateFaqAnswer($input: UpdateFaqAnswerInput!) {\n    updateFaqAnswer(input: $input) {\n      id\n      question\n      answer\n      updatedAt\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateFaqAnswer($input: UpdateFaqAnswerInput!) {\n    updateFaqAnswer(input: $input) {\n      id\n      question\n      answer\n      updatedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteFaqAnswer($id: ID!) {\n    deleteFaqAnswer(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteFaqAnswer($id: ID!) {\n    deleteFaqAnswer(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
