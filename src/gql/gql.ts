@@ -50,6 +50,9 @@ type Documents = {
     "\n  mutation DeleteFaqAnswer($id: ID!) {\n    deleteFaqAnswer(id: $id)\n  }\n": typeof types.DeleteFaqAnswerDocument,
     "\n  query GetGalleries($input: GetGalleriesFilterInput) {\n    getGalleries(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.GetGalleriesDocument,
     "\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": typeof types.CreateGalleryDocument,
+    "\n  mutation CreatePool($input: CreatePoolInput!) {\n    createPool(input: $input) {\n      id\n      rwaAddress\n      chainId\n      ownerId\n      ownerType\n      entryFeePercent\n      exitFeePercent\n      expectedHoldAmount\n      expectedRwaAmount\n      rewardPercent\n      priceImpactPercent\n      entryPeriodStart\n      entryPeriodExpired\n      completionPeriodExpired\n      fixedSell\n      allowEntryBurn\n      awaitCompletionExpired\n      floatingOutTranchesTimestamps\n      outgoingTranches {\n        amount\n        timestamp\n        executedAmount\n      }\n      incomingTranches {\n        amount\n        expiredAt\n        returnedAmount\n      }\n    }\n  }\n": typeof types.CreatePoolDocument,
+    "\n  mutation RequestPoolApprovalSignatures($input: RequestPoolApprovalSignaturesInput!) {\n    requestPoolApprovalSignatures(input: $input) {\n      taskId\n    }\n  }\n": typeof types.RequestPoolApprovalSignaturesDocument,
+    "\n  query GetSignatureTask($input: GetSignatureTaskInput!) {\n    getSignatureTask(input: $input) {\n      id\n      completed\n      expired\n      signatures {\n        signer\n        signature\n      }\n    }\n  }\n": typeof types.GetSignatureTaskDocument,
 };
 const documents: Documents = {
     "\n  mutation Authenticate($input: AuthenticateInput!) {\n    authenticate(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": types.AuthenticateDocument,
@@ -88,6 +91,9 @@ const documents: Documents = {
     "\n  mutation DeleteFaqAnswer($id: ID!) {\n    deleteFaqAnswer(id: $id)\n  }\n": types.DeleteFaqAnswerDocument,
     "\n  query GetGalleries($input: GetGalleriesFilterInput) {\n    getGalleries(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.GetGalleriesDocument,
     "\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n": types.CreateGalleryDocument,
+    "\n  mutation CreatePool($input: CreatePoolInput!) {\n    createPool(input: $input) {\n      id\n      rwaAddress\n      chainId\n      ownerId\n      ownerType\n      entryFeePercent\n      exitFeePercent\n      expectedHoldAmount\n      expectedRwaAmount\n      rewardPercent\n      priceImpactPercent\n      entryPeriodStart\n      entryPeriodExpired\n      completionPeriodExpired\n      fixedSell\n      allowEntryBurn\n      awaitCompletionExpired\n      floatingOutTranchesTimestamps\n      outgoingTranches {\n        amount\n        timestamp\n        executedAmount\n      }\n      incomingTranches {\n        amount\n        expiredAt\n        returnedAmount\n      }\n    }\n  }\n": types.CreatePoolDocument,
+    "\n  mutation RequestPoolApprovalSignatures($input: RequestPoolApprovalSignaturesInput!) {\n    requestPoolApprovalSignatures(input: $input) {\n      taskId\n    }\n  }\n": types.RequestPoolApprovalSignaturesDocument,
+    "\n  query GetSignatureTask($input: GetSignatureTaskInput!) {\n    getSignatureTask(input: $input) {\n      id\n      completed\n      expired\n      signatures {\n        signer\n        signature\n      }\n    }\n  }\n": types.GetSignatureTaskDocument,
 };
 
 /**
@@ -248,6 +254,18 @@ export function graphql(source: "\n  query GetGalleries($input: GetGalleriesFilt
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n"): (typeof documents)["\n  mutation CreateGallery($input: CreateGalleryInput!) {\n    createGallery(input: $input) {\n      id\n      name\n      parentId\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreatePool($input: CreatePoolInput!) {\n    createPool(input: $input) {\n      id\n      rwaAddress\n      chainId\n      ownerId\n      ownerType\n      entryFeePercent\n      exitFeePercent\n      expectedHoldAmount\n      expectedRwaAmount\n      rewardPercent\n      priceImpactPercent\n      entryPeriodStart\n      entryPeriodExpired\n      completionPeriodExpired\n      fixedSell\n      allowEntryBurn\n      awaitCompletionExpired\n      floatingOutTranchesTimestamps\n      outgoingTranches {\n        amount\n        timestamp\n        executedAmount\n      }\n      incomingTranches {\n        amount\n        expiredAt\n        returnedAmount\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreatePool($input: CreatePoolInput!) {\n    createPool(input: $input) {\n      id\n      rwaAddress\n      chainId\n      ownerId\n      ownerType\n      entryFeePercent\n      exitFeePercent\n      expectedHoldAmount\n      expectedRwaAmount\n      rewardPercent\n      priceImpactPercent\n      entryPeriodStart\n      entryPeriodExpired\n      completionPeriodExpired\n      fixedSell\n      allowEntryBurn\n      awaitCompletionExpired\n      floatingOutTranchesTimestamps\n      outgoingTranches {\n        amount\n        timestamp\n        executedAmount\n      }\n      incomingTranches {\n        amount\n        expiredAt\n        returnedAmount\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RequestPoolApprovalSignatures($input: RequestPoolApprovalSignaturesInput!) {\n    requestPoolApprovalSignatures(input: $input) {\n      taskId\n    }\n  }\n"): (typeof documents)["\n  mutation RequestPoolApprovalSignatures($input: RequestPoolApprovalSignaturesInput!) {\n    requestPoolApprovalSignatures(input: $input) {\n      taskId\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetSignatureTask($input: GetSignatureTaskInput!) {\n    getSignatureTask(input: $input) {\n      id\n      completed\n      expired\n      signatures {\n        signer\n        signature\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetSignatureTask($input: GetSignatureTaskInput!) {\n    getSignatureTask(input: $input) {\n      id\n      completed\n      expired\n      signatures {\n        signer\n        signature\n      }\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
