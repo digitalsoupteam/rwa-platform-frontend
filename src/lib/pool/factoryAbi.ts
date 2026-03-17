@@ -1,6 +1,46 @@
 export const FACTORY_ADDRESS = '0xD1b0e186A2B0d602f27cE2e046Fa95BBe9FE6d84' as const;
+export const HOLD_TOKEN_ADDRESS = '0x66670d16331dc923Ff095f5B0A658F01e6794216' as const;
+
+export const ERC20_APPROVE_ABI = [
+  {
+    inputs: [
+      { internalType: 'address', name: 'spender', type: 'address' },
+      { internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'address', name: 'owner', type: 'address' },
+      { internalType: 'address', name: 'spender', type: 'address' },
+    ],
+    name: 'allowance',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
 export const FACTORY_ABI = [
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'createRWAFee', type: 'uint256' },
+      { internalType: 'string', name: 'entityId', type: 'string' },
+      { internalType: 'string', name: 'entityOwnerId', type: 'string' },
+      { internalType: 'string', name: 'entityOwnerType', type: 'string' },
+      { internalType: 'address', name: 'owner', type: 'address' },
+      { internalType: 'address[]', name: 'signers', type: 'address[]' },
+      { internalType: 'bytes[]', name: 'signatures', type: 'bytes[]' },
+      { internalType: 'uint256', name: 'expired', type: 'uint256' },
+    ],
+    name: 'deployRWA',
+    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
   {
     inputs: [
       { internalType: 'uint256', name: 'createPoolFeeRatio', type: 'uint256' },

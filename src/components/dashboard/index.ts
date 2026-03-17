@@ -4,5 +4,6 @@ import Breadcrumbs from './Breadcrumbs';
 import TeamSection from './TeamSection';
 import DocumentsSection from './DocumentsSection';
 import FaqSection from './FaqSection';
+import PoolsSection from './PoolsSection';
 
-export { CompanyList, Onboarding, Breadcrumbs, TeamSection, DocumentsSection, FaqSection };
+export { CompanyList, Onboarding, Breadcrumbs, TeamSection, DocumentsSection, FaqSection, PoolsSection };
