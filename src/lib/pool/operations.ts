@@ -1,5 +1,23 @@
 import { gql } from '@apollo/client';
 
+export const GET_POOLS = gql`
+  query GetPools($input: FilterInput!) {
+    getPools(input: $input) {
+      id
+      name
+      description
+      poolAddress
+      expectedHoldAmount
+      rewardPercent
+      entryPeriodStart
+      entryPeriodExpired
+      completionPeriodExpired
+      paused
+      createdAt
+    }
+  }
+`;
+
 export const CREATE_POOL = gql`
   mutation CreatePool($input: CreatePoolInput!) {
     createPool(input: $input) {

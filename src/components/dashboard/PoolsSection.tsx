@@ -3,7 +3,7 @@
 import React, { FC } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@apollo/client/react';
-import { Title } from '@/components/ui';
+import { ButtonBorderDash, Title } from '@/components/ui';
 import { GET_POOLS } from '@/lib/pool/operations';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,40 +60,6 @@ const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool }) => (
   </div>
 );
 
-const AddPoolDashCard: FC<{ projectId: string }> = ({ projectId }) => (
-  <Link
-    href={`/dashboard/add-pool?businessId=${projectId}`}
-    className={
-      'relative flex items-center justify-center p-4 rounded-xl w-full min-h-[160px] text-label-tertiary text-lg font-medium hover:text-blue transition-colors'
-    }
-  >
-    <svg
-      className={'absolute inset-0.5 w-[calc(100%-4px)] h-[calc(100%-4px)] pointer-events-none'}
-      preserveAspectRatio={'none'}
-    >
-      <rect
-        x={'1'}
-        y={'1'}
-        width={'100%'}
-        height={'100%'}
-        rx={'16'}
-        ry={'16'}
-        fill={'none'}
-        stroke={'currentColor'}
-        strokeWidth={'2'}
-        strokeDasharray={'10 10'}
-      />
-    </svg>
-    <span className={'inline-flex items-center gap-2'}>
-      <svg width={'24'} height={'24'} viewBox={'0 0 24 24'} fill={'none'} stroke={'currentColor'} strokeWidth={'2'} strokeLinecap={'round'} strokeLinejoin={'round'}>
-        <line x1={'12'} y1={'5'} x2={'12'} y2={'19'} />
-        <line x1={'5'} y1={'12'} x2={'19'} y2={'12'} />
-      </svg>
-      Add pool
-    </span>
-  </Link>
-);
-
 interface PoolsSectionProps {
   projectId: string;
 }
@@ -109,18 +75,30 @@ const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
 
   return (
     <>
-      <Title className={'mb-6'} size={'xs'} level={2}>Pools</Title>
+      <Title className={'mb-6'} size={'xs'} level={2}>
+        Pools
+      </Title>
 
       {pools.length === 0 ? (
-        <div className={'max-w-[280px]'}>
-          <AddPoolDashCard projectId={projectId} />
+        <div>
+          <ButtonBorderDash
+            href={`/dashboard/add-pool?businessId=${projectId}`}
+            className={'block w-full max-w-110 min-h-74'}
+          >
+            Add pool
+          </ButtonBorderDash>
         </div>
       ) : (
         <div className={'grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'}>
           {pools.map((pool: Pool) => (
             <PoolCard key={pool.id} pool={pool} projectId={projectId} />
           ))}
-          <AddPoolDashCard projectId={projectId} />
+          <ButtonBorderDash
+            href={`/dashboard/add-pool?businessId=${projectId}`}
+            className={'block w-full max-w-110 min-h-74'}
+          >
+            Add pool
+          </ButtonBorderDash>
         </div>
       )}
     </>

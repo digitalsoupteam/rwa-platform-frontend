@@ -1,4 +1,5 @@
 import { graphql } from '@/gql';
+import { gql } from '@apollo/client';
 
 export const GET_BUSINESS = graphql(`
   query GetBusiness($id: ID!) {
@@ -14,6 +15,28 @@ export const GET_BUSINESS = graphql(`
     }
   }
 `);
+
+export const GET_BUSINESS_DEPLOY_INFO = gql`
+  query GetBusinessDeployInfo($id: ID!) {
+    getBusiness(id: $id) {
+      id
+      ownerId
+      ownerType
+      ownerWallet
+      tokenAddress
+      approvalSignaturesTaskId
+      approvalSignaturesTaskExpired
+    }
+  }
+`;
+
+export const REQUEST_BUSINESS_APPROVAL_SIGNATURES = gql`
+  mutation RequestBusinessApprovalSignatures($input: RequestBusinessApprovalSignaturesInput!) {
+    requestBusinessApprovalSignatures(input: $input) {
+      taskId
+    }
+  }
+`;
 
 export const CREATE_BUSINESS = graphql(`
   mutation CreateBusiness($input: CreateBusinessInput!) {
