@@ -6,7 +6,13 @@ import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs, DocumentsSection, FaqSection, PoolsSection } from '@/components/dashboard';
 import { Button, Input, TextArea, Title, toast } from '@/components/ui';
 import { useMutation, useQuery, useApolloClient } from '@apollo/client/react';
-import { EDIT_BUSINESS, GET_BUSINESS, GET_BUSINESS_DEPLOY_INFO, REQUEST_BUSINESS_APPROVAL_SIGNATURES } from '@/lib/business/operations';
+import {
+  EDIT_BUSINESS,
+  GET_BUSINESS,
+  GET_BUSINESS_DEPLOY_INFO,
+  REJECT_BUSINESS_APPROVAL_SIGNATURES,
+  REQUEST_BUSINESS_APPROVAL_SIGNATURES,
+} from '@/lib/business/operations';
 import { GET_SIGNATURE_TASK } from '@/lib/pool/operations';
 import { ERC20_APPROVE_ABI, FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS } from '@/lib/pool/factoryAbi';
 import { GET_COMPANY } from '@/lib/company/operations';
@@ -14,6 +20,7 @@ import { NewsList } from '@/components/news';
 import { Modal } from '@/components/common';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 
+// Fee validated against backend test: tests/rwa_fast_tests/business-deployment.test.ts uses '100'
 const CREATE_RWA_FEE = '100';
 
 type DeployStatus =
@@ -70,6 +77,8 @@ const ProjectPage: FC = () => {
   const [editBusiness, { data: updatedBusiness, loading: updatingBusiness }] = useMutation(EDIT_BUSINESS);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [requestBusinessApprovalSignatures] = useMutation<any>(REQUEST_BUSINESS_APPROVAL_SIGNATURES);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [rejectBusinessApprovalSignatures] = useMutation<any>(REJECT_BUSINESS_APPROVAL_SIGNATURES);
 
   const { isSuccess: txConfirmed } = useWaitForTransactionReceipt({ hash: deployTxHash });
 
@@ -88,22 +97,28 @@ const ProjectPage: FC = () => {
     }
   }, [txConfirmed, deployStatus, refetchDeployInfo]);
 
-  const pollUntilComplete = async (taskId: string, timeoutMs = 120_000) => {
+  const pollUntilComplete = async (taskId: string, timeoutMs = 300_000) => {
     const deadline = Date.now() + timeoutMs;
+    let attempt = 0;
     while (Date.now() < deadline) {
-      await new Promise(r => setTimeout(r, 3000));
-      const { data } = await apolloClient.query({
-        query: GET_SIGNATURE_TASK,
-        variables: { input: { taskId } },
-        fetchPolicy: 'network-only',
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const task = (data as any)?.getSignatureTask;
-      if (task?.completed) {
-        return task as { signatures: { signer: string; signature: string }[]; expired: number };
+      if (attempt > 0) await new Promise(r => setTimeout(r, 3000));
+      attempt++;
+      try {
+        const { data } = await apolloClient.query({
+          query: GET_SIGNATURE_TASK,
+          variables: { input: { taskId } },
+          fetchPolicy: 'network-only',
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const task = (data as any)?.getSignatureTask;
+        if (task?.completed) {
+          return task as { signatures: { signer: string; signature: string }[]; expired: number };
+        }
+      } catch {
+        // Network hiccup — keep polling
       }
     }
-    throw new Error('Signature task timed out');
+    throw new Error('Signature task timed out after 5 minutes. The backend signers may be unavailable.');
   };
 
   const handleDeploy = async () => {
@@ -113,11 +128,27 @@ const ProjectPage: FC = () => {
 
     deployingRef.current = true;
     try {
-      // Reuse existing pending task if one already exists (e.g. from a previous session)
-      let taskId: string | undefined = deployInfo?.approvalSignaturesTaskId ?? undefined;
+      let taskId: string;
+      const existingTaskId: string | undefined = deployInfo?.approvalSignaturesTaskId;
+      const existingExpiredAt: number | undefined = deployInfo?.approvalSignaturesTaskExpired;
+      const now = Math.floor(Date.now() / 1000);
 
-      if (!taskId) {
+      if (existingTaskId && existingExpiredAt && existingExpiredAt > now) {
+        // Active non-expired task exists — reuse it directly
+        taskId = existingTaskId;
+      } else {
         setDeployStatus('requesting-signatures');
+
+        // If task is expired, reject it first to clear the lock
+        if (existingTaskId) {
+          try {
+            await rejectBusinessApprovalSignatures({ variables: { id: projectId } });
+            await refetchDeployInfo();
+          } catch {
+            // Ignore errors — may already be cleared or rejection not yet allowed
+          }
+        }
+
         const sigRes = await requestBusinessApprovalSignatures({
           variables: {
             input: {
@@ -128,6 +159,15 @@ const ProjectPage: FC = () => {
             },
           },
         });
+
+        if (sigRes.error) {
+          if (existingExpiredAt && existingExpiredAt + 60 > now) {
+            const waitUntil = new Date((existingExpiredAt + 60) * 1000).toLocaleTimeString();
+            throw new Error(`Previous signature request not yet expired. Try again after ${waitUntil}.`);
+          }
+          throw new Error(sigRes.error.message);
+        }
+
         taskId = sigRes.data?.requestBusinessApprovalSignatures?.taskId;
         if (!taskId) throw new Error('No taskId returned');
       }
@@ -141,7 +181,7 @@ const ProjectPage: FC = () => {
       const ownerId = deployInfo?.ownerId ?? project.ownerId;
       const ownerType = deployInfo?.ownerType ?? project.ownerType;
 
-      // Approve HOLD token spend (MaxUint256) before deploying
+      // Approve factory to spend HOLD tokens (contract charges CREATE_RWA_FEE × 10^18)
       setDeployStatus('approving-hold');
       const approveTxHash = await writeContractAsync({
         address: HOLD_TOKEN_ADDRESS,
@@ -167,6 +207,7 @@ const ProjectPage: FC = () => {
           signatures,
           BigInt(Math.floor(task.expired)),
         ],
+        gas: BigInt(1_200_000),
       });
 
       setDeployTxHash(txHash);

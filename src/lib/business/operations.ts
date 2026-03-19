@@ -38,6 +38,12 @@ export const REQUEST_BUSINESS_APPROVAL_SIGNATURES = gql`
   }
 `;
 
+export const REJECT_BUSINESS_APPROVAL_SIGNATURES = gql`
+  mutation RejectBusinessApprovalSignatures($id: ID!) {
+    rejectBusinessApprovalSignatures(id: $id)
+  }
+`;
+
 export const CREATE_BUSINESS = graphql(`
   mutation CreateBusiness($input: CreateBusinessInput!) {
     createBusiness(input: $input) {
