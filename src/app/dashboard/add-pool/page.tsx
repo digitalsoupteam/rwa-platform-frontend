@@ -5,10 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Button, Title, toast } from '@/components/ui';
 import { useMutation, useApolloClient } from '@apollo/client/react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import clsx from 'clsx';
 import { CREATE_POOL, REQUEST_POOL_APPROVAL_SIGNATURES, GET_SIGNATURE_TASK } from '@/lib/pool/operations';
-import { FACTORY_ABI, FACTORY_ADDRESS } from '@/lib/pool/factoryAbi';
+import { FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI } from '@/lib/pool/factoryAbi';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const TIMING_OPTIONS = Array.from({ length: 73 }, (_, i) => `${(i + 1) * 5} days`);
@@ -308,6 +308,7 @@ const AddPoolPage: FC = () => {
   const businessId = searchParams.get('businessId') ?? '';
   const { address: walletAddress } = useAccount();
   const apolloClient = useApolloClient();
+  const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   const [deployTxHash, setDeployTxHash] = useState<`0x${string}` | undefined>();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: deployTxHash });
@@ -519,7 +520,18 @@ const AddPoolPage: FC = () => {
         };
       });
 
-      // Step 4: Call the Factory contract
+      // Step 4: Approve HOLD token spend
+      setDeployStatus('Approving HOLD token spend…');
+      const approveTxHash = await writeContractAsync({
+        address: HOLD_TOKEN_ADDRESS,
+        abi: ERC20_APPROVE_ABI,
+        functionName: 'approve',
+        args: [FACTORY_ADDRESS, BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')],
+      });
+      if (!publicClient) throw new Error('No public client available');
+      await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
+
+      // Step 5: Call the Factory contract
       setDeployStatus('Sending transaction…');
       const txHash = await writeContractAsync({
         address: FACTORY_ADDRESS,
@@ -550,6 +562,7 @@ const AddPoolPage: FC = () => {
           signatures,
           expired,
         ],
+        gas: BigInt(1_200_000),
       });
 
       setDeployTxHash(txHash);
