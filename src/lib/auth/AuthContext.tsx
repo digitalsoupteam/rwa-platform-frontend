@@ -125,6 +125,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsAuthenticated(false);
     setUser(null);
     toast('Signed out successfully.');
+    router.push('/');
   };
 
   const refreshTokens = async () => {
