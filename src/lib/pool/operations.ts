@@ -13,6 +13,7 @@ export const GET_POOLS = gql`
       entryPeriodExpired
       completionPeriodExpired
       paused
+      chainId
       createdAt
     }
   }
