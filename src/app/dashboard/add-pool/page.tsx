@@ -11,11 +11,12 @@ import { CREATE_POOL, REQUEST_POOL_APPROVAL_SIGNATURES, GET_SIGNATURE_TASK } fro
 import { FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI } from '@/lib/pool/factoryAbi';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const TIMING_OPTIONS = Array.from({ length: 73 }, (_, i) => `${(i + 1) * 5} days`);
+const TIMING_OPTIONS = Array.from({ length: 67 }, (_, i) => `${(i + 1) * 5} days`); // max 335 days: completionPeriod = timing + 30 ≤ 365
 const COMMISSION_RATE = 0.03;
 const MAX_TRANCHES = 20;
 const CREATE_POOL_FEE_RATIO = '300'; // 3% in basis points
-const PRICE_IMPACT_PERCENT = BigInt(100);
+const PRICE_IMPACT_PERCENT = BigInt(101); // 100 is absent from the on-chain liquidity coefficient table
+const ENTRY_PERIOD_DAYS = 90; // contract max; calendar months can exceed 90 days
 const POLL_INTERVAL_MS = 3_000;
 const POLL_TIMEOUT_MS = 120_000;
 
@@ -76,9 +77,9 @@ function parseNum(v: string): number {
   return parseFloat(v.replace(/\s/g, '')) || 0;
 }
 
-function addMonths(isoDate: string, months: number): string {
+function addDays(isoDate: string, days: number): string {
   const d = new Date(isoDate);
-  d.setMonth(d.getMonth() + months);
+  d.setDate(d.getDate() + days);
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   const yyyy = d.getFullYear();
@@ -120,10 +121,11 @@ const Tooltip: FC<{ text: string; children: React.ReactNode }> = ({ text, childr
 };
 
 // ── Calendar ───────────────────────────────────────────────────────────────────
-const Calendar: FC<{ value: string; onChange: (v: string) => void; onClose: () => void }> = ({
+const Calendar: FC<{ value: string; onChange: (v: string) => void; onClose: () => void; minDate?: string }> = ({
   value,
   onChange,
   onClose,
+  minDate,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const init = value ? new Date(value) : new Date();
@@ -142,6 +144,7 @@ const Calendar: FC<{ value: string; onChange: (v: string) => void; onClose: () =
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const monthLabel = new Date(viewYear, viewMonth).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const minDateObj = minDate ? new Date(minDate) : null;
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
@@ -156,6 +159,12 @@ const Calendar: FC<{ value: string; onChange: (v: string) => void; onClose: () =
     const iso = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     onChange(iso);
     onClose();
+  };
+
+  const isPast = (day: number) => {
+    if (!minDateObj) return false;
+    const d = new Date(viewYear, viewMonth, day);
+    return d < new Date(minDateObj.getFullYear(), minDateObj.getMonth(), minDateObj.getDate());
   };
 
   const cells = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
@@ -193,13 +202,16 @@ const Calendar: FC<{ value: string; onChange: (v: string) => void; onClose: () =
             selected.getDate() === day &&
             selected.getMonth() === viewMonth &&
             selected.getFullYear() === viewYear;
+          const disabled = isPast(day);
           return (
             <button
               key={day}
               type="button"
-              onClick={() => selectDay(day)}
+              onClick={() => !disabled && selectDay(day)}
+              disabled={disabled}
               className={clsx(
-                'text-center text-sm py-1 rounded-lg cursor-pointer hover:bg-blue-light transition-colors',
+                'text-center text-sm py-1 rounded-lg transition-colors',
+                disabled ? 'text-grey-light cursor-not-allowed' : 'cursor-pointer hover:bg-blue-light',
                 isSelected && '!bg-blue !text-white hover:!bg-blue'
               )}
             >
@@ -213,7 +225,7 @@ const Calendar: FC<{ value: string; onChange: (v: string) => void; onClose: () =
 };
 
 // ── Timing dropdown ────────────────────────────────────────────────────────────
-const TimingDropdown: FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
+const TimingDropdown: FC<{ value: string; onChange: (v: string) => void; minOption?: string }> = ({ value, onChange, minOption }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -224,6 +236,9 @@ const TimingDropdown: FC<{ value: string; onChange: (v: string) => void }> = ({ 
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  const minDays = minOption ? daysFromTimingOption(minOption) : 0;
+  const availableOptions = TIMING_OPTIONS.filter(opt => daysFromTimingOption(opt) > minDays);
 
   return (
     <div ref={ref} className="relative">
@@ -245,7 +260,7 @@ const TimingDropdown: FC<{ value: string; onChange: (v: string) => void }> = ({ 
       </button>
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white rounded-xl border border-stroke-primary shadow-base max-h-48 overflow-y-auto">
-          {TIMING_OPTIONS.map(opt => (
+          {availableOptions.map(opt => (
             <button
               key={opt}
               type="button"
@@ -332,7 +347,7 @@ const AddPoolPage: FC = () => {
   const profitNum = parseNum(profitability);
   const commission = goalNum * COMMISSION_RATE;
   const debtAmount = goalNum > 0 && profitNum >= 0 ? goalNum * (1 + profitNum / 100) : 0;
-  const endDate = startDate ? addMonths(startDate, 3) : '';
+  const endDate = startDate ? addDays(startDate, ENTRY_PERIOD_DAYS) : '';
 
   const hasCommission = goalNum > 0;
   const hasDebt = goalNum > 0 && profitability !== '';
@@ -346,14 +361,28 @@ const AddPoolPage: FC = () => {
   const updateTranche = useCallback(
     (index: number, field: keyof Tranche, value: string) => {
       setTranches(prev => {
-        const next = prev.map((t, i) => (i === index ? { ...t, [field]: value } : t));
+        let clampedValue = value;
+
+        if (field === 'percent' && value !== '') {
+          const otherPct = prev.reduce((sum, t, j) => j !== index ? sum + (parseFloat(t.percent) || 0) : sum, 0);
+          const maxPct = 100 - otherPct;
+          const pct = parseFloat(value) || 0;
+          if (pct > maxPct) clampedValue = String(maxPct);
+        } else if (field === 'amount' && value !== '') {
+          const otherAmt = prev.reduce((sum, t, j) => j !== index ? sum + (parseFloat(t.amount) || 0) : sum, 0);
+          const maxAmt = debtAmount - otherAmt;
+          const amt = parseFloat(value) || 0;
+          if (amt > maxAmt) clampedValue = String(maxAmt);
+        }
+
+        const next = prev.map((t, i) => (i === index ? { ...t, [field]: clampedValue } : t));
         const t = { ...next[index] };
 
         if (field === 'percent') {
-          const pct = parseFloat(value) || 0;
+          const pct = parseFloat(clampedValue) || 0;
           t.amount = debtAmount > 0 && pct > 0 ? String(Math.round((pct / 100) * debtAmount)) : '';
         } else if (field === 'amount') {
-          const amt = parseFloat(value) || 0;
+          const amt = parseFloat(clampedValue) || 0;
           t.percent = debtAmount > 0 && amt > 0 ? String(+((amt / debtAmount) * 100).toFixed(2)) : '';
         }
 
@@ -385,15 +414,8 @@ const AddPoolPage: FC = () => {
 
   // ── Build tranche arrays from form state ───────────────────────────────────
   const buildTranches = useCallback(() => {
-    const entryPeriodExpiredUnix = startDate
-      ? Math.floor(new Date(addMonths(startDate.replace(/\./g, '-'), 0).replace(/\./g, '-')).getTime() / 1000)
-      : 0;
-
-    // entryPeriodExpired = startDate + 3 months
     const startUnix = startDate ? Math.floor(new Date(startDate).getTime() / 1000) : 0;
-    const endUnix = startDate
-      ? (() => { const d = new Date(startDate); d.setMonth(d.getMonth() + 3); return Math.floor(d.getTime() / 1000); })()
-      : 0;
+    const endUnix = startUnix + ENTRY_PERIOD_DAYS * 86400;
 
     const filledTranches = tranches.filter(t => t.timing && t.amount);
 
@@ -433,6 +455,10 @@ const AddPoolPage: FC = () => {
       toast('Fill in all required fields', 'error');
       return;
     }
+    if (profitNum < 1 || profitNum > 100) {
+      toast('Profitability must be between 1% and 100%', 'error');
+      return;
+    }
     const filledTranches = tranches.filter(t => t.timing && t.amount);
     if (filledTranches.length === 0) {
       toast('Add at least one debt repayment tranche', 'error');
@@ -447,6 +473,15 @@ const AddPoolPage: FC = () => {
       const holdAmount = toWei(goalNum);
       const rewardBps = BigInt(Math.round(profitNum * 100));
 
+      const totalExpected = holdAmount + (holdAmount * rewardBps) / BigInt(10000);
+      const totalIncoming = incomingAmounts.reduce((a, b) => a + b, BigInt(0));
+      if (totalIncoming !== totalExpected) {
+        const expectedUsdt = Number(totalExpected / BigInt(10 ** 18));
+        toast(`Tranche amounts must sum to exactly ${expectedUsdt} USDT (goal + ${profitNum}% profit)`, 'error');
+        setIsDeploying(false);
+        return;
+      }
+
       // Step 1: Create pool record in DB
       setDeployStatus('Creating pool record…');
       const { data: poolData } = await createPool({
@@ -456,11 +491,11 @@ const AddPoolPage: FC = () => {
             businessId,
             description: description || undefined,
             expectedHoldAmount: holdAmount.toString(),
-            expectedRwaAmount: holdAmount.toString(),
+            expectedRwaAmount: goalNum.toString(),
             rewardPercent: rewardBps.toString(),
             priceImpactPercent: PRICE_IMPACT_PERCENT.toString(),
-            entryFeePercent: '0',
-            exitFeePercent: '0',
+            entryFeePercent: '100',
+            exitFeePercent: '100',
             entryPeriodStart: startUnix,
             entryPeriodExpired: endUnix,
             completionPeriodExpired: Number(completionPeriodExpiredUnix),
@@ -542,14 +577,14 @@ const AddPoolPage: FC = () => {
           pool.id,
           pool.rwaAddress as `0x${string}`,
           holdAmount,
-          holdAmount,
+          BigInt(goalNum),
           PRICE_IMPACT_PERCENT,
           rewardBps,
           BigInt(startUnix),
           BigInt(endUnix),
           completionPeriodExpiredUnix,
-          BigInt(0),
-          BigInt(0),
+          BigInt(100),
+          BigInt(100),
           poolType === 'fixed',
           false,
           true,
@@ -562,7 +597,7 @@ const AddPoolPage: FC = () => {
           signatures,
           expired,
         ],
-        gas: BigInt(1_200_000),
+        gas: BigInt(2_000_000),
       });
 
       setDeployTxHash(txHash);
@@ -671,14 +706,17 @@ const AddPoolPage: FC = () => {
                 <div className="flex items-center gap-6">
                   <label className="w-44 shrink-0 text-sm text-grey-dark flex items-center gap-1.5">
                     Profitability
-                    <Tooltip text="Best option is not too high and not too low. Profitability can't be higher than 70%. Profitability will be included in the total amount of debt">
+                    <Tooltip text="Best option is not too high and not too low. Profitability can't be higher than 100%. Profitability will be included in the total amount of debt">
                       <InfoIcon />
                     </Tooltip>
                   </label>
                   <div className="relative w-[330px]">
                     <input
                       value={profitability}
-                      onChange={e => setProfitability(e.target.value.replace(/[^0-9.]/g, ''))}
+                      onChange={e => {
+                        const v = e.target.value.replace(/[^0-9.]/g, '');
+                        if (v === '' || (parseFloat(v) >= 1 && parseFloat(v) <= 100)) setProfitability(v);
+                      }}
                       placeholder="4"
                       className="w-full px-3 py-2.5 pr-8 rounded-lg border border-stroke-primary bg-white text-sm outline-none placeholder:text-label-tertiary tr-d-all focus:border-grey-dark"
                     />
@@ -753,7 +791,7 @@ const AddPoolPage: FC = () => {
                       </svg>
                     </button>
                     {showCalendar && (
-                      <Calendar value={startDate} onChange={setStartDate} onClose={closeCalendar} />
+                      <Calendar value={startDate} onChange={setStartDate} onClose={closeCalendar} minDate={new Date().toISOString().slice(0, 10)} />
                     )}
                   </div>
                 </div>
@@ -782,7 +820,7 @@ const AddPoolPage: FC = () => {
                     <InfoCard
                       label="End date:"
                       value={endDate}
-                      description="The end date of the fundraising, exactly 3 months from the start date"
+                      description="The end date of the fundraising, 90 days from the start date"
                       icon={<CalendarIcon />}
                     />
                   )}
@@ -811,7 +849,7 @@ const AddPoolPage: FC = () => {
                 <InfoCard
                   label="End date:"
                   value={endDate}
-                  description="The end date of the fundraising, exactly 3 months from the start date"
+                  description="The end date of the fundraising, 90 days from the start date"
                   icon={<CalendarIcon />}
                 />
               </div>
@@ -864,6 +902,7 @@ const AddPoolPage: FC = () => {
                     <TimingDropdown
                       value={tranche.timing}
                       onChange={v => updateTranche(i, 'timing', v)}
+                      minOption={i > 0 ? tranches[i - 1].timing : undefined}
                     />
 
                     {/* Percent of debt */}
