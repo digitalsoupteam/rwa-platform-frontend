@@ -4,6 +4,7 @@ import React, { FC, useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Button, Title, toast } from '@/components/ui';
+import { ConfirmModal } from '@/components/common';
 import { useMutation, useApolloClient } from '@apollo/client/react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import clsx from 'clsx';
@@ -333,6 +334,7 @@ const AddPoolPage: FC = () => {
 
   const [deployStatus, setDeployStatus] = useState<string>('');
   const [isDeploying, setIsDeploying] = useState(false);
+  const [showDeployModal, setShowDeployModal] = useState(false);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -441,8 +443,8 @@ const AddPoolPage: FC = () => {
     };
   }, [startDate, tranches, goalNum]);
 
-  // ── Deploy pool ────────────────────────────────────────────────────────────
-  const handleDeploy = async () => {
+  // ── Validate and open confirmation modal ──────────────────────────────────
+  const handleDeployClick = () => {
     if (!walletAddress) {
       toast('Connect your wallet first', 'error');
       return;
@@ -464,7 +466,12 @@ const AddPoolPage: FC = () => {
       toast('Add at least one debt repayment tranche', 'error');
       return;
     }
+    setShowDeployModal(true);
+  };
 
+  // ── Deploy pool ────────────────────────────────────────────────────────────
+  const handleDeploy = async () => {
+    setShowDeployModal(false);
     setIsDeploying(true);
     try {
       const { startUnix, endUnix, completionPeriodExpiredUnix, incomingAmounts, incomingDeadlines, outgoingAmounts, outgoingTimestamps } =
@@ -626,7 +633,7 @@ const AddPoolPage: FC = () => {
               <Button
                 visualType="quaternary"
                 type="button"
-                onClick={handleDeploy}
+                onClick={handleDeployClick}
                 disabled={isDeploying || isConfirming}
               >
                 {isDeploying || isConfirming ? 'Deploying…' : 'Deploy pool'}
@@ -978,6 +985,15 @@ const AddPoolPage: FC = () => {
 
         </div>
       </Wrapper>
+      <ConfirmModal
+        isOpen={showDeployModal}
+        title={'Deploy pool?'}
+        heading={'Care to double-check?'}
+        description={"You won't be able to change pool parameters after the pool is deployed. Make sure everything is correct"}
+        confirmText={'Deploy'}
+        onConfirm={handleDeploy}
+        onCancel={() => setShowDeployModal(false)}
+      />
     </DashboardLayout>
   );
 };

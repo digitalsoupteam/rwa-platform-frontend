@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
 import { Button, Title, toast } from '@/components/ui';
-import { DeleteConfirmModal } from '@/components/common';
+import { ConfirmModal } from '@/components/common';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { GET_BUSINESS } from '@/lib/business/operations';
@@ -119,7 +119,7 @@ const EditPostPage: FC = () => {
         </section>
       </form>
 
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={deleteModalOpen}
         description={'This action cannot be undone.'}
         loading={deletingPost}
