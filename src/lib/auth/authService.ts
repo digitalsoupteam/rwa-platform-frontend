@@ -80,7 +80,7 @@ export const authService = {
 
     const { data, error } = await apolloClient.mutate<RefreshTokenMutation>({
       mutation: REFRESH_TOKEN,
-      variables: { refreshToken },
+      variables: { input: { refreshToken } },
     });
 
     if (error) {
