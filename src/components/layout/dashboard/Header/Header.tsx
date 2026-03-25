@@ -8,11 +8,13 @@ import Image from 'next/image';
 import { Wrapper } from '@/components/layout';
 
 import { Button, Icon } from '@/components/ui';
+import { AddPoolModal } from '@/components/common';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 const Header: FC = () => {
   const [isMenuOpened, setIsMenuOpened] = useState(false);
   const [isProfileOpened, setIsProfileOpened] = useState(false);
+  const [isAddPoolModalOpen, setIsAddPoolModalOpen] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement | null>(null);
   const { logout } = useAuth();
 
@@ -112,7 +114,7 @@ const Header: FC = () => {
               >
                 <Icon className={'size-5'} name={'burger'} />
               </button>
-              <Button className={'rounded-xl max-lg:hidden'} visualType={'quaternary'}>
+              <Button className={'rounded-xl max-lg:hidden'} visualType={'quaternary'} onClick={() => setIsAddPoolModalOpen(true)}>
                 <Icon name={'plus'} />
                 Add pool
               </Button>
@@ -139,7 +141,7 @@ const Header: FC = () => {
             <Link className={'flex items-center justify-center w-[81px] md:w-[95px]'} href={'/'}>
               <Image className={'w-full h-auto'} src={'/images/logo-dark.svg'} width={'85'} height={'24'} alt={' '} />
             </Link>
-            <Button className={'rounded-xl'} visualType={'quaternary'}>
+            <Button className={'rounded-xl'} visualType={'quaternary'} onClick={() => setIsAddPoolModalOpen(true)}>
               <Icon name={'plus'} />
               Add pool
             </Button>
@@ -183,6 +185,7 @@ const Header: FC = () => {
           </div>
         </div>
       </div>
+      <AddPoolModal isOpen={isAddPoolModalOpen} onClose={() => setIsAddPoolModalOpen(false)} />
     </>
   );
 };
