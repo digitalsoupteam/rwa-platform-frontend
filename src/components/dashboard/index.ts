@@ -5,5 +5,6 @@ import TeamSection from './TeamSection';
 import DocumentsSection from './DocumentsSection';
 import FaqSection from './FaqSection';
 import PoolsSection from './PoolsSection';
+import CategoryCheckboxes from './CategoryCheckboxes';
 
-export { CompanyList, Onboarding, Breadcrumbs, TeamSection, DocumentsSection, FaqSection, PoolsSection };
+export { CompanyList, Onboarding, Breadcrumbs, TeamSection, DocumentsSection, FaqSection, PoolsSection, CategoryCheckboxes };

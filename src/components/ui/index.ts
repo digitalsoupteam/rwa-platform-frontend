@@ -10,8 +10,9 @@ import ButtonBorderDash from './ButtonBorderDash/ButtonBorderDash';
 import TextArea from './TextArea/TextArea';
 import { Toast, toast } from './Toast/Toast';
 import Pagination from './Pagination/Pagination';
+import Checkbox from './Checkbox/Checkbox';
 
 import type { IconType } from './Icon/Icon';
 
-export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination };
+export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination, Checkbox };
 export type { IconType };

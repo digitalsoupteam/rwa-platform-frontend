@@ -3,7 +3,7 @@
 import React, { ChangeEventHandler, FC, FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Breadcrumbs, DocumentsSection, FaqSection, PoolsSection } from '@/components/dashboard';
+import { Breadcrumbs, CategoryCheckboxes, DocumentsSection, FaqSection, PoolsSection } from '@/components/dashboard';
 import { Button, Input, TextArea, Title, toast } from '@/components/ui';
 import { useMutation, useQuery, useApolloClient } from '@apollo/client/react';
 import {
@@ -44,6 +44,7 @@ const ProjectPage: FC = () => {
   const [isEditModalOpened, setIsEditModalOpened] = useState(false);
   const [nameValue, setNameValue] = useState('');
   const [aboutValue, setAboutValue] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [errors, setErrors] = useState({ name: '', about: '' });
 
   const [deployStatus, setDeployStatus] = useState<DeployStatus>('idle');
@@ -254,6 +255,7 @@ const ProjectPage: FC = () => {
             updateData: {
               name: nameValue,
               description: aboutValue,
+              tags: selectedCategories,
             },
           },
         },
@@ -270,6 +272,7 @@ const ProjectPage: FC = () => {
     if (!project) return;
     setNameValue(project.name);
     setAboutValue(project.description ?? '');
+    setSelectedCategories(project.tags ?? []);
   }, [project]);
 
   const isDeploying = deployStatus !== 'idle';
@@ -398,6 +401,9 @@ const ProjectPage: FC = () => {
               value={aboutValue}
               onChange={aboutChangeHandler}
             />
+          </div>
+          <div className={'px-4 mb-6'}>
+            <CategoryCheckboxes selected={selectedCategories} onChange={setSelectedCategories} />
           </div>
           <div className={'px-4 flex justify-end'}>
             <Button visualType={'quaternary'} type={'submit'} disabled={updatingBusiness}>

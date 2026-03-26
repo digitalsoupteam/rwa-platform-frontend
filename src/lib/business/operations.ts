@@ -7,6 +7,7 @@ export const GET_BUSINESS = graphql(`
       id
       name
       description
+      tags
       ownerId
       ownerType
       chainId
