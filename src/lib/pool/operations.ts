@@ -5,6 +5,7 @@ export const GET_POOLS = gql`
     getPools(input: $input) {
       id
       name
+      businessId
       description
       poolAddress
       expectedHoldAmount

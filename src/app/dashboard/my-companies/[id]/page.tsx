@@ -8,8 +8,10 @@ import { Button, ButtonBorderDash, Icon, Input, TextArea, Title, toast } from '@
 import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/operations';
 import { CREATE_BUSINESS, GET_BUSINESSES } from '@/lib/business/operations';
+import { GET_POOLS } from '@/lib/pool/operations';
 import { Modal } from '@/components/common';
 import { CategoryCheckboxes, TeamSection } from '@/components/dashboard';
+import { ProjectCard } from '@/components/project';
 import { BusinessOwnerType } from '@/gql/graphql';
 import Link from 'next/link';
 
@@ -50,6 +52,26 @@ const CompanyPage: FC = () => {
   });
 
   const [createBusiness, { loading: creatingBusiness }] = useMutation(CREATE_BUSINESS);
+
+  const businessIds = businessesData?.getBusinesses.map(b => b.id) ?? [];
+
+  type PoolItem = { id: string; businessId: string; rewardPercent?: string };
+
+  const { data: poolsData } = useQuery<{ getPools: PoolItem[] }>(GET_POOLS, {
+    variables: { input: { filter: { businessId: { $in: businessIds } } } },
+    skip: businessIds.length === 0,
+  });
+
+  const poolStatsByBusiness = (poolsData?.getPools ?? []).reduce<
+    Record<string, { count: number; totalReward: number; rewardCount: number }>
+  >((acc, pool) => {
+    const bid = pool.businessId ?? '';
+    if (!acc[bid]) acc[bid] = { count: 0, totalReward: 0, rewardCount: 0 };
+    acc[bid].count += 1;
+    const rp = parseFloat(pool.rewardPercent ?? '');
+    if (!isNaN(rp)) { acc[bid].totalReward += rp; acc[bid].rewardCount += 1; }
+    return acc;
+  }, {});
 
   const validateName = (value?: string) => (value || nameValue).length > 2;
   const validateAbout = (value?: string) => (value || aboutValue).length > 2;
@@ -249,16 +271,27 @@ const CompanyPage: FC = () => {
             )}
           </div>
           <div className={'grid lg:grid-cols-2 gap-4'}>
-            {businessesData?.getBusinesses.map(business => (
-              <Link
-                key={business.id}
-                href={`/dashboard/my-companies/${id}/projects/${business.id}`}
-                className={'p-4 border-1 border-stroke-primary rounded-xl'}
-              >
-                <div className={'text-xl font-semibold mb-3'}>{business.name}</div>
-                <div className={'text-base'}>{business.description}</div>
-              </Link>
-            ))}
+            {businessesData?.getBusinesses.map(business => {
+              const stats = poolStatsByBusiness[business.id];
+              const avgReward = stats?.rewardCount
+                ? (stats.totalReward / stats.rewardCount).toFixed(1)
+                : null;
+              return (
+                <Link key={business.id} href={`/dashboard/my-companies/${id}/projects/${business.id}`}>
+                  <ProjectCard
+                    project={{
+                      id: business.id,
+                      name: business.name,
+                      description: business.description,
+                      tags: business.tags,
+                      riskScore: business.riskScore,
+                      poolsCount: stats?.count ?? 0,
+                      rewardPercent: avgReward,
+                    }}
+                  />
+                </Link>
+              );
+            })}
             {(!businessesData?.getBusinesses || businessesData.getBusinesses.length === 0) && (
               <ButtonBorderDash
                 className={'min-h-[297px] max-w-110'}
