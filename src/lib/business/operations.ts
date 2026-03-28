@@ -1,6 +1,18 @@
 import { graphql } from '@/gql';
 import { gql } from '@apollo/client';
 
+export const GET_BUSINESS_WITH_RISK = gql`
+  query GetBusinessWithRisk($id: ID!) {
+    getBusiness(id: $id) {
+      id
+      name
+      description
+      tags
+      riskScore
+    }
+  }
+`;
+
 export const GET_BUSINESS = graphql(`
   query GetBusiness($id: ID!) {
     getBusiness(id: $id) {

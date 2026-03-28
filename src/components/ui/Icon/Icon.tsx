@@ -8,6 +8,10 @@ import LogoutSVG from '../../../../public/icons/logout.svg';
 import EditSVG from '../../../../public/icons/edit.svg';
 import TickSVG from '../../../../public/icons/tick.svg';
 import TrashSVG from '../../../../public/icons/trash.svg';
+import ShareSVG from '../../../../public/icons/share.svg';
+import InfoSVG from '../../../../public/icons/info.svg';
+import USDTSVG from '../../../../public/icons/usdt.svg';
+import TriangleSVG from '../../../../public/icons/triangle.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -18,6 +22,10 @@ const ICONS = {
   edit: EditSVG,
   tick: TickSVG,
   trash: TrashSVG,
+  share: ShareSVG,
+  info: InfoSVG,
+  usdt: USDTSVG,
+  triangle: TriangleSVG,
 } as const;
 
 export type IconType = keyof typeof ICONS;
