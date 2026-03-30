@@ -8,9 +8,12 @@ export const GET_POOL_DETAIL = gql`
       businessId
       description
       poolAddress
+      rwaAddress
       expectedHoldAmount
       expectedRwaAmount
       rewardPercent
+      entryFeePercent
+      exitFeePercent
       entryPeriodStart
       entryPeriodExpired
       completionPeriodExpired

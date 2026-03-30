@@ -11,6 +11,7 @@ import { GET_POOL_DETAIL } from '@/lib/pool/operations';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
+import BuyTokenWidget from './BuyTokenWidget';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -366,7 +367,7 @@ const PoolPage: FC = () => {
             </div>
 
             {/* ── Pool progress panel ───────────────────────────────────────── */}
-            <div className='lg:w-110 shrink-0'>
+            <div className='lg:w-110 shrink-0 flex flex-col gap-4'>
               <div className='border border-stroke-primary bg-bg-tertiary rounded-2xl overflow-hidden'>
                 {/* Header */}
                 <div className='flex items-center justify-between p-4 bg-white'>
@@ -455,6 +456,9 @@ const PoolPage: FC = () => {
                   )}
                 </div>
               </div>
+
+              {/* ── Buy / Sell widget ─────────────────────────────────────── */}
+              <BuyTokenWidget pool={pool} />
             </div>
           </div>
         </Wrapper>
