@@ -12,6 +12,7 @@ import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
 import BuyTokenWidget from './BuyTokenWidget';
+import PriceChart from './PriceChart';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -347,22 +348,18 @@ const PoolPage: FC = () => {
               </div>
 
               {/* Chart area — desktop always, mobile collapsible */}
-              <div className={clsx('overflow-hidden', !priceChartOpen && 'hidden lg:block')}>
-                <div className='flex flex-col min-h-116'>
-                  <EmptyChart />
-                </div>
-                {/* Time axis */}
-                <div className='pt-3 border-t-2 border-[#1ABF97] flex items-center justify-between text-sm text-label-tertiary'>
-                  <span>00:00</span>
-                  <span className={'max-lg:hidden'}>03:00</span>
-                  <span className={'max-lg:hidden'}>06:00</span>
-                  <span className={'max-lg:hidden'}>09:00</span>
-                  <span>12:00</span>
-                  <span className={'max-lg:hidden'}>15:00</span>
-                  <span className={'max-lg:hidden'}>18:00</span>
-                  <span className={'max-lg:hidden'}>21:00</span>
-                  <span>00:00</span>
-                </div>
+              <div className={clsx(!priceChartOpen && 'hidden lg:block')}>
+                {pool?.poolAddress ? (
+                  <PriceChart
+                    poolAddress={pool.poolAddress}
+                    filter={activeFilter}
+                    fallback={<div className='flex flex-col min-h-116'><EmptyChart /></div>}
+                  />
+                ) : (
+                  <div className='flex flex-col min-h-116'>
+                    <EmptyChart />
+                  </div>
+                )}
               </div>
             </div>
 

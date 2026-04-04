@@ -96,6 +96,27 @@ export const REQUEST_POOL_APPROVAL_SIGNATURES = gql`
   }
 `;
 
+export const GET_RAW_PRICE_DATA = gql`
+  query GetRawPriceData($input: GetRawPriceDataInput!) {
+    getRawPriceData(input: $input) {
+      timestamp
+      price
+    }
+  }
+`;
+
+export const GET_OHLC_PRICE_DATA = gql`
+  query GetOhlcPriceData($input: GetOhlcPriceDataInput!) {
+    getOhlcPriceData(input: $input) {
+      timestamp
+      open
+      high
+      low
+      close
+    }
+  }
+`;
+
 export const GET_SIGNATURE_TASK = gql`
   query GetSignatureTask($input: GetSignatureTaskInput!) {
     getSignatureTask(input: $input) {
