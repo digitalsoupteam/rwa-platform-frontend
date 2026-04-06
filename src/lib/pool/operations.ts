@@ -19,6 +19,7 @@ export const GET_POOL_DETAIL = gql`
       completionPeriodExpired
       fixedSell
       paused
+      tags
       chainId
       createdAt
       realHoldReserve
@@ -100,6 +101,14 @@ export const GET_RAW_PRICE_DATA = gql`
   query GetRawPriceData($input: GetRawPriceDataInput!) {
     getRawPriceData(input: $input) {
       timestamp
+      price
+    }
+  }
+`;
+
+export const GET_LATEST_PRICE = gql`
+  query GetLatestPrice($input: GetRawPriceDataInput!) {
+    getRawPriceData(input: $input) {
       price
     }
   }

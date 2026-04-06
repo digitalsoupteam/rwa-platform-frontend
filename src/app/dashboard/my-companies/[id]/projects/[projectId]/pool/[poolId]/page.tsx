@@ -7,7 +7,7 @@ import { useQuery } from '@apollo/client/react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
 import { NewsList } from '@/components/news';
-import { GET_POOL_DETAIL } from '@/lib/pool/operations';
+import { GET_POOL_DETAIL, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
@@ -188,8 +188,38 @@ const PoolPage: FC = () => {
   const pools: AnyPool[] = (poolsData as any)?.getPools ?? [];
   const pool = pools.find((p: AnyPool) => p.id === poolId);
 
-  const price = pool ? getPoolPrice(pool) : '1.00';
-  const [priceInt, priceDec] = price.split('.');
+  const now = React.useMemo(() => Math.floor(Date.now() / 1000), []);
+  const { data: priceHistoryData } = useQuery(GET_RAW_PRICE_DATA, {
+    variables: { input: { poolAddress: pool?.poolAddress ?? '', startTime: now - 86400, endTime: now } },
+    skip: !pool?.poolAddress,
+    fetchPolicy: 'cache-and-network',
+    pollInterval: 15000,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pricePoints: { price: string }[] = (priceHistoryData as any)?.getRawPriceData ?? [];
+
+  function parseWeiToNum(raw: string): number {
+    try { return Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000; } catch { return 0; }
+  }
+
+  const currentPrice = pricePoints.length > 0
+    ? parseWeiToNum(pricePoints[pricePoints.length - 1].price)
+    : 0;
+
+  const price24hAgo = pricePoints.length > 0
+    ? parseWeiToNum(pricePoints[0].price)
+    : 0;
+
+  const priceDiff = currentPrice && price24hAgo ? currentPrice - price24hAgo : 0;
+  const priceDiffPct = price24hAgo ? (priceDiff / price24hAgo) * 100 : 0;
+  const priceUp = priceDiff >= 0;
+
+  const livePrice = currentPrice
+    ? currentPrice.toFixed(4)
+    : getPoolPrice(pool);
+
+  const [priceInt, priceDec] = livePrice.split('.');
   const progress = pool ? getProgressPercent(pool) : 0;
   const status = pool ? getPoolStatus(pool) : '—';
   const isFlexible = pool ? !pool.fixedSell : false;
@@ -281,10 +311,10 @@ const PoolPage: FC = () => {
               {/* Mobile: price card (always visible) */}
               <div className={'bg-bg-tertiary px-4 py-6 lg:hidden mb-3'}>
                 <p className='text-sm text-label-tertiary mb-2'>
-                  +$0.00{' '}
-                  <span className='text-green-500'>
-                    <Icon className={'inline size-4'} name={'triangle'} />
-                    0.00%
+                  {priceDiff >= 0 ? '+' : ''}{priceDiff.toFixed(4)} USDT{' '}
+                  <span className={priceUp ? 'text-green-500' : 'text-red-500'}>
+                    <Icon className={`inline size-4 ${priceUp ? '' : 'rotate-180'}`} name={'triangle'} />
+                    {Math.abs(priceDiffPct).toFixed(2)}%
                   </span>{' '}
                   · 24h
                 </p>
