@@ -106,6 +106,17 @@ export const GET_RAW_PRICE_DATA = gql`
   }
 `;
 
+export const EDIT_POOL = gql`
+  mutation EditPool($input: EditPoolInput!) {
+    editPool(input: $input) {
+      id
+      name
+      description
+      tags
+    }
+  }
+`;
+
 export const GET_LATEST_PRICE = gql`
   query GetLatestPrice($input: GetRawPriceDataInput!) {
     getRawPriceData(input: $input) {

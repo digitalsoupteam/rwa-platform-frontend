@@ -13,6 +13,7 @@ import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
 import BuyTokenWidget from './BuyTokenWidget';
 import PriceChart from './PriceChart';
+import EditPoolModal from './EditPoolModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -165,6 +166,7 @@ const PoolPage: FC = () => {
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('1H');
   const [scheduleOpen, setScheduleOpen] = useState(true);
   const [priceChartOpen, setPriceChartOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: companyData } = useQuery(GET_COMPANY, {
     variables: { id: companyId },
@@ -187,7 +189,6 @@ const PoolPage: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pools: AnyPool[] = (poolsData as any)?.getPools ?? [];
   const pool = pools.find((p: AnyPool) => p.id === poolId);
-
   const now = React.useMemo(() => Math.floor(Date.now() / 1000), []);
   const { data: priceHistoryData } = useQuery(GET_RAW_PRICE_DATA, {
     variables: { input: { poolAddress: pool?.poolAddress ?? '', startTime: now - 86400, endTime: now } },
@@ -273,9 +274,9 @@ const PoolPage: FC = () => {
               )}
 
               {/* Tags */}
-              {business?.tags && business.tags.length > 0 && (
+              {pool?.tags?.length > 0 && (
                 <div className='flex flex-wrap gap-2'>
-                  {business.tags.map((tag: string) => (
+                  {pool.tags.map((tag: string) => (
                     <span
                       key={tag}
                       className={'text-base/[100%] text-blue font-medium bg-[#D9E4FF] rounded-full px-3 py-2'}
@@ -289,7 +290,7 @@ const PoolPage: FC = () => {
 
             {/* Right: Edit / Share buttons */}
             <div className='flex gap-2 md:mt-2 md:shrink-0'>
-              <Button visualType={'quinary'}>
+              <Button visualType={'quinary'} onClick={() => setEditOpen(true)}>
                 <Icon name={'edit'} />
                 Edit
               </Button>
@@ -497,6 +498,7 @@ const PoolPage: FC = () => {
           <NewsList projectId={projectId} />
         </Wrapper>
       </section>
+      <EditPoolModal pool={pool} isOpen={editOpen} onClose={() => setEditOpen(false)} />
     </DashboardLayout>
   );
 };
