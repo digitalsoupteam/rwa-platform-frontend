@@ -20,6 +20,7 @@ export const GET_POOL_DETAIL = gql`
       fixedSell
       paused
       tags
+      image
       chainId
       createdAt
       realHoldReserve
@@ -50,6 +51,7 @@ export const GET_POOLS = gql`
       paused
       chainId
       createdAt
+      image
     }
   }
 `;
@@ -113,6 +115,7 @@ export const EDIT_POOL = gql`
       name
       description
       tags
+      image
     }
   }
 `;

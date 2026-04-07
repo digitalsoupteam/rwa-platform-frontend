@@ -1,6 +1,7 @@
 'use client';
 
 import React, { FC } from 'react';
+import Image from 'next/image';
 import { useQuery } from '@apollo/client/react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -80,6 +81,8 @@ function getPoolPrice(pool: Pool): string {
   return '—';
 }
 
+const FILES_BASE = process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/';
+
 const CHAIN_NAMES: Record<string, string> = {
   '97': 'BSC Testnet',
   '56': 'BSC',
@@ -101,7 +104,25 @@ const PoolCard: FC<{ pool: Pool; companyId: string; projectId: string }> = ({ po
   return (
     <Link href={href} className="block">
     <Card size={'sm'} color={'greyLight'} className={isPending ? 'opacity-50' : undefined}>
-      <div className={'mb-4'}>
+      <div className={'mb-4 flex items-center gap-3'}>
+        <div className={'relative w-12 h-12 rounded-full overflow-hidden shrink-0'}>
+          {pool.image ? (
+            <Image
+              src={pool.image.startsWith('http') ? pool.image : FILES_BASE + pool.image.split('/').pop()}
+              alt={pool.name}
+              fill
+              className={'object-cover'}
+            />
+          ) : (
+            <div
+              className={'w-full h-full'}
+              style={{
+                backgroundImage: 'repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%)',
+                backgroundSize: '12px 12px',
+              }}
+            />
+          )}
+        </div>
         <div className={'font-bold text-base truncate'}>{pool.name}</div>
       </div>
 

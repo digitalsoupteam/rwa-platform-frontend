@@ -197,6 +197,8 @@ const PoolPage: FC = () => {
     pollInterval: 15000,
   });
 
+  console.log(pool)
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pricePoints: { price: string }[] = (priceHistoryData as any)?.getRawPriceData ?? [];
 
