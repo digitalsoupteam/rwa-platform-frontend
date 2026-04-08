@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import clsx from 'clsx';
-import Icon from '../Icon/Icon';
+import Icon from './Icon';
 
 function getPaginationPages(current: number, total: number): (number | '...')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);

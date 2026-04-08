@@ -1,12 +1,11 @@
 import React, { FC } from 'react';
 import clsx from 'clsx';
 
-import { Hero, HowItWorks, HowToStart, PoolProgress } from '@/components/home';
+import { AppDemo, Hero, HowItWorks, HowToStart, PoolProgress } from '@/components/home';
 import { FAQ, Gallery } from '@/components/common';
 import { CommonLayout, Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
 import { ProjectCard } from '@/components/project';
-import AppDemo from '@/components/home/AppDemo/AppDemo';
 
 const Home: FC = () => {
   const projects = [

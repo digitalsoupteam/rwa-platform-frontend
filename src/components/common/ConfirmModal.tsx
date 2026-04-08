@@ -1,7 +1,7 @@
 'use client';
 
 import React, { FC } from 'react';
-import { Modal } from '@/components/common';
+import { Modal } from '@/components/common/index';
 import { Button } from '@/components/ui';
 
 interface ConfirmModalProps {

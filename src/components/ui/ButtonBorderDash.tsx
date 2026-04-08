@@ -1,7 +1,7 @@
 import React, { FC, HTMLAttributes } from 'react';
 import Link, { LinkProps } from 'next/link';
 
-import PlusTightSVG from '../../../../public/icons/plus-tight.svg';
+import PlusTightSVG from '../../../public/icons/plus-tight.svg';
 import clsx from 'clsx';
 
 const dashRect = (

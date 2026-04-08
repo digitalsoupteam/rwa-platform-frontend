@@ -1,6 +1,7 @@
-import Hero from './Hero/Hero';
-import HowItWorks from './HowItWorks/HowItWorks';
-import HowToStart from './HowToStart/HowToStart';
-import PoolProgress from './PoolProgress/PoolProgress';
+import AppDemo from './AppDemo';
+import Hero from './Hero';
+import HowItWorks from './HowItWorks';
+import HowToStart from './HowToStart';
+import PoolProgress from './PoolProgress';
 
-export { Hero, HowItWorks, HowToStart, PoolProgress };
+export { AppDemo, Hero, HowItWorks, HowToStart, PoolProgress };

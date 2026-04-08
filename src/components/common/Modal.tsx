@@ -3,7 +3,7 @@
 import React, { FC, HTMLAttributes, useEffect } from 'react';
 import clsx from 'clsx';
 
-import CrossSVG from '../../../../public/icons/cross.svg';
+import CrossSVG from '../../../public/icons/cross.svg';
 
 interface ModalProps extends HTMLAttributes<HTMLElement> {
   isOpened: boolean;

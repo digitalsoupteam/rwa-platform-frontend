@@ -3,7 +3,7 @@
 import React, { ChangeEventHandler, FC, FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Breadcrumbs, CategoryCheckboxes, DocumentsSection, FaqSection, PoolsSection } from '@/components/dashboard';
+import { Breadcrumbs, CategoryCheckboxes, DocumentsSection, FaqSection } from '@/components/dashboard';
 import { Button, Input, TextArea, Title, toast } from '@/components/ui';
 import { useMutation, useQuery, useApolloClient } from '@apollo/client/react';
 import {
@@ -18,6 +18,7 @@ import { ERC20_APPROVE_ABI, FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS } f
 import { GET_COMPANY } from '@/lib/company/operations';
 import { NewsList } from '@/components/news';
 import { Modal } from '@/components/common';
+import { PoolsSection } from '@/components/pool';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 
 // Fee validated against backend test: tests/rwa_fast_tests/business-deployment.test.ts uses '100'
@@ -124,7 +125,10 @@ const ProjectPage: FC = () => {
 
   const handleDeploy = async () => {
     if (deployingRef.current) return;
-    if (!walletAddress) { toast('Connect your wallet first', 'error'); return; }
+    if (!walletAddress) {
+      toast('Connect your wallet first', 'error');
+      return;
+    }
     if (!project) return;
 
     deployingRef.current = true;
@@ -293,11 +297,11 @@ const ProjectPage: FC = () => {
             <div className={'flex flex-col gap-6 border-b-1 border-stroke-primary pb-6 lg:grid lg:grid-cols-2'}>
               <div>
                 <div className={'flex items-center gap-3 mb-4'}>
-                  <Title size={'xs'}>
-                    {updatedBusiness?.editBusiness.name ?? project.name}
-                  </Title>
+                  <Title size={'xs'}>{updatedBusiness?.editBusiness.name ?? project.name}</Title>
                   {isDeployed && (
-                    <span className={'text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 shrink-0'}>
+                    <span
+                      className={'text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 shrink-0'}
+                    >
                       Deployed
                     </span>
                   )}
@@ -309,11 +313,7 @@ const ProjectPage: FC = () => {
               <div className={'flex flex-wrap gap-2 lg:items-end lg:justify-end'}>
                 {!isDeployed && (
                   <div className={'flex items-center gap-3'}>
-                    <Button
-                      visualType={'quaternary'}
-                      disabled={isDeploying}
-                      onClick={handleDeploy}
-                    >
+                    <Button visualType={'quaternary'} disabled={isDeploying} onClick={handleDeploy}>
                       {isDeploying ? 'Deploying…' : 'Deploy project'}
                     </Button>
                     {isDeploying && (

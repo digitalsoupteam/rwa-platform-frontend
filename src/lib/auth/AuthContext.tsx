@@ -7,7 +7,7 @@ import { authService } from './authService';
 import { refreshAccessToken } from '../apollo/client';
 import { AuthTokens, User } from '@/gql/graphql';
 import { useRouter } from 'next/navigation';
-import { toast } from '@/components/ui/Toast/Toast';
+import { toast } from '@/components/ui/Toast';
 
 interface AuthContextType {
   isAuthenticated: boolean;

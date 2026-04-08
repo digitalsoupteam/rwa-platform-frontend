@@ -11,9 +11,7 @@ import { GET_POOL_DETAIL, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
-import BuyTokenWidget from './BuyTokenWidget';
-import PriceChart from './PriceChart';
-import EditPoolModal from './EditPoolModal';
+import { BuyTokenWidget, EditPoolModal, PriceChart } from '@/components/pool';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -127,7 +125,7 @@ const CheckIcon: FC = () => (
 );
 
 const ChevronIcon: FC<{ open: boolean }> = ({ open }) => (
-  <Icon className={clsx('transition-transform duration-200 shrink-0 rotate-90', open && '!-rotate-90')} name={'tick'}/>
+  <Icon className={clsx('transition-transform duration-200 shrink-0 rotate-90', open && '!-rotate-90')} name={'tick'} />
 );
 
 // ── Empty chart placeholder ────────────────────────────────────────────────────
@@ -197,30 +195,28 @@ const PoolPage: FC = () => {
     pollInterval: 15000,
   });
 
-  console.log(pool)
+  console.log(pool);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pricePoints: { price: string }[] = (priceHistoryData as any)?.getRawPriceData ?? [];
 
   function parseWeiToNum(raw: string): number {
-    try { return Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000; } catch { return 0; }
+    try {
+      return Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000;
+    } catch {
+      return 0;
+    }
   }
 
-  const currentPrice = pricePoints.length > 0
-    ? parseWeiToNum(pricePoints[pricePoints.length - 1].price)
-    : 0;
+  const currentPrice = pricePoints.length > 0 ? parseWeiToNum(pricePoints[pricePoints.length - 1].price) : 0;
 
-  const price24hAgo = pricePoints.length > 0
-    ? parseWeiToNum(pricePoints[0].price)
-    : 0;
+  const price24hAgo = pricePoints.length > 0 ? parseWeiToNum(pricePoints[0].price) : 0;
 
   const priceDiff = currentPrice && price24hAgo ? currentPrice - price24hAgo : 0;
   const priceDiffPct = price24hAgo ? (priceDiff / price24hAgo) * 100 : 0;
   const priceUp = priceDiff >= 0;
 
-  const livePrice = currentPrice
-    ? currentPrice.toFixed(4)
-    : getPoolPrice(pool);
+  const livePrice = currentPrice ? currentPrice.toFixed(4) : getPoolPrice(pool);
 
   const [priceInt, priceDec] = livePrice.split('.');
   const progress = pool ? getProgressPercent(pool) : 0;
@@ -314,7 +310,8 @@ const PoolPage: FC = () => {
               {/* Mobile: price card (always visible) */}
               <div className={'bg-bg-tertiary px-4 py-6 lg:hidden mb-3'}>
                 <p className='text-sm text-label-tertiary mb-2'>
-                  {priceDiff >= 0 ? '+' : ''}{priceDiff.toFixed(4)} USDT{' '}
+                  {priceDiff >= 0 ? '+' : ''}
+                  {priceDiff.toFixed(4)} USDT{' '}
                   <span className={priceUp ? 'text-green-500' : 'text-red-500'}>
                     <Icon className={`inline size-4 ${priceUp ? '' : 'rotate-180'}`} name={'triangle'} />
                     {Math.abs(priceDiffPct).toFixed(2)}%
@@ -386,7 +383,11 @@ const PoolPage: FC = () => {
                   <PriceChart
                     poolAddress={pool.poolAddress}
                     filter={activeFilter}
-                    fallback={<div className='flex flex-col min-h-116'><EmptyChart /></div>}
+                    fallback={
+                      <div className='flex flex-col min-h-116'>
+                        <EmptyChart />
+                      </div>
+                    }
                   />
                 ) : (
                   <div className='flex flex-col min-h-116'>

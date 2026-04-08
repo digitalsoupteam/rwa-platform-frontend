@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import React, { FC } from 'react';
 
-import TwitterSVG from '../../../assets/icons/twitter.svg';
-import TelegramSVG from '../../../assets/icons/telegram.svg';
-import DiscordSVG from '../../../assets/icons/discord.svg';
+import TwitterSVG from '../../assets/icons/twitter.svg';
+import TelegramSVG from '../../assets/icons/telegram.svg';
+import DiscordSVG from '../../assets/icons/discord.svg';
 import clsx from 'clsx';
 
 interface SocialsProps {

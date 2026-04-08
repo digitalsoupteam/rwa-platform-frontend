@@ -4,7 +4,7 @@ import React, { FC, useState } from 'react';
 import { Wrapper } from '@/components/layout';
 import { Card, Title } from '@/components/ui';
 import clsx from 'clsx';
-import { CallbackForm } from '@/components/common';
+import { CallbackForm } from '@/components/common/index';
 
 interface FAQProps {
   title?: string;

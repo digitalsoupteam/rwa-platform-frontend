@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Wrapper } from '@/components/layout';
 
 import { Button, Icon } from '@/components/ui';
-import { AddPoolModal } from '@/components/common';
+import { AddPoolModal } from '@/components/pool';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 const Header: FC = () => {
@@ -41,7 +41,7 @@ const Header: FC = () => {
       <header className={'pt-2.5 max-md:pb-8 md:pt-5 md:mb-12'}>
         <Wrapper>
           <div className={'flex gap-5 items-center justify-between'}>
-            <Link className={'flex items-center justify-center w-[81px] md:w-[95px]'} href={'/'}>
+            <Link className={'flex items-center justify-center w-[81px] md:w-[95px]'} href={'/rwa-platform-frontend/public'}>
               <Image className={'w-full h-auto'} src={'/images/logo-dark.svg'} width={'85'} height={'24'} alt={' '} />
             </Link>
 
@@ -88,10 +88,10 @@ const Header: FC = () => {
                     <Link className={'px-3 py-1.5'} href={'/dashboard/'}>
                       My companies
                     </Link>
-                    <Link className={'px-3 py-1.5'} href={'/'}>
+                    <Link className={'px-3 py-1.5'} href={'/rwa-platform-frontend/public'}>
                       Tranches
                     </Link>
-                    <Link className={'px-3 py-1.5'} href={'/'}>
+                    <Link className={'px-3 py-1.5'} href={'/rwa-platform-frontend/public'}>
                       My account
                     </Link>
                     <button
@@ -138,7 +138,7 @@ const Header: FC = () => {
           )}
         >
           <div className={'flex items-center justify-between gap-5'}>
-            <Link className={'flex items-center justify-center w-[81px] md:w-[95px]'} href={'/'}>
+            <Link className={'flex items-center justify-center w-[81px] md:w-[95px]'} href={'/rwa-platform-frontend/public'}>
               <Image className={'w-full h-auto'} src={'/images/logo-dark.svg'} width={'85'} height={'24'} alt={' '} />
             </Link>
             <Button className={'rounded-xl'} visualType={'quaternary'} onClick={() => setIsAddPoolModalOpen(true)}>

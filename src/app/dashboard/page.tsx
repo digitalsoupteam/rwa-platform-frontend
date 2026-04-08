@@ -3,7 +3,7 @@
 import React, { FC } from 'react';
 import AuthGuard from '@/lib/auth/AuthGuard';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { CompanyList } from '@/components/dashboard';
+import { CompanyList } from '@/components/company';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 const page: FC = () => {

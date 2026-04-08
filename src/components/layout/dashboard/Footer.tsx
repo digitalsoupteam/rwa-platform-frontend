@@ -16,8 +16,8 @@ const Footer: FC = () => {
               <Link href={'/tokenization/'}>Tokenize your business</Link>
             </div>
             <div className={'flex flex-col gap-4 text-base font-medium'}>
-              <Link href={'/#'}>Whitepaper</Link>
-              <Link href={'/#'}>Privacy Policy</Link>
+              <Link href={'/rwa-platform-frontend/public#'}>Whitepaper</Link>
+              <Link href={'/rwa-platform-frontend/public#'}>Privacy Policy</Link>
               <Link href={'/terms-of-service/'}>Terms of service</Link>
             </div>
             <div className={'flex flex-col gap-4 text-base font-medium'}>
@@ -29,7 +29,7 @@ const Footer: FC = () => {
           </div>
 
           <div className={'flex flex-col gap-4 md:gap-12.5 lg:order-first'}>
-            <Link className={'w-[125px] md:w-40'} href='/'>
+            <Link className={'w-[125px] md:w-40'} href='/rwa-platform-frontend/public'>
               <Image src={'/images/logo-dark.svg'} width={120} height={34} alt={''} />
             </Link>
             <div className={'text-[#9B9BA5] text-sm'}>
