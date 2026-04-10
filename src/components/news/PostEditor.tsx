@@ -275,7 +275,12 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
             return (
               <div key={block.id} className={'group relative rounded-xl overflow-hidden my-2'}>
                 <Image
-                  src={block.external ? block.link : (process.env.NEXT_PUBLIC_FILES_BASE_URL ?? 'https://192.168.100.20/files/') + block.link.split('/').pop()}
+                  src={
+                    block.external
+                      ? block.link
+                      : (process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/') +
+                        block.link.split('/').pop()
+                  }
                   alt={'Post image'}
                   width={800}
                   height={450}
@@ -284,7 +289,9 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
                 <button
                   type={'button'}
                   onClick={() => removeBlock(block.id)}
-                  className={'absolute top-3 right-3 bg-white rounded-full w-7 h-7 flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100 text-base'}
+                  className={
+                    'absolute top-3 right-3 bg-white rounded-full w-7 h-7 flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100 text-base'
+                  }
                 >
                   ×
                 </button>

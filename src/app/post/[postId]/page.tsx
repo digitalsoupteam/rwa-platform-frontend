@@ -52,8 +52,8 @@ const ReadPostPage: FC = () => {
             <Breadcrumbs
               items={[
                 { name: 'My companies', url: '/dashboard/' },
-                { name: company.name, url: `/dashboard/my-companies/${companyId}` },
-                { name: project.name, url: `/dashboard/my-companies/${companyId}/projects/${projectId}` },
+                { name: company.name, url: `/my-companies/${companyId}` },
+                { name: project.name, url: `/my-companies/${companyId}/projects/${projectId}` },
               ]}
               currentItem={post.title}
             />
@@ -63,7 +63,7 @@ const ReadPostPage: FC = () => {
           {/*  <Button*/}
           {/*    visualType={'quinary'}*/}
           {/*    type={'button'}*/}
-          {/*    onClick={() => router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}/edit-post/${postId}`)}*/}
+          {/*    onClick={() => router.push(`/my-companies/${companyId}/projects/${projectId}/edit-post/${postId}`)}*/}
           {/*  >*/}
           {/*    Edit*/}
           {/*  </Button>*/}

@@ -30,7 +30,7 @@ const CompanyPage: FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const params = useParams();
-  const id = params.id as string;
+  const id = params.companyId as string;
   const router = useRouter();
 
   const {
@@ -277,7 +277,7 @@ const CompanyPage: FC = () => {
                 ? (stats.totalReward / stats.rewardCount).toFixed(1)
                 : null;
               return (
-                <Link key={business.id} href={`/dashboard/my-companies/${id}/projects/${business.id}`}>
+                <Link key={business.id} href={`/project/${business.id}`}>
                   <ProjectCard
                     project={{
                       id: business.id,

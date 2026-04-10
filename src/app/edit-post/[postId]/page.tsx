@@ -1,7 +1,7 @@
 'use client';
 
 import React, { FC, FormEventHandler, useRef, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
 import { Button, Title, toast } from '@/components/ui';
@@ -14,15 +14,16 @@ import { PostEditor, PostEditorHandle } from '@/components/news';
 
 const EditPostPage: FC = () => {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const companyId = params.id as string;
-  const projectId = params.projectId as string;
   const postId = params.postId as string;
+  const projectId = searchParams.get('projectId') ?? '';
+  const companyId = searchParams.get('companyId') ?? undefined;
 
   const editorRef = useRef<PostEditorHandle>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const { data: companyData } = useQuery(GET_COMPANY, { variables: { id: companyId }, skip: !companyId });
+  const { data: companyData } = useQuery(GET_COMPANY, { variables: { id: companyId as string }, skip: !companyId });
   const { data: businessData } = useQuery(GET_BUSINESS, { variables: { id: projectId }, skip: !projectId });
   const { data: postData, loading: postLoading } = useQuery(GET_POST, { variables: { id: postId }, skip: !postId });
 
@@ -46,7 +47,7 @@ const EditPostPage: FC = () => {
         },
       });
       toast('Post updated!');
-      router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}`);
+      router.push(`/post/${postId}`);
     } catch {
       toast('Failed to update post.', 'error');
     }
@@ -56,7 +57,7 @@ const EditPostPage: FC = () => {
     try {
       await deletePost({ variables: { id: postId } });
       toast('Post deleted.');
-      router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}`);
+      router.push('/dashboard');
     } catch {
       toast('Failed to delete post.', 'error');
     }
@@ -75,8 +76,8 @@ const EditPostPage: FC = () => {
               <Breadcrumbs
                 items={[
                   { name: 'My companies', url: '/dashboard/' },
-                  { name: company.name, url: `/dashboard/my-companies/${companyId}` },
-                  { name: project.name, url: `/dashboard/my-companies/${companyId}/projects/${projectId}` },
+                  { name: company.name, url: `/company/${companyId}` },
+                  { name: project.name, url: `/project/${projectId}` },
                 ]}
                 currentItem={'Edit Post'}
               />
@@ -94,7 +95,7 @@ const EditPostPage: FC = () => {
                 <Button
                   visualType={'quinary'}
                   type={'button'}
-                  onClick={() => router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}`)}
+                  onClick={() => router.back()}
                 >
                   Cancel
                 </Button>

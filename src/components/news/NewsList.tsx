@@ -1,7 +1,7 @@
 'use client';
 
 import React, { FC, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button, ButtonBorderDash, Icon, Pagination, Title, toast } from '@/components/ui';
 import { useQuery } from '@apollo/client/react';
 import { GET_BLOGS, GET_POSTS } from '@/lib/blog/operations';
@@ -43,13 +43,12 @@ function timeAgo(dateStr: number): string {
 
 interface NewsListProps {
   projectId: string;
+  companyId?: string;
   projectName?: string;
 }
 
-const NewsList: FC<NewsListProps> = ({ projectId }) => {
+const NewsList: FC<NewsListProps> = ({ projectId, companyId }) => {
   const router = useRouter();
-  const params = useParams();
-  const companyId = params.id as string;
 
   const [page, setPage] = useState(1);
   const { data: blogsData } = useQuery(GET_BLOGS, {
@@ -58,17 +57,21 @@ const NewsList: FC<NewsListProps> = ({ projectId }) => {
 
   const blog = blogsData?.getBlogs[0];
 
-  const { data: postsData, refetch: refetchPosts } = useQuery(GET_POSTS, {
+  const { data: postsData } = useQuery(GET_POSTS, {
     variables: { input: { filter: { blogId: blog?.id } } },
     skip: !blog?.id,
   });
 
   const navigateToCreate = () => {
-    router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}/create-post`);
+    const params = new URLSearchParams({ projectId });
+    if (companyId) params.set('companyId', companyId);
+    router.push(`/create-post?${params}`);
   };
 
   const navigateToEdit = (postId: string) => {
-    router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}/edit-post/${postId}`);
+    const params = new URLSearchParams({ projectId });
+    if (companyId) params.set('companyId', companyId);
+    router.push(`/edit-post/${postId}?${params}`);
   };
 
   const posts = postsData?.getPosts ?? [];
@@ -110,7 +113,7 @@ const NewsList: FC<NewsListProps> = ({ projectId }) => {
                 <div className={'flex-1 min-w-0'}>
                   <div className={'flex items-center gap-2 mb-2'}>
                     <Link
-                      href={`/dashboard/my-companies/${companyId}/projects/${projectId}/post/${post.id}`}
+                      href={`/post/${post.id}`}
                       className={'text-base font-semibold hover:underline text-left'}
                     >
                       {post.title}

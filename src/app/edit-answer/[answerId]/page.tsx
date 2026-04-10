@@ -47,7 +47,7 @@ const EditAnswerPage: FC = () => {
         variables: { input: { id: answerId, updateData: { question: data.question, answer: data.answer } } },
       });
       toast('Answer updated!');
-      router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}`);
+      router.push(`/my-companies/${companyId}/projects/${projectId}`);
     } catch {
       toast('Failed to update answer.', 'error');
     }
@@ -57,7 +57,7 @@ const EditAnswerPage: FC = () => {
     try {
       await deleteAnswer({ variables: { id: answerId } });
       toast('Answer deleted.');
-      router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}`);
+      router.push(`/my-companies/${companyId}/projects/${projectId}`);
     } catch {
       toast('Failed to delete answer.', 'error');
     }
@@ -74,8 +74,8 @@ const EditAnswerPage: FC = () => {
               <Breadcrumbs
                 items={[
                   { name: 'My companies', url: '/dashboard/' },
-                  { name: company.name, url: `/dashboard/my-companies/${companyId}` },
-                  { name: project.name, url: `/dashboard/my-companies/${companyId}/projects/${projectId}` },
+                  { name: company.name, url: `/my-companies/${companyId}` },
+                  { name: project.name, url: `/my-companies/${companyId}/projects/${projectId}` },
                 ]}
                 currentItem={'Edit answer'}
               />
@@ -93,7 +93,7 @@ const EditAnswerPage: FC = () => {
                 <Button
                   visualType={'quinary'}
                   type={'button'}
-                  onClick={() => router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}`)}
+                  onClick={() => router.push(`/my-companies/${companyId}/projects/${projectId}`)}
                 >
                   Cancel
                 </Button>

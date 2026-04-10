@@ -14,8 +14,8 @@ type Pool = any;
 function formatAmount(raw: string | null | undefined): string {
   if (!raw) return '0';
   try {
-    const val = Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000;
-    return val.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const val = Math.round(Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000);
+    return val.toLocaleString('en-US').replace(/,/g, ' ');
   } catch {
     return '0';
   }
@@ -93,16 +93,15 @@ function getNetworkName(chainId: string | null | undefined): string {
   return CHAIN_NAMES[chainId] ?? `Chain ${chainId}`;
 }
 
-const PoolCard: FC<{ pool: Pool; companyId: string; projectId: string }> = ({ pool, companyId, projectId }) => {
+const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool, projectId }) => {
   const isPending = !pool.poolAddress;
   const status = getPoolStatus(pool);
   const progress = getProgressPercent(pool);
   const price = getPoolPrice(pool);
   const token = getNetworkName(pool.chainId);
-  const href = `/dashboard/my-companies/${companyId}/projects/${projectId}/pool/${pool.id}`;
 
   return (
-    <Link href={href} className="block">
+    <Link href={`/pool/${pool.id}`} className="block">
     <Card size={'sm'} color={'greyLight'} className={isPending ? 'opacity-50' : undefined}>
       <div className={'mb-4 flex items-center gap-3'}>
         <div className={'relative w-12 h-12 rounded-full overflow-hidden shrink-0'}>
@@ -127,14 +126,16 @@ const PoolCard: FC<{ pool: Pool; companyId: string; projectId: string }> = ({ po
       </div>
 
       <div className={'mb-2'}>
-        <div className={'relative overflow-hidden rounded-lg bg-blue-dim h-8 flex items-center justify-center'}>
-          <div
-            className={'z-0 absolute top-0 left-0 bottom-0 bg-blue-accent'}
-            style={{ width: `${progress}%` }}
-          />
-          <div className={'z-1 relative text-black text-sm font-bold'}>
+        <div className={'relative overflow-hidden rounded-lg bg-stroke-secondary h-9 flex items-center justify-center'}>
+          {progress > 0 && (
+            <div
+              className={'absolute top-0 left-0 h-full bg-blue rounded-xl'}
+              style={{ width: `${progress}%` }}
+            />
+          )}
+          <span className={'relative z-10 text-sm text-white'}>
             {formatAmount(pool.realHoldReserve)} / {formatAmount(pool.expectedHoldAmount)}
-          </div>
+          </span>
         </div>
       </div>
 
@@ -170,7 +171,6 @@ interface PoolsSectionProps {
 
 const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
   const params = useParams();
-  const companyId = params.id as string;
 
   const { data } = useQuery(GET_POOLS, {
     variables: { input: { filter: { businessId: projectId } } },
@@ -185,7 +185,7 @@ const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
       <div className={'flex items-center justify-between mb-6'}>
         <Title size={'xs'} level={2}>Pools</Title>
         {pools.length > 0 && (
-          <Button visualType={'quaternary'} href={`/dashboard/add-pool?businessId=${projectId}`}>
+          <Button visualType={'quaternary'} href={`/add-pool?businessId=${projectId}`}>
             + Add pool
           </Button>
         )}
@@ -193,14 +193,14 @@ const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
 
       {pools.length === 0 ? (
         <div className={'max-w-110'}>
-          <ButtonBorderDash href={`/dashboard/add-pool?businessId=${projectId}`} className={'min-h-74.5'}>
+          <ButtonBorderDash href={`/add-pool?businessId=${projectId}`} className={'min-h-74.5'}>
             Add pool
           </ButtonBorderDash>
         </div>
       ) : (
         <div className={'grid grid-cols-2 gap-4'}>
           {pools.map((pool: Pool) => (
-            <PoolCard key={pool.id} pool={pool} companyId={companyId} projectId={projectId} />
+            <PoolCard key={pool.id} pool={pool} projectId={projectId} />
           ))}
         </div>
       )}

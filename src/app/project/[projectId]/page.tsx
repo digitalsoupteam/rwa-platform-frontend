@@ -53,7 +53,6 @@ const ProjectPage: FC = () => {
   const deployingRef = useRef(false);
 
   const params = useParams();
-  const companyId = params.id as string;
   const projectId = params.projectId as string;
 
   const { address: walletAddress } = useAccount();
@@ -61,14 +60,16 @@ const ProjectPage: FC = () => {
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
 
-  const { data: companyData } = useQuery(GET_COMPANY, {
-    variables: { id: companyId },
-    skip: !companyId,
-  });
-
   const { data: businessData } = useQuery(GET_BUSINESS, {
     variables: { id: projectId },
     skip: !projectId,
+  });
+
+  const companyId = businessData?.getBusiness.ownerId as string;
+
+  const { data: companyData } = useQuery(GET_COMPANY, {
+    variables: { id: companyId },
+    skip: !companyId,
   });
 
   const { data: deployInfoData, refetch: refetchDeployInfo } = useQuery(GET_BUSINESS_DEPLOY_INFO, {
@@ -289,7 +290,7 @@ const ProjectPage: FC = () => {
           <Breadcrumbs
             items={[
               { name: 'My companies', url: '/dashboard/' },
-              { name: company?.name ?? '...', url: `/dashboard/my-companies/${companyId}` },
+              { name: company?.name ?? '...', url: `/company/${companyId}` },
             ]}
             currentItem={updatedBusiness?.editBusiness.name ?? project?.name ?? '...'}
           />
@@ -352,7 +353,7 @@ const ProjectPage: FC = () => {
 
       <section className={'mb-12'}>
         <Wrapper>
-          <NewsList projectId={projectId} projectName={project?.name} />
+          <NewsList projectId={projectId} companyId={companyId} projectName={project?.name} />
         </Wrapper>
       </section>
 

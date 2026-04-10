@@ -120,7 +120,7 @@ const AddPoolModal: FC<AddPoolModalProps> = ({ isOpen, onClose }) => {
 
   const handleCreate = () => {
     if (!selectedBusinessId) return;
-    router.push(`/dashboard/add-pool?businessId=${selectedBusinessId}`);
+    router.push(`/add-pool?businessId=${selectedBusinessId}`);
     onClose();
   };
 

@@ -7,7 +7,7 @@ import { useQuery } from '@apollo/client/react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
 import { NewsList } from '@/components/news';
-import { GET_POOL_DETAIL, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
+import { GET_POOL_BY_ID, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
@@ -102,6 +102,14 @@ function getTranchePercent(amount: string, totalWei: bigint): string {
   }
 }
 
+function parseWeiToNum(raw: string): number {
+  try {
+    return Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000;
+  } catch {
+    return 0;
+  }
+}
+
 // ── Icons ──────────────────────────────────────────────────────────────────────
 const ClockIcon: FC = () => (
   <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -135,8 +143,8 @@ const EmptyChart: FC = () => (
     <div className={'mb-4'}>
       <svg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'>
         <path
-          fill-rule='evenodd'
-          clip-rule='evenodd'
+          fillRule='evenodd'
+          clipRule='evenodd'
           d='M40.6474 12.6333C40.6474 18.556 45.4557 23.3572 51.387 23.3572C52.0401 23.354 52.6916 23.2913 53.3333 23.1699V44.4304C53.3333 53.3748 48.0572 58.6665 39.0997 58.6665H19.5902C10.6093 58.6665 5.33325 53.3748 5.33325 44.4304V24.9494C5.33325 16.005 10.6093 10.6665 19.5902 10.6665H40.835C40.7089 11.3145 40.6461 11.9732 40.6474 12.6333ZM35.0665 39.7241L42.6874 29.8899V29.8431C43.3398 28.9664 43.1734 27.7302 42.3122 27.0567C41.8954 26.735 41.3658 26.5957 40.8443 26.6707C40.3229 26.7457 39.8542 27.0286 39.5453 27.4548L33.1203 35.7202L25.8042 29.9602C25.3865 29.6348 24.8551 29.4911 24.3301 29.5616C23.805 29.6321 23.3305 29.9108 23.0138 30.3348L15.1349 40.4967C14.858 40.8419 14.7089 41.272 14.7128 41.7143C14.6671 42.6082 15.2316 43.4202 16.0863 43.69C16.9409 43.9598 17.8703 43.6193 18.3474 42.8616L24.9366 34.3387L32.2526 40.0753C32.6688 40.4108 33.2036 40.5629 33.7343 40.4966C34.265 40.4304 34.7459 40.1515 35.0665 39.7241Z'
           fill='#4A5363'
         />
@@ -157,8 +165,6 @@ type TimeFilter = (typeof TIME_FILTERS)[number];
 
 const PoolPage: FC = () => {
   const params = useParams();
-  const companyId = params.id as string;
-  const projectId = params.projectId as string;
   const poolId = params.poolId as string;
 
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('1H');
@@ -166,27 +172,33 @@ const PoolPage: FC = () => {
   const [priceChartOpen, setPriceChartOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  const { data: companyData } = useQuery(GET_COMPANY, {
-    variables: { id: companyId },
-    skip: !companyId,
+  const { data: poolData } = useQuery(GET_POOL_BY_ID, {
+    variables: { id: poolId },
   });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pool: AnyPool = (poolData as any)?.getPool ?? null;
+
+  const projectId: string | undefined = pool?.businessId;
 
   const { data: businessData } = useQuery(GET_BUSINESS_WITH_RISK, {
     variables: { id: projectId },
     skip: !projectId,
   });
 
-  const { data: poolsData } = useQuery(GET_POOL_DETAIL, {
-    variables: { input: { filter: { businessId: projectId } } },
-    skip: !projectId,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const business = (businessData as any)?.getBusiness;
+
+  const companyId: string | undefined =
+    business?.ownerType === 'company' ? business?.ownerId : undefined;
+
+  const { data: companyData } = useQuery(GET_COMPANY, {
+    variables: { id: companyId ?? '' },
+    skip: !companyId,
   });
 
   const company = companyData?.getCompany;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const business = (businessData as any)?.getBusiness;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pools: AnyPool[] = (poolsData as any)?.getPools ?? [];
-  const pool = pools.find((p: AnyPool) => p.id === poolId);
+
   const now = React.useMemo(() => Math.floor(Date.now() / 1000), []);
   const { data: priceHistoryData } = useQuery(GET_RAW_PRICE_DATA, {
     variables: { input: { poolAddress: pool?.poolAddress ?? '', startTime: now - 86400, endTime: now } },
@@ -195,21 +207,10 @@ const PoolPage: FC = () => {
     pollInterval: 15000,
   });
 
-  console.log(pool);
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pricePoints: { price: string }[] = (priceHistoryData as any)?.getRawPriceData ?? [];
 
-  function parseWeiToNum(raw: string): number {
-    try {
-      return Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000;
-    } catch {
-      return 0;
-    }
-  }
-
   const currentPrice = pricePoints.length > 0 ? parseWeiToNum(pricePoints[pricePoints.length - 1].price) : 0;
-
   const price24hAgo = pricePoints.length > 0 ? parseWeiToNum(pricePoints[0].price) : 0;
 
   const priceDiff = currentPrice && price24hAgo ? currentPrice - price24hAgo : 0;
@@ -241,8 +242,8 @@ const PoolPage: FC = () => {
           <Breadcrumbs
             items={[
               { name: 'My companies', url: '/dashboard/' },
-              { name: company?.name ?? '...', url: `/dashboard/my-companies/${companyId}` },
-              { name: business?.name ?? '...', url: `/dashboard/my-companies/${companyId}/projects/${projectId}` },
+              { name: company?.name ?? '...', url: `/company/${companyId}` },
+              { name: business?.name ?? '...', url: `/project/${projectId}` },
             ]}
             currentItem={pool?.name ?? '...'}
           />
@@ -352,10 +353,11 @@ const PoolPage: FC = () => {
                     </span>
                   </p>
                   <p className='text-base text-label-tertiary'>
-                    +$0.00{' '}
-                    <span className='text-green-500'>
-                      <Icon className={'inline size-4'} name={'triangle'} />
-                      0.00%
+                    {priceDiff >= 0 ? '+' : ''}
+                    {priceDiff.toFixed(4)} USDT{' '}
+                    <span className={priceUp ? 'text-green-500' : 'text-red-500'}>
+                      <Icon className={'inline size-4 ' + (priceUp ? '' : 'rotate-180')} name={'triangle'} />
+                      {Math.abs(priceDiffPct).toFixed(2)}%
                     </span>{' '}
                     · 24h
                   </p>
@@ -498,7 +500,7 @@ const PoolPage: FC = () => {
       {/* ── News ─────────────────────────────────────────────────────────────── */}
       <section className='mb-12'>
         <Wrapper>
-          <NewsList projectId={projectId} />
+          {projectId && <NewsList projectId={projectId} companyId={companyId} />}
         </Wrapper>
       </section>
       <EditPoolModal pool={pool} isOpen={editOpen} onClose={() => setEditOpen(false)} />

@@ -87,7 +87,7 @@ const CompanyList: FC = () => {
               userCompanies.getCompanies.map(company => (
                 <Link
                   className={'p-4 border-1 border-stroke-primary rounded-xl'}
-                  href={`/dashboard/my-companies/${company.id}`}
+                  href={`/company/${company.id}`}
                   key={company.id}
                 >
                   <div className={'text-xl font-semibold mb-3'}>{company.name}</div>

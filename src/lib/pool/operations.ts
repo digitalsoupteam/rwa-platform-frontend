@@ -1,5 +1,40 @@
 import { gql } from '@apollo/client';
 
+export const GET_POOL_BY_ID = gql`
+  query GetPoolById($id: ID!) {
+    getPool(id: $id) {
+      id
+      name
+      businessId
+      description
+      poolAddress
+      rwaAddress
+      expectedHoldAmount
+      expectedRwaAmount
+      rewardPercent
+      entryFeePercent
+      exitFeePercent
+      entryPeriodStart
+      entryPeriodExpired
+      completionPeriodExpired
+      fixedSell
+      paused
+      tags
+      image
+      chainId
+      createdAt
+      realHoldReserve
+      virtualHoldReserve
+      virtualRwaReserve
+      incomingTranches {
+        amount
+        expiredAt
+        returnedAmount
+      }
+    }
+  }
+`;
+
 export const GET_POOL_DETAIL = gql`
   query GetPoolDetail($input: FilterInput!) {
     getPools(input: $input) {
@@ -44,14 +79,20 @@ export const GET_POOLS = gql`
       description
       poolAddress
       expectedHoldAmount
+      expectedRwaAmount
       rewardPercent
       entryPeriodStart
       entryPeriodExpired
       completionPeriodExpired
+      fixedSell
       paused
       chainId
       createdAt
       image
+      realHoldReserve
+      virtualHoldReserve
+      virtualRwaReserve
+      isFullyReturned
     }
   }
 `;
