@@ -35,7 +35,7 @@ const Header: FC = () => {
   }, [opened]);
 
   return (
-    <header className={'absolute top-0 right-0 left-0'}>
+    <header className={'z-15 absolute top-0 right-0 left-0'}>
       <div
         aria-hidden={!opened}
         className={clsx(

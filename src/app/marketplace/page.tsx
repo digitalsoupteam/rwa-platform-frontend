@@ -4,9 +4,9 @@ import React, { FC, useState } from 'react';
 import { CommonLayout, Wrapper } from '@/components/layout';
 import { Button, Title } from '@/components/ui';
 import { FAQ } from '@/components/common';
-import { MarketplaceCard, MarketplaceFilters } from '@/components/marketplace';
+import { MarketplaceCard, MarketplaceFilters, MobileFiltersModal } from '@/components/marketplace';
 import type { MarketplaceProject } from '@/components/marketplace';
-import clsx from 'clsx';
+import { Icon } from '@/components/ui';
 
 const ALL_PROJECTS: MarketplaceProject[] = [
   { id: 'proj-1',  name: 'EcoGrow',      tokenTicker: 'ECG', price: '71.03 USDT',  monthlyProfit: '6',   collected: 71000,  total: 100000, dueDate: '30.06.26', iconBg: 'linear-gradient(135deg, #1D58E9, #38abe3)' },
@@ -76,13 +76,16 @@ const Marketplace: FC = () => {
   return (
     <CommonLayout>
       {/* Hero */}
-      <section
-        className={
-          'bg-[url(/images/tokenization-bg-m.png)] bg-top bg-cover bg-no-repeat pt-[96px] pb-25 md:bg-size-[100%_660px] md:pb-37.5 md:pt-[184px] md:bg-[url(/images/tokenization-bg-d.png)]'
-        }
-      >
+      <section className={'relative pt-[96px] pb-25 md:pb-37.5 md:pt-[184px]'}>
+        <div
+          className={
+            'absolute inset-x-0 top-0 -bottom-[360px] md:-bottom-[110px] ' +
+            'bg-[url(/images/market-bg-m.png)] bg-top bg-cover bg-no-repeat ' +
+            'md:bg-[url(/images/market-bg-d.png)] md:bg-size-[100%_660px] -z-10'
+          }
+        />
         <Wrapper>
-          <div className={'flex flex-col items-center'}>
+          <div className={'relative flex flex-col items-center'}>
             <Title className={'text-white text-center mb-4 max-w-[860px]'} size={'xl'} level={1}>
               Choose from hundreds of promising projects
             </Title>
@@ -94,54 +97,64 @@ const Marketplace: FC = () => {
       </section>
 
       {/* Marketplace content */}
-      <section className={'mb-25 md:mb-50'}>
+      <section className={'relative z-10 mb-25 md:mb-50'}>
         <Wrapper>
-          {/* Filter chips + mobile filter toggle */}
-          <div className={'flex items-center gap-2 mb-6 md:mb-8'}>
-            <div className={'flex gap-2 overflow-x-auto scrollbar-hidden flex-1'}>
-              {activeChips.map(chip => (
-                <button
-                  key={chip}
-                  onClick={() => removeChip(chip)}
-                  className={
-                    'shrink-0 flex items-center gap-1.5 bg-blue-light text-blue text-sm font-medium px-3 py-1.5 rounded-full tr-d-all hover:bg-blue-dim'
-                  }
-                >
-                  {chip}
-                  <span className={'size-3 mask-contain mask-[url(/icons/cross.svg)] bg-blue'} />
-                </button>
-              ))}
-              {activeChips.length === 0 && (
-                <span className={'text-sm text-grey-dark py-1.5'}>No active filters</span>
-              )}
-            </div>
-            <button
-              className={
-                'lg:hidden shrink-0 flex items-center gap-1.5 border-1 border-stroke-primary bg-white text-sm font-medium px-3 py-1.5 rounded-full tr-d-all hover:bg-grey-light'
-              }
-              onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-            >
-              <span className={'size-4 mask-contain mask-[url(/icons/burger.svg)] bg-black'} />
-              Filters
-            </button>
-          </div>
-
-          {/* Mobile filters drawer */}
-          {mobileFiltersOpen && (
-            <div className={'lg:hidden mb-6'}>
-              <MarketplaceFilters />
-            </div>
-          )}
-
           {/* Main layout */}
           <div className={'flex gap-5 items-start'}>
-            {/* Sidebar */}
+            {/* Sidebar (desktop only) */}
             <div className={'hidden lg:block w-[272px] shrink-0 sticky top-24'}>
               <MarketplaceFilters />
             </div>
 
-            {/* Cards + load more */}
+            {/* Content column */}
             <div className={'flex-1 min-w-0'}>
+              {/* Mobile: section title + filter trigger */}
+              <div className={'lg:hidden flex flex-col gap-6 mb-10'}>
+                <div className={'flex flex-col gap-3 text-center'}>
+                  <p className={'text-[32px] font-semibold leading-none tracking-[-1.5px] text-black'}>
+                    Choose from hundreds of promising projects
+                  </p>
+                  <p className={'text-base leading-[1.4] text-grey-dark'}>
+                    Find assets that meet your goals
+                  </p>
+                </div>
+                <button
+                  onClick={() => setMobileFiltersOpen(true)}
+                  className={'w-full flex items-center justify-between border border-grey rounded-xl h-[40px] px-5 tr-d-all'}
+                >
+                  <span className={'text-base leading-[1.4] text-grey-dark'}>Filters</span>
+                  <Icon name={'tick'} className={'size-5 shrink-0 rotate-90 text-grey-dark'} />
+                </button>
+              </div>
+
+              {/* Filter chips (desktop only) */}
+              <div className={'hidden lg:flex flex-wrap gap-3 mb-9'}>
+                {activeChips.map(chip => (
+                  <button
+                    key={chip}
+                    onClick={() => removeChip(chip)}
+                    className={
+                      'shrink-0 flex items-center gap-4 bg-blue-dim text-black text-sm font-normal px-4 py-2 rounded-full tr-d-all hover:bg-blue-dim/70'
+                    }
+                  >
+                    {chip}
+                    <span className={'size-2 mask-contain mask-[url(/icons/cross.svg)] bg-black'} />
+                  </button>
+                ))}
+                {activeChips.length === 0 && (
+                  <span className={'text-sm text-grey-dark py-2'}>No active filters</span>
+                )}
+                {activeChips.length > 0 && (
+                  <button
+                    onClick={() => setActiveChips([])}
+                    className={'shrink-0 flex items-center gap-2 text-black text-sm font-normal py-2 tr-d-all hover:text-grey-dark'}
+                  >
+                    <span className={'size-5 mask-contain mask-[url(/icons/cross.svg)] bg-black'} />
+                    Clear all
+                  </button>
+                )}
+              </div>
+
               <div className={'grid gap-3 sm:grid-cols-2 xl:grid-cols-3 mb-5'}>
                 {visibleProjects.map(project => (
                   <MarketplaceCard key={project.id} project={project} />
@@ -162,6 +175,16 @@ const Marketplace: FC = () => {
       </section>
 
       <FAQ title={'You might want to know'} faqList={FAQ_LIST} />
+
+      {/* Mobile filters modal */}
+      {mobileFiltersOpen && (
+        <MobileFiltersModal
+          activeChips={activeChips}
+          onRemoveChip={removeChip}
+          onClearAll={() => setActiveChips([])}
+          onClose={() => setMobileFiltersOpen(false)}
+        />
+      )}
     </CommonLayout>
   );
 };
