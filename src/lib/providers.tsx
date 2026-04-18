@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
 import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { bscTestnet } from 'wagmi/chains';
+import { Toaster } from 'sonner';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -28,6 +29,7 @@ export function Providers({ children }: ProvidersProps) {
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider>
             <AuthProvider>{children}</AuthProvider>
+            <Toaster position='top-right' visibleToasts={5} />
           </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>

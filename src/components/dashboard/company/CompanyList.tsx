@@ -2,7 +2,7 @@
 
 import React, { ChangeEventHandler, FC, FormEventHandler, useState } from 'react';
 import { Wrapper } from '@/components/layout';
-import { Button, ButtonBorderDash, Input, TextArea, Title } from '@/components/ui';
+import { Button, ButtonBorderDash, Input, TextArea, Title, toast } from '@/components/ui';
 import { Modal } from '@/components/common';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { CREATE_COMPANY, GET_COMPANIES } from '@/lib/company/operations';
@@ -20,17 +20,12 @@ const CompanyList: FC = () => {
   });
   const { user } = useAuth();
 
-  const [createCompany, { data: createdCompany, loading: creatingCompany, error: creatingCompanyError }] =
-    useMutation(CREATE_COMPANY);
-
-  console.log('createdCompany', createdCompany);
-  console.log('creatingCompanyError', creatingCompanyError);
+  const [createCompany] = useMutation(CREATE_COMPANY);
 
   const {
     data: userCompanies,
     loading: userCompaniesLoading,
     refetch: refetchUserCompanies,
-    error: userCompaniesLoadingError,
   } = useQuery(GET_COMPANIES, {
     variables: { input: { filter: { ownerId: user?.userId } } },
   });
@@ -73,8 +68,9 @@ const CompanyList: FC = () => {
 
       await refetchUserCompanies();
       setIsCreateModalOpened(false);
+      toast('Company successfully created!');
     } catch (err) {
-      console.error('ERROR', err);
+      toast('Failed to create company. Please try again.', 'error');
     }
   };
 

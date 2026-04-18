@@ -7,28 +7,29 @@ type ButtonProps =
   | (ButtonHTMLAttributes<HTMLButtonElement> & { href?: undefined });
 
 type IButtonProps = ButtonProps & {
-  visualType: 'primary' | 'secondary' | 'tertiary' | 'quaternary';
+  visualType: 'primary' | 'secondary' | 'tertiary' | 'quaternary' | 'quinary';
 };
 
 const Button: FC<IButtonProps> = ({ children, className, href, visualType, ...props }) => {
   const VISUAL_TYPES = {
     primary: clsx(
-      'shadow-button bg-button bg-size-[200%_auto] text-white',
+      'shadow-button bg-button bg-size-[200%_auto] text-white px-6 py-4 text-base/[1.5] font-semibold rounded-2xl',
       'hover:not-disabled:bg-position-[100%] focus-visible:not-disabled:bg-position-[100%] disabled:opacity-50'
     ),
     secondary: clsx(
-      'bg-blue-dark text-white',
+      'bg-blue-dark text-white px-6 py-4 text-base/[1.5] font-semibold rounded-2xl',
       'hover:not-disabled:bg-blue-hover focus-visible:not-disabled:blue-hover disabled:opacity-50'
     ),
     tertiary: clsx(
-      'bg-white text-blue',
+      'bg-white text-blue px-6 py-4 text-base/[1.5] font-semibold rounded-2xl',
       'hover:not-disabled:bg-blue-light focus-visible:not-disabled:blue-light active:bg-blue-dim disabled:opacity-50 disabled:bg-white disabled:text-grey'
     ),
     quaternary: clsx('bg-blue py-3 px-4 font-semibold text-white text-sm/1 rounded-lg'),
+    quinary: clsx('bg-transparent p-3 font-medium text-sm text-grey-dark rounded-lg border-1 border-stroke-primary'),
   };
 
   const commonClassName = clsx(
-    'not-disabled:cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-4 text-base/[1.5] font-semibold rounded-2xl tr-d-all',
+    'not-disabled:cursor-pointer inline-flex items-center justify-center gap-2 tr-d-all',
     VISUAL_TYPES[visualType],
     className
   );
