@@ -24,7 +24,7 @@ const Button: FC<IButtonProps> = ({ children, className, href, visualType, ...pr
       'bg-white text-blue px-6 py-4 text-base/[1.5] font-semibold rounded-2xl',
       'hover:not-disabled:bg-blue-light focus-visible:not-disabled:blue-light active:bg-blue-dim disabled:opacity-50 disabled:bg-white disabled:text-grey'
     ),
-    quaternary: clsx('bg-blue py-3 px-4 font-semibold text-white text-sm/1 rounded-lg'),
+    quaternary: clsx('bg-blue py-3 px-4 font-semibold text-white text-sm rounded-lg'),
     quinary: clsx('bg-transparent p-3 font-medium text-sm text-grey-dark rounded-lg border-1 border-stroke-primary'),
   };
 

@@ -4,5 +4,6 @@ import Gallery from './Gallery/Gallery';
 import TokenizeAnyBusiness from './TokenizeAnyBusiness/TokenizeAnyBusiness';
 import WideGallery from './WideGallery/WideGallery';
 import Modal from './Modal/Modal';
+import DeleteConfirmModal from './DeleteConfirmModal/DeleteConfirmModal';
 
-export { FAQ, CallbackForm, Gallery, TokenizeAnyBusiness, WideGallery, Modal };
+export { FAQ, CallbackForm, Gallery, TokenizeAnyBusiness, WideGallery, Modal, DeleteConfirmModal };

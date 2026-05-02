@@ -67,3 +67,21 @@ export const DELETE_COMPANY = graphql(`
     deleteCompany(id: $id)
   }
 `);
+
+export const ADD_MEMBER = graphql(`
+  mutation AddMember($input: AddMemberInput!) {
+    addMember(input: $input) {
+      id
+      userId
+      name
+      createdAt
+      updatedAt
+    }
+  }
+`);
+
+export const REMOVE_MEMBER = graphql(`
+  mutation RemoveMember($input: RemoveMemberInput!) {
+    removeMember(input: $input)
+  }
+`);
