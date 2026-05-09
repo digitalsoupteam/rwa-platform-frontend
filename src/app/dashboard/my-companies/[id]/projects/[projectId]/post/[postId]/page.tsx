@@ -41,7 +41,7 @@ const ReadPostPage: FC = () => {
 
   if (postLoading || !post) return null;
 
-  const filesBase = process.env.NEXT_PUBLIC_FILES_BASE_URL ?? 'https://192.168.100.20/files/';
+  const filesBase = process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/';
   const blocks = parseContent(post.content);
 
   return (

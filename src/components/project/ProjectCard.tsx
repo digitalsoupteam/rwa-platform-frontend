@@ -1,60 +1,61 @@
 import React, { FC, HTMLAttributes } from 'react';
-import { Card } from '@/components/ui';
-import Image from 'next/image';
+import clsx from 'clsx';
 
 interface ProjectCardProps extends HTMLAttributes<HTMLDivElement> {
   project: {
     id: string;
     name: string;
-    logo: string;
-    network: string;
-    relativeProfitUSDT: number;
-    profit: number;
-    pool: {
-      current: number;
-      target: number;
-      dueDate: string;
-    }
-  }
+    description?: string | null;
+    tags?: string[] | null;
+    riskScore?: number | null;
+    poolsCount?: number;
+    rewardPercent?: string | null;
+  };
 }
 
 const ProjectCard: FC<ProjectCardProps> = ({ className, project }) => {
+  const { name, description, tags, riskScore, poolsCount, rewardPercent } = project;
+
   return (
-    <Card className={className} size={'sm'} color={'greyLight'} key={project.id + 'promising-project'}>
-      <div className={'grid grid-cols-[max-content_1fr_max-content] items-center mb-7'}>
-        <Image
-          className={'size-11 object-cover object-center rounded-full mr-3'}
-          src={project.logo}
-          width={'44'}
-          height={'43'}
-          alt={' '}
-        />
-        <div className={'text-black text-base[1.4] truncate mr-6'}>{project.name}</div>
-        <div className={'ml-auto py-1 px-2.5 rounded-[20px] bg-blue-dim text-base[1.2] font-semibold text-blue'}>
-          {project.network}
-        </div>
+    <div className={clsx('bg-white border-1 border-stroke-primary rounded-xl flex flex-col gap-4', className)}>
+      {/* GROWTH badge — hidden until data is available */}
+      {/*<div className={'flex items-center justify-between'}>*/}
+      {/*  <span />*/}
+      {/*  <span className={'text-xs font-medium tracking-widest text-label-tertiary'}>GROWTH</span>*/}
+      {/*</div>*/}
+
+      <div className={'p-4'}>
+        <div className={'text-xl font-bold mb-3'}>{name}</div>
+        {description && <div className={'text-base line-clamp-2'}>{description}</div>}
       </div>
-      <div className={'pb-6 border-b border-grey/40 mb-5'}>
-        <div className={'text-grey-dark text-base/[1.4] mb-4'}>
-          <span className={'text-black text-2xl/[1.2] font-bold'}>{project.relativeProfitUSDT} USDT</span> / 1{' '}
-          {project.network}
-        </div>
-        <div className={'py-1.5 px-3 rounded-[20px] bg-blue-dim w-fit'}>~{project.profit}% monthly profit</div>
-      </div>
-      <div className={'text-sm/[1.4] text-grey-dark'}>
-        <div className={'mb-2'}>Pool collecting status</div>
-        <div className={'relative overflow-hidden rounded-lg bg-blue-dim h-8 flex items-center justify-center mb-2'}>
-          <div
-            className={'z-0 absolute top-0 left-0 bottom-0 right-0 bg-blue-accent'}
-            style={{ width: `${(project.pool.current / project.pool.target) * 100}%` }}
-          />
-          <div className={'z-1 relative text-black text-sm/[1.4] font-bold'}>
-            {project.pool.current} / {project.pool.target}
+
+      <div className={'bg-bg-tertiary p-4 flex flex-col gap-4'}>
+        {tags && tags.length > 0 && (
+          <div className={'flex flex-wrap gap-2'}>
+            {tags.map(tag => (
+              <span key={tag} className={'text-base/[100%] text-blue font-medium bg-[#D9E4FF] rounded-full px-3 py-2'}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className={'grid grid-cols-3 gap-2'}>
+          <div className={'rounded-sm border-1 border-stroke-primary px-2 pt-2 pb-4'}>
+            <div className={'text-sm text-grey-dark mb-2'}>Current pools</div>
+            <div className={'text-lg font-semibold'}>{poolsCount ?? 0}</div>
+          </div>
+          <div className={'rounded-sm border-1 border-stroke-primary px-2 pt-2 pb-4'}>
+            <div className={'text-sm text-grey-dark mb-2'}>Avg monthly profit</div>
+            <div className={'text-lg font-semibold'}>{rewardPercent ? `~${rewardPercent}%` : '—'}</div>
+          </div>
+          <div className={'rounded-sm border-1 border-stroke-primary px-2 pt-2 pb-4'}>
+            <div className={'text-sm text-grey-dark mb-2'}>AI Risk Score</div>
+            <div className={'text-lg font-semibold'}>{riskScore ?? 0}</div>
           </div>
         </div>
-        <div>{project.pool.dueDate}</div>
       </div>
-    </Card>
+    </div>
   );
 };
 

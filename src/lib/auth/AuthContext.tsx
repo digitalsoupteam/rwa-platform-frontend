@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { useAccount, useDisconnect, useConnections, useWalletClient } from 'wagmi';
 import { signTypedData } from 'viem/actions';
 import { authService } from './authService';
+import { refreshAccessToken } from '../apollo/client';
 import { AuthTokens, User } from '@/gql/graphql';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/Toast/Toast';
@@ -87,33 +88,49 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [address, walletClient, chainId, isConnected, connections]);
 
   useEffect(() => {
-    const checkAuth = () => {
-      if (!address || !walletClient) return null;
+    const checkAuth = async () => {
+      if (!address) return;
 
       const isAuth = authService.isAuthenticated();
-      setIsAuthenticated(isAuth);
 
       if (isAuth) {
+        setIsAuthenticated(true);
         const userId = authService.getUserId();
         const wallet = authService.getWallet();
-
         if (userId && wallet) {
-          setUser({
-            userId,
-            wallet,
-            createdAt: 0,
-            updatedAt: 0,
-          });
+          setUser({ userId, wallet, createdAt: 0, updatedAt: 0 });
         }
-      } else {
-        setUser(null);
+        setIsLoading(false);
+        return;
+      }
 
-        if (address) {
-          login();
+      const storedRefreshToken = localStorage.getItem('refreshToken');
+      if (storedRefreshToken) {
+        try {
+          const success = await refreshAccessToken();
+          if (success) {
+            setIsAuthenticated(true);
+            setUser({
+              userId: localStorage.getItem('userId') ?? '',
+              wallet: localStorage.getItem('wallet') ?? '',
+              createdAt: 0,
+              updatedAt: 0,
+            });
+            setIsLoading(false);
+            return;
+          }
+        } catch {
+          // refresh failed, fall through to login
         }
       }
 
+      setIsAuthenticated(false);
+      setUser(null);
       setIsLoading(false);
+
+      if (walletClient) {
+        login();
+      }
     };
 
     checkAuth();
@@ -125,6 +142,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsAuthenticated(false);
     setUser(null);
     toast('Signed out successfully.');
+    router.push('/');
   };
 
   const refreshTokens = async () => {

@@ -8,8 +8,10 @@ import { Button, ButtonBorderDash, Icon, Input, TextArea, Title, toast } from '@
 import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/operations';
 import { CREATE_BUSINESS, GET_BUSINESSES } from '@/lib/business/operations';
+import { GET_POOLS } from '@/lib/pool/operations';
 import { Modal } from '@/components/common';
-import { TeamSection } from '@/components/dashboard';
+import { CategoryCheckboxes, TeamSection } from '@/components/dashboard';
+import { ProjectCard } from '@/components/project';
 import { BusinessOwnerType } from '@/gql/graphql';
 import Link from 'next/link';
 
@@ -21,9 +23,12 @@ const CompanyPage: FC = () => {
   const [errors, setErrors] = useState({ name: '', about: '' });
 
   const [isCreateProjectModalOpened, setIsCreateProjectModalOpened] = useState(false);
+  const [projectStep, setProjectStep] = useState<1 | 2>(1);
   const [projectNameValue, setProjectNameValue] = useState('');
   const [projectAboutValue, setProjectAboutValue] = useState('');
   const [projectErrors, setProjectErrors] = useState({ name: '', about: '' });
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
@@ -47,6 +52,26 @@ const CompanyPage: FC = () => {
   });
 
   const [createBusiness, { loading: creatingBusiness }] = useMutation(CREATE_BUSINESS);
+
+  const businessIds = businessesData?.getBusinesses.map(b => b.id) ?? [];
+
+  type PoolItem = { id: string; businessId: string; rewardPercent?: string };
+
+  const { data: poolsData } = useQuery<{ getPools: PoolItem[] }>(GET_POOLS, {
+    variables: { input: { filter: { businessId: { $in: businessIds } } } },
+    skip: businessIds.length === 0,
+  });
+
+  const poolStatsByBusiness = (poolsData?.getPools ?? []).reduce<
+    Record<string, { count: number; totalReward: number; rewardCount: number }>
+  >((acc, pool) => {
+    const bid = pool.businessId ?? '';
+    if (!acc[bid]) acc[bid] = { count: 0, totalReward: 0, rewardCount: 0 };
+    acc[bid].count += 1;
+    const rp = parseFloat(pool.rewardPercent ?? '');
+    if (!isNaN(rp)) { acc[bid].totalReward += rp; acc[bid].rewardCount += 1; }
+    return acc;
+  }, {});
 
   const validateName = (value?: string) => (value || nameValue).length > 2;
   const validateAbout = (value?: string) => (value || aboutValue).length > 2;
@@ -129,7 +154,16 @@ const CompanyPage: FC = () => {
     setProjectAboutValue(evt.target.value);
   };
 
-  const createProjectSubmitHandler: FormEventHandler<HTMLFormElement> = async evt => {
+  const closeCreateProjectModal = () => {
+    setIsCreateProjectModalOpened(false);
+    setProjectStep(1);
+    setProjectNameValue('');
+    setProjectAboutValue('');
+    setProjectErrors({ name: '', about: '' });
+    setSelectedCategories([]);
+  };
+
+  const projectStep1NextHandler: FormEventHandler<HTMLFormElement> = evt => {
     evt.preventDefault();
 
     const currentErrors = { ...projectErrors };
@@ -142,6 +176,10 @@ const CompanyPage: FC = () => {
     setProjectErrors(currentErrors);
     if (!isNameValid || !isAboutValid) return;
 
+    setProjectStep(2);
+  };
+
+  const createProjectSubmitHandler = async () => {
     try {
       await createBusiness({
         variables: {
@@ -151,14 +189,13 @@ const CompanyPage: FC = () => {
             ownerId: id,
             ownerType: BusinessOwnerType.Company,
             chainId: '97',
+            tags: selectedCategories,
           },
         },
       });
 
       await refetchBusinesses();
-      setIsCreateProjectModalOpened(false);
-      setProjectNameValue('');
-      setProjectAboutValue('');
+      closeCreateProjectModal();
       toast('Project successfully created!');
     } catch {
       toast('Failed to create project. Please try again.', 'error');
@@ -234,16 +271,27 @@ const CompanyPage: FC = () => {
             )}
           </div>
           <div className={'grid lg:grid-cols-2 gap-4'}>
-            {businessesData?.getBusinesses.map(business => (
-              <Link
-                key={business.id}
-                href={`/dashboard/my-companies/${id}/projects/${business.id}`}
-                className={'p-4 border-1 border-stroke-primary rounded-xl'}
-              >
-                <div className={'text-xl font-semibold mb-3'}>{business.name}</div>
-                <div className={'text-base'}>{business.description}</div>
-              </Link>
-            ))}
+            {businessesData?.getBusinesses.map(business => {
+              const stats = poolStatsByBusiness[business.id];
+              const avgReward = stats?.rewardCount
+                ? (stats.totalReward / stats.rewardCount).toFixed(1)
+                : null;
+              return (
+                <Link key={business.id} href={`/dashboard/my-companies/${id}/projects/${business.id}`}>
+                  <ProjectCard
+                    project={{
+                      id: business.id,
+                      name: business.name,
+                      description: business.description,
+                      tags: business.tags,
+                      riskScore: business.riskScore,
+                      poolsCount: stats?.count ?? 0,
+                      rewardPercent: avgReward,
+                    }}
+                  />
+                </Link>
+              );
+            })}
             {(!businessesData?.getBusinesses || businessesData.getBusinesses.length === 0) && (
               <ButtonBorderDash
                 className={'min-h-[297px] max-w-110'}
@@ -262,46 +310,66 @@ const CompanyPage: FC = () => {
         </Wrapper>
       </section>
 
-      <Modal isOpened={isCreateProjectModalOpened} closeModal={() => setIsCreateProjectModalOpened(false)}>
-        <div className={'text-base font-medium pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-6'}>
-          Add new project
+      <Modal isOpened={isCreateProjectModalOpened} closeModal={closeCreateProjectModal}>
+        <div className={'pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-6'}>
+          <div className={'text-base font-medium'}>Add new project</div>
+          <div className={'text-xs text-text-secondary mt-0.5'}>Step {projectStep} of 2</div>
         </div>
-        <form onSubmit={createProjectSubmitHandler}>
-          <div className={'px-4 mb-6'}>
-            <div className={'text-sm font-medium mb-3'}>
-              Project name<span className={'text-red-bright'}>*</span>
+
+        {projectStep === 1 && (
+          <form onSubmit={projectStep1NextHandler}>
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium mb-3'}>
+                Project name<span className={'text-red-bright'}>*</span>
+              </div>
+              <Input
+                placeholder={'For example, «Green Fund Series A»'}
+                size={'sm'}
+                colorScheme={'light'}
+                errorMessage={projectErrors.name}
+                type={'text'}
+                name={'projectName'}
+                value={projectNameValue}
+                onChange={projectNameChangeHandler}
+              />
             </div>
-            <Input
-              placeholder={'For example, «Green Fund Series A»'}
-              size={'sm'}
-              colorScheme={'light'}
-              errorMessage={projectErrors.name}
-              type={'text'}
-              name={'projectName'}
-              value={projectNameValue}
-              onChange={projectNameChangeHandler}
-            />
-          </div>
-          <div className={'px-4 mb-6'}>
-            <div className={'text-sm font-medium mb-3'}>
-              Description<span className={'text-red-bright'}>*</span>
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium mb-3'}>
+                Description<span className={'text-red-bright'}>*</span>
+              </div>
+              <TextArea
+                className={'h-[110px]'}
+                maxLength={250}
+                errorMessage={projectErrors.about}
+                placeholder={'Write a short description for your project'}
+                name={'projectAbout'}
+                value={projectAboutValue}
+                onChange={projectAboutChangeHandler}
+              />
             </div>
-            <TextArea
-              className={'h-[110px]'}
-              maxLength={250}
-              errorMessage={projectErrors.about}
-              placeholder={'Write a short description for your project'}
-              name={'projectAbout'}
-              value={projectAboutValue}
-              onChange={projectAboutChangeHandler}
-            />
+            <div className={'px-4 flex justify-end'}>
+              <Button visualType={'quaternary'} type={'submit'}>
+                Next
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {projectStep === 2 && (
+          <div>
+            <div className={'px-4 mb-6'}>
+              <CategoryCheckboxes selected={selectedCategories} onChange={setSelectedCategories} />
+            </div>
+            <div className={'px-4 flex justify-between'}>
+              <Button visualType={'quinary'} type={'button'} onClick={() => setProjectStep(1)}>
+                Back
+              </Button>
+              <Button visualType={'quaternary'} type={'button'} disabled={creatingBusiness} onClick={createProjectSubmitHandler}>
+                Create
+              </Button>
+            </div>
           </div>
-          <div className={'px-4 flex justify-end'}>
-            <Button visualType={'quaternary'} type={'submit'} disabled={creatingBusiness}>
-              Apply
-            </Button>
-          </div>
-        </form>
+        )}
       </Modal>
 
       <Modal isOpened={isEditModalOpened} closeModal={() => setIsEditModalOpened(false)}>

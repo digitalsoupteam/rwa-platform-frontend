@@ -4,7 +4,7 @@ import React, { ChangeEvent, DragEvent, FC, useEffect, useRef, useState } from '
 import clsx from 'clsx';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Button, ButtonBorderDash, Icon, Input, Title, toast } from '@/components/ui';
-import DeleteConfirmModal from '@/components/common/DeleteConfirmModal/DeleteConfirmModal';
+import { ConfirmModal } from '@/components/common';
 import { ADD_MEMBER, GET_COMPANY, REMOVE_MEMBER } from '@/lib/company/operations';
 
 interface TeamMember {
@@ -473,7 +473,7 @@ const TeamSection: FC<TeamSectionProps> = ({ companyId }) => {
         </div>
       )}
 
-      <DeleteConfirmModal
+      <ConfirmModal
         isOpen={!!deleteTarget}
         description={'This action cannot be undone.'}
         loading={removing}
