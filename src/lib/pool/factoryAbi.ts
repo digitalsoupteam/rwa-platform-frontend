@@ -22,6 +22,74 @@ export const ERC20_APPROVE_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
+  {
+    inputs: [{ internalType: 'address', name: 'account', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
+export const ERC1155_BALANCE_ABI = [
+  {
+    inputs: [
+      { internalType: 'address', name: 'account', type: 'address' },
+      { internalType: 'uint256', name: 'id', type: 'uint256' },
+    ],
+    name: 'balanceOf',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
+export const POOL_ABI = [
+  {
+    inputs: [],
+    name: 'tokenId',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'rwaAmount', type: 'uint256' },
+      { internalType: 'bool', name: 'allowPartial', type: 'bool' },
+    ],
+    name: 'estimateMint',
+    outputs: [
+      { internalType: 'uint256', name: 'holdAmountWithFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'fee', type: 'uint256' },
+      { internalType: 'uint256', name: 'actualRwaAmount', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'rwaAmount', type: 'uint256' },
+      { internalType: 'uint256', name: 'maxHoldAmount', type: 'uint256' },
+      { internalType: 'uint256', name: 'validUntil', type: 'uint256' },
+      { internalType: 'bool', name: 'allowPartial', type: 'bool' },
+    ],
+    name: 'mint',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { internalType: 'uint256', name: 'rwaAmount', type: 'uint256' },
+      { internalType: 'uint256', name: 'minHoldAmount', type: 'uint256' },
+      { internalType: 'uint256', name: 'minBonusAmount', type: 'uint256' },
+      { internalType: 'uint256', name: 'validUntil', type: 'uint256' },
+    ],
+    name: 'burn',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
 ] as const;
 
 export const FACTORY_ABI = [

@@ -1,5 +1,40 @@
 import { gql } from '@apollo/client';
 
+export const GET_POOL_DETAIL = gql`
+  query GetPoolDetail($input: FilterInput!) {
+    getPools(input: $input) {
+      id
+      name
+      businessId
+      description
+      poolAddress
+      rwaAddress
+      expectedHoldAmount
+      expectedRwaAmount
+      rewardPercent
+      entryFeePercent
+      exitFeePercent
+      entryPeriodStart
+      entryPeriodExpired
+      completionPeriodExpired
+      fixedSell
+      paused
+      tags
+      image
+      chainId
+      createdAt
+      realHoldReserve
+      virtualHoldReserve
+      virtualRwaReserve
+      incomingTranches {
+        amount
+        expiredAt
+        returnedAmount
+      }
+    }
+  }
+`;
+
 export const GET_POOLS = gql`
   query GetPools($input: FilterInput!) {
     getPools(input: $input) {
@@ -16,6 +51,7 @@ export const GET_POOLS = gql`
       paused
       chainId
       createdAt
+      image
     }
   }
 `;
@@ -59,6 +95,47 @@ export const REQUEST_POOL_APPROVAL_SIGNATURES = gql`
   mutation RequestPoolApprovalSignatures($input: RequestPoolApprovalSignaturesInput!) {
     requestPoolApprovalSignatures(input: $input) {
       taskId
+    }
+  }
+`;
+
+export const GET_RAW_PRICE_DATA = gql`
+  query GetRawPriceData($input: GetRawPriceDataInput!) {
+    getRawPriceData(input: $input) {
+      timestamp
+      price
+    }
+  }
+`;
+
+export const EDIT_POOL = gql`
+  mutation EditPool($input: EditPoolInput!) {
+    editPool(input: $input) {
+      id
+      name
+      description
+      tags
+      image
+    }
+  }
+`;
+
+export const GET_LATEST_PRICE = gql`
+  query GetLatestPrice($input: GetRawPriceDataInput!) {
+    getRawPriceData(input: $input) {
+      price
+    }
+  }
+`;
+
+export const GET_OHLC_PRICE_DATA = gql`
+  query GetOhlcPriceData($input: GetOhlcPriceDataInput!) {
+    getOhlcPriceData(input: $input) {
+      timestamp
+      open
+      high
+      low
+      close
     }
   }
 `;

@@ -1,0 +1,472 @@
+'use client';
+
+import React, { FC, useMemo, useState, useCallback } from 'react';
+import clsx from 'clsx';
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI, ERC1155_BALANCE_ABI, POOL_ABI } from '@/lib/pool/factoryAbi';
+import { Button, toast } from '@/components/ui';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyPool = any;
+
+const ZERO = BigInt(0);
+const SLIPPAGE_BPS = BigInt(50);
+const HOLD_DECIMALS = 18;
+const HOLD_DIVISOR = BigInt(10) ** BigInt(HOLD_DECIMALS);
+
+// USDT/HOLD amounts use 18 decimals
+function formatUsdtAmount(wei: bigint | undefined): string {
+  if (!wei || wei === ZERO) return '0';
+  const whole = wei / HOLD_DIVISOR;
+  const frac = wei % HOLD_DIVISOR;
+  if (frac === ZERO) return whole.toLocaleString('en-US').replace(/,/g, ' ');
+  const fracStr = frac.toString().padStart(HOLD_DECIMALS, '0').replace(/0+$/, '').slice(0, 4);
+  return `${whole.toLocaleString('en-US').replace(/,/g, ' ')}.${fracStr}`;
+}
+
+function parseUsdtInput(input: string): bigint {
+  if (!input || isNaN(parseFloat(input))) return ZERO;
+  const trimmed = input.replace(/\s/g, '');
+  const [whole, frac = ''] = trimmed.split('.');
+  const fracPadded = frac.padEnd(HOLD_DECIMALS, '0').slice(0, HOLD_DECIMALS);
+  try {
+    return BigInt(whole || '0') * HOLD_DIVISOR + BigInt(fracPadded);
+  } catch {
+    return ZERO;
+  }
+}
+
+// RWA tokens use 0 decimals — stored as plain integers
+function formatRwaAmount(amount: bigint | undefined): string {
+  if (!amount || amount === ZERO) return '0';
+  return amount.toLocaleString('en-US').replace(/,/g, ' ');
+}
+
+function parseRwaInput(input: string): bigint {
+  if (!input) return ZERO;
+  const trimmed = input.split('.')[0].replace(/\s/g, '');
+  try {
+    return BigInt(trimmed || '0');
+  } catch {
+    return ZERO;
+  }
+}
+
+function computeRwaFromUsdt(usdtWei: bigint, pool: AnyPool): { rwaWei: bigint; fee: bigint } {
+  try {
+    if (!usdtWei || usdtWei === ZERO) return { rwaWei: ZERO, fee: ZERO };
+    const virtualHold = BigInt(pool?.virtualHoldReserve || '0');
+    const realHold = BigInt(pool?.realHoldReserve || '0');
+    const virtualRwa = BigInt(pool?.virtualRwaReserve || '0');
+    const entryFee = BigInt(pool?.entryFeePercent || '100');
+    if (!virtualHold || !virtualRwa) return { rwaWei: ZERO, fee: ZERO };
+
+    const effectiveHold = virtualHold + realHold;
+    const k = effectiveHold * virtualRwa;
+
+    // holdAmountWithFee = holdAmount * (10000 + fee) / 10000
+    // → holdAmount = usdtWei * 10000 / (10000 + fee)
+    const bp = BigInt(10000);
+    const holdAmount = (usdtWei * bp) / (bp + entryFee);
+    const fee = usdtWei - holdAmount;
+
+    const newHoldReserve = effectiveHold + holdAmount;
+    const newRwaReserve = k / newHoldReserve;
+    const rwaWei = virtualRwa > newRwaReserve ? virtualRwa - newRwaReserve : ZERO;
+
+    return { rwaWei, fee };
+  } catch {
+    return { rwaWei: ZERO, fee: ZERO };
+  }
+}
+
+function computeUsdtFromRwa(rwaAmt: bigint, pool: AnyPool): { usdtWei: bigint; fee: bigint } {
+  try {
+    if (!rwaAmt || rwaAmt === ZERO) return { usdtWei: ZERO, fee: ZERO };
+    const virtualHold = BigInt(pool?.virtualHoldReserve || '0');
+    const realHold = BigInt(pool?.realHoldReserve || '0');
+    const virtualRwa = BigInt(pool?.virtualRwaReserve || '0');
+    const exitFee = BigInt(pool?.exitFeePercent || '100');
+    if (!virtualHold || !virtualRwa) return { usdtWei: ZERO, fee: ZERO };
+
+    const effectiveHold = virtualHold + realHold;
+    const k = effectiveHold * virtualRwa;
+
+    const newRwaReserve = virtualRwa + rwaAmt;
+    const newHoldReserve = k / newRwaReserve;
+    const holdAmount = effectiveHold > newHoldReserve ? effectiveHold - newHoldReserve : ZERO;
+
+    const fee = (holdAmount * exitFee) / BigInt(10000);
+    const usdtWei = holdAmount - fee;
+
+    return { usdtWei, fee };
+  } catch {
+    return { usdtWei: ZERO, fee: ZERO };
+  }
+}
+
+const InfoIcon: FC = () => (
+  <svg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'>
+    <circle cx='7' cy='7' r='6.5' stroke='#959EB5' />
+    <circle cx='7' cy='4.5' r='0.65' fill='#959EB5' />
+    <path d='M7 6.5v3.5' stroke='#959EB5' strokeWidth='1.1' strokeLinecap='round' />
+  </svg>
+);
+
+const SLIDER_MARKS = [0, 25, 50, 75, 100];
+
+interface BuyTokenWidgetProps {
+  pool: AnyPool;
+}
+
+const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
+  const [mode, setMode] = useState<'buy' | 'sell'>('buy');
+  const [inputValue, setInputValue] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { address } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+
+  const rwaAddress = pool?.rwaAddress as `0x${string}` | undefined;
+  const poolAddress = pool?.poolAddress as `0x${string}` | undefined;
+
+  const { data: poolTokenId } = useReadContract({
+    address: poolAddress,
+    abi: POOL_ABI,
+    functionName: 'tokenId',
+    query: { enabled: !!poolAddress },
+  });
+
+  const { data: usdtBalance } = useReadContract({
+    address: HOLD_TOKEN_ADDRESS,
+    abi: ERC20_APPROVE_ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+
+  const { data: rwaBalance } = useReadContract({
+    address: rwaAddress,
+    abi: ERC1155_BALANCE_ABI,
+    functionName: 'balanceOf',
+    args: address && poolTokenId != null ? [address, poolTokenId as bigint] : undefined,
+    query: { enabled: !!address && !!rwaAddress && poolTokenId != null },
+  });
+
+  const tokenSymbol = pool?.name
+    ? pool.name
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .slice(0, 4)
+        .toUpperCase()
+    : 'RWA';
+
+  const entryFeePercent = BigInt(pool?.entryFeePercent || '100');
+  const exitFeePercent = BigInt(pool?.exitFeePercent || '100');
+  const rewardPercent = BigInt(pool?.rewardPercent || '0');
+
+  const feeDisplayPct =
+    mode === 'buy'
+      ? (Number(entryFeePercent) / 100).toFixed(2).replace('.', ',')
+      : (Number(exitFeePercent) / 100).toFixed(2).replace('.', ',');
+
+  const profitDisplayPct = (Number(rewardPercent) / 100).toFixed(0);
+
+  // In buy mode the input is USDT (18 decimals); in sell mode it's raw RWA tokens (0 decimals)
+  const inputWei = useMemo(
+    () => (mode === 'buy' ? parseUsdtInput(inputValue) : parseRwaInput(inputValue)),
+    [mode, inputValue]
+  );
+
+  const { receiveAmt, feeWei, profitWei } = useMemo(() => {
+    if (mode === 'buy') {
+      const { rwaWei, fee } = computeRwaFromUsdt(inputWei, pool);
+      const holdAmount = inputWei > fee ? inputWei - fee : ZERO;
+      const profit = (holdAmount * rewardPercent) / BigInt(10000);
+      return { receiveAmt: rwaWei, feeWei: fee, profitWei: profit };
+    } else {
+      const { usdtWei, fee } = computeUsdtFromRwa(inputWei, pool);
+      return { receiveAmt: usdtWei, feeWei: fee, profitWei: ZERO };
+    }
+  }, [mode, inputWei, pool, rewardPercent]);
+
+  const usdtBalanceBig = usdtBalance as bigint | undefined;
+  const rwaBalanceBig = rwaBalance as bigint | undefined;
+
+  const sliderValue = useMemo(() => {
+    if (mode === 'buy') {
+      if (!usdtBalanceBig || usdtBalanceBig === ZERO || inputWei === ZERO) return 0;
+      return Math.min(100, Math.max(0, Number((inputWei * BigInt(100)) / usdtBalanceBig)));
+    } else {
+      if (!rwaBalanceBig || rwaBalanceBig === ZERO || inputWei === ZERO) return 0;
+      return Math.min(100, Math.max(0, Number((inputWei * BigInt(100)) / rwaBalanceBig)));
+    }
+  }, [mode, inputWei, usdtBalanceBig, rwaBalanceBig]);
+
+  const handleSlider = useCallback(
+    (pct: number) => {
+      if (mode === 'buy') {
+        if (!usdtBalanceBig) return;
+
+        const wei = pct === 100 ? usdtBalanceBig : (usdtBalanceBig * BigInt(pct)) / BigInt(100);
+
+        setInputValue(wei === ZERO ? '' : formatUsdtAmount(wei).replace(/\s/g, ''));
+      } else {
+        if (!rwaBalanceBig) return;
+
+        const amt = pct === 100 ? rwaBalanceBig : (rwaBalanceBig * BigInt(pct)) / BigInt(100);
+
+        setInputValue(amt === ZERO ? '' : amt.toString());
+      }
+    },
+    [mode, usdtBalanceBig, rwaBalanceBig]
+  );
+
+  const handleBuy = async () => {
+    if (!address || !poolAddress || !pool) return;
+    if (inputWei === ZERO) {
+      toast('Enter an amount', 'error');
+      return;
+    }
+    if (!publicClient) return;
+    setIsSubmitting(true);
+    try {
+      // inputWei is USDT in 18 decimals; derive the RWA amount from it
+      const { rwaWei } = computeRwaFromUsdt(inputWei, pool);
+      if (rwaWei === ZERO) {
+        toast('Invalid amount', 'error');
+        return;
+      }
+
+      const maxHold = inputWei + (inputWei * SLIPPAGE_BPS) / BigInt(10000);
+      const validUntil = BigInt(Math.floor(Date.now() / 1000) + 300);
+
+      const allowance = (await publicClient.readContract({
+        address: HOLD_TOKEN_ADDRESS,
+        abi: ERC20_APPROVE_ABI,
+        functionName: 'allowance',
+        args: [address, poolAddress],
+      })) as bigint;
+
+      if (allowance < maxHold) {
+        toast('Approving USDT…');
+        const approveTx = await writeContractAsync({
+          address: HOLD_TOKEN_ADDRESS,
+          abi: ERC20_APPROVE_ABI,
+          functionName: 'approve',
+          args: [poolAddress, BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')],
+        });
+        await publicClient.waitForTransactionReceipt({ hash: approveTx });
+      }
+
+      toast('Sending transaction…');
+      await writeContractAsync({
+        address: poolAddress,
+        abi: POOL_ABI,
+        functionName: 'mint',
+        args: [rwaWei, maxHold, validUntil, false],
+      });
+
+      toast('Tokens purchased successfully!');
+      setInputValue('');
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : 'Transaction failed', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSell = async () => {
+    if (!address || !poolAddress || !pool) return;
+    if (inputWei === ZERO) {
+      toast('Enter an amount', 'error');
+      return;
+    }
+    if (!publicClient) return;
+    setIsSubmitting(true);
+    try {
+      // inputWei is raw RWA token count (0 decimals)
+      const { usdtWei } = computeUsdtFromRwa(inputWei, pool);
+      const minHold = usdtWei - (usdtWei * SLIPPAGE_BPS) / BigInt(10000);
+      const validUntil = BigInt(Math.floor(Date.now() / 1000) + 300);
+
+      toast('Sending transaction…');
+      await writeContractAsync({
+        address: poolAddress,
+        abi: POOL_ABI,
+        functionName: 'burn',
+        args: [inputWei, minHold, ZERO, validUntil],
+      });
+
+      toast('Tokens sold successfully!');
+      setInputValue('');
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : 'Transaction failed', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const displayBalance = formatRwaAmount(rwaBalanceBig);
+  const isPoolDeployed = !!poolAddress;
+  const canSubmit = isPoolDeployed && inputWei > ZERO && !isSubmitting;
+
+  return (
+    <div className='bg-white border border-stroke-primary rounded-2xl p-5 flex flex-col gap-4'>
+      {/* Header */}
+      <div className='flex items-center justify-between'>
+        <span className='text-base font-bold text-[#1D1D1F]'>Your balance</span>
+        <span className='text-sm font-semibold text-blue bg-[#D9E4FF] rounded-full px-3 py-1.5'>
+          {displayBalance} {tokenSymbol}
+        </span>
+      </div>
+
+      {/* Buy / Sell tabs */}
+      <div className='grid grid-cols-2 gap-2 overflow-hidden'>
+        <Button
+          visualType={mode === 'buy' ? 'quaternary' : 'quinary'}
+          onClick={() => {
+            setMode('buy');
+            setInputValue('');
+          }}
+        >
+          Buy
+        </Button>
+        <Button
+          visualType={mode === 'sell' ? 'quaternary' : 'quinary'}
+          onClick={() => {
+            setMode('sell');
+            setInputValue('');
+          }}
+        >
+          Sell
+        </Button>
+      </div>
+
+      {/* Input */}
+      <div className='flex flex-col gap-1.5'>
+        <label className='text-sm text-grey-dark'>{mode === 'buy' ? 'USDT pay' : `${tokenSymbol} sell`}</label>
+        <input
+          type='number'
+          min='0'
+          value={inputValue}
+          onChange={e => {
+            const raw = e.target.value;
+            if (mode === 'buy' && usdtBalanceBig) {
+              const parsed = parseUsdtInput(raw);
+              if (parsed > usdtBalanceBig) {
+                setInputValue(formatUsdtAmount(usdtBalanceBig).replace(/\s/g, ''));
+                return;
+              }
+            }
+            if (mode === 'sell' && rwaBalanceBig) {
+              const parsed = parseRwaInput(raw);
+              if (parsed > rwaBalanceBig) {
+                setInputValue(rwaBalanceBig.toString());
+                return;
+              }
+            }
+            setInputValue(raw);
+          }}
+          placeholder='0'
+          className='w-full px-4 py-3 rounded-2xl border border-stroke-primary bg-white text-base text-black placeholder:text-label-tertiary outline-none tr-d-all focus:border-grey-dark'
+        />
+      </div>
+
+      {/* Slider */}
+      <div className='relative'>
+        <div className='relative flex justify-between mb-1'>
+          {SLIDER_MARKS.map(m => {
+            const isActive = sliderValue >= m;
+            return (
+              <button
+                key={m}
+                type='button'
+                onClick={() => handleSlider(m + 1)}
+                className='z-1 relative flex flex-col items-center gap-1.5 cursor-pointer group'
+              >
+                <span
+                  className={clsx(
+                    'w-3 h-3 rounded-full border-2 bg-white tr-d-all group-first-of-type:mr-auto group-last-of-type:ml-auto',
+                    isActive ? 'border-black !bg-black' : 'border-label-tertiary bg-white',
+                    'group-hover:border-label-tertiary'
+                  )}
+                />
+                <span className='text-xs text-[#9B9BA5]'>{m}%</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <input
+          type='range'
+          min={0}
+          max={100}
+          step={1}
+          value={sliderValue}
+          onChange={e => handleSlider(Number(e.target.value))}
+          className='absolute inset-x-0 top-[6px] -translate-y-1/2 w-full h-1 appearance-none bg-transparent cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none
+            [&::-webkit-slider-thumb]:w-3.5
+            [&::-webkit-slider-thumb]:h-3.5
+            [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-transparent
+            [&::-webkit-slider-thumb]:cursor-pointer
+            [&::-moz-range-thumb]:w-3.5
+            [&::-moz-range-thumb]:h-3.5
+            [&::-moz-range-thumb]:rounded-full
+            [&::-moz-range-thumb]:bg-transparent
+            [&::-moz-range-thumb]:border-0
+            [&::-moz-range-thumb]:cursor-pointer'
+          style={{
+            background: `linear-gradient(to right, black ${sliderValue}%, #e5e5e5 ${sliderValue}%)`,
+          }}
+        />
+      </div>
+
+      {/* Receive row */}
+      <div className='flex items-center justify-between py-3'>
+        <span className='text-sm font-semibold text-[#1D1D1F]'>Receive</span>
+        <span className='text-sm font-semibold text-[#1D1D1F]'>
+          {mode === 'buy' ? formatRwaAmount(receiveAmt) : formatUsdtAmount(receiveAmt)}{' '}
+          {mode === 'buy' ? tokenSymbol : 'USDT'}
+        </span>
+      </div>
+
+      {/* Potential profit row (buy only) */}
+      {mode === 'buy' && (
+        <div className='flex items-center justify-between py-3 border-t border-stroke-primary'>
+          <span className='flex items-center gap-1.5 text-sm text-[#1D1D1F]'>
+            Potential profit ({profitDisplayPct}%)
+            <InfoIcon />
+          </span>
+          <span className='text-sm text-grey-dark'>~ {formatUsdtAmount(profitWei)} USDT</span>
+        </div>
+      )}
+
+      {/* Fee row */}
+      <div className='flex items-center justify-between py-3 border-t border-stroke-primary'>
+        <span className='flex items-center gap-1.5 text-sm text-[#1D1D1F]'>
+          Fee ({feeDisplayPct}%)
+          <InfoIcon />
+        </span>
+        <span className='text-sm text-grey-dark'>~ {formatUsdtAmount(feeWei)} USDT</span>
+      </div>
+
+      {/* Action button */}
+      {!address ? (
+        <Button visualType={'quaternary'} onClick={openConnectModal}>
+          Connect wallet
+        </Button>
+      ) : (
+        <Button visualType={'quaternary'} onClick={mode === 'buy' ? handleBuy : handleSell} disabled={!canSubmit}>
+          {isSubmitting ? 'Processing…' : mode === 'buy' ? `Buy ${tokenSymbol}` : `Sell ${tokenSymbol}`}
+        </Button>
+      )}
+    </div>
+  );
+};
+
+export default BuyTokenWidget;

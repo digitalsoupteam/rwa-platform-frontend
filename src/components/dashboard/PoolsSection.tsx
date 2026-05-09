@@ -1,7 +1,10 @@
 'use client';
 
 import React, { FC } from 'react';
+import Image from 'next/image';
 import { useQuery } from '@apollo/client/react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button, ButtonBorderDash, Card, Title } from '@/components/ui';
 import { GET_POOLS } from '@/lib/pool/operations';
 
@@ -78,6 +81,8 @@ function getPoolPrice(pool: Pool): string {
   return '—';
 }
 
+const FILES_BASE = process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/';
+
 const CHAIN_NAMES: Record<string, string> = {
   '97': 'BSC Testnet',
   '56': 'BSC',
@@ -88,16 +93,36 @@ function getNetworkName(chainId: string | null | undefined): string {
   return CHAIN_NAMES[chainId] ?? `Chain ${chainId}`;
 }
 
-const PoolCard: FC<{ pool: Pool }> = ({ pool }) => {
+const PoolCard: FC<{ pool: Pool; companyId: string; projectId: string }> = ({ pool, companyId, projectId }) => {
   const isPending = !pool.poolAddress;
   const status = getPoolStatus(pool);
   const progress = getProgressPercent(pool);
   const price = getPoolPrice(pool);
   const token = getNetworkName(pool.chainId);
+  const href = `/dashboard/my-companies/${companyId}/projects/${projectId}/pool/${pool.id}`;
 
   return (
+    <Link href={href} className="block">
     <Card size={'sm'} color={'greyLight'} className={isPending ? 'opacity-50' : undefined}>
-      <div className={'mb-4'}>
+      <div className={'mb-4 flex items-center gap-3'}>
+        <div className={'relative w-12 h-12 rounded-full overflow-hidden shrink-0'}>
+          {pool.image ? (
+            <Image
+              src={pool.image.startsWith('http') ? pool.image : FILES_BASE + pool.image.split('/').pop()}
+              alt={pool.name}
+              fill
+              className={'object-cover'}
+            />
+          ) : (
+            <div
+              className={'w-full h-full'}
+              style={{
+                backgroundImage: 'repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%)',
+                backgroundSize: '12px 12px',
+              }}
+            />
+          )}
+        </div>
         <div className={'font-bold text-base truncate'}>{pool.name}</div>
       </div>
 
@@ -135,6 +160,7 @@ const PoolCard: FC<{ pool: Pool }> = ({ pool }) => {
         </div>
       </div>
     </Card>
+    </Link>
   );
 };
 
@@ -143,6 +169,9 @@ interface PoolsSectionProps {
 }
 
 const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
+  const params = useParams();
+  const companyId = params.id as string;
+
   const { data } = useQuery(GET_POOLS, {
     variables: { input: { filter: { businessId: projectId } } },
     skip: !projectId,
@@ -150,7 +179,7 @@ const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pools: Pool[] = (data as any)?.getPools ?? [];
-console.log(pools)
+
   return (
     <>
       <div className={'flex items-center justify-between mb-6'}>
@@ -171,7 +200,7 @@ console.log(pools)
       ) : (
         <div className={'grid grid-cols-2 gap-4'}>
           {pools.map((pool: Pool) => (
-            <PoolCard key={pool.id} pool={pool} />
+            <PoolCard key={pool.id} pool={pool} companyId={companyId} projectId={projectId} />
           ))}
         </div>
       )}

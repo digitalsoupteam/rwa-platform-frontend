@@ -13,9 +13,10 @@ const MAX_CATEGORIES = 3;
 interface CategoryCheckboxesProps {
   selected: string[];
   onChange: (selected: string[]) => void;
+  title?: string;
 }
 
-const CategoryCheckboxes: FC<CategoryCheckboxesProps> = ({ selected, onChange }) => {
+const CategoryCheckboxes: FC<CategoryCheckboxesProps> = ({ selected, onChange, title = 'Project categories' }) => {
   const toggle = (category: string) => {
     if (selected.includes(category)) {
       onChange(selected.filter(c => c !== category));
@@ -27,7 +28,7 @@ const CategoryCheckboxes: FC<CategoryCheckboxesProps> = ({ selected, onChange })
   return (
     <div>
       <div className={'text-sm font-medium mb-1'}>
-        Project categories<span className={'text-red-bright'}>*</span>
+        {title}<span className={'text-red-bright'}>*</span>
       </div>
       <div className={'text-xs text-text-secondary mb-4'}>Select up to {MAX_CATEGORIES} main categories for your project</div>
       <div className={'grid grid-cols-2 gap-x-8 gap-y-3'}>
