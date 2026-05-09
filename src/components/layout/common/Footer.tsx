@@ -92,7 +92,7 @@ const Footer: FC = () => {
               ))}
           </ul>
           <div className={'lg:order-3'}>
-            <Socials />
+            <Socials color={'light'} gap={'md'} />
           </div>
           <div className={'text-blue-dim text-xs/[1.3] font-normal lg:order-5'}>Design by OUT.AGENCY</div>
           <div className={'text-blue-dim text-xs/[1.3] font-normal max-md:-mt-3 lg:order-4'}>

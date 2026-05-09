@@ -319,7 +319,7 @@ const CalendarIcon = () => (
 );
 
 // ── Page ───────────────────────────────────────────────────────────────────────
-const AddPoolPage: FC = () => {
+const AddPoolContent: FC = () => {
   const searchParams = useSearchParams();
   const businessId = searchParams.get('businessId') ?? '';
   const { address: walletAddress } = useAccount();
@@ -997,5 +997,11 @@ const AddPoolPage: FC = () => {
     </DashboardLayout>
   );
 };
+
+const AddPoolPage: FC = () => (
+  <React.Suspense fallback={null}>
+    <AddPoolContent />
+  </React.Suspense>
+);
 
 export default AddPoolPage;
