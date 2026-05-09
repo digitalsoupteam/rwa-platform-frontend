@@ -1,4 +1,4 @@
-import FaqEditor from './FaqEditor/FaqEditor';
+import FaqEditor from './FaqEditor';
 
 export { FaqEditor };
-export type { FaqEditorHandle, FaqEditorData } from './FaqEditor/FaqEditor';
+export type { FaqEditorHandle, FaqEditorData } from './FaqEditor';

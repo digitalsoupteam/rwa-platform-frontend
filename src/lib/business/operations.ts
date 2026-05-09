@@ -9,6 +9,8 @@ export const GET_BUSINESS_WITH_RISK = gql`
       description
       tags
       riskScore
+      ownerId
+      ownerType
     }
   }
 `;

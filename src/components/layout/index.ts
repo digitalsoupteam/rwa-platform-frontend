@@ -1,5 +1,5 @@
-import CommonLayout from './common/CommonLayout/CommonLayout';
-import DashboardLayout from '@/components/layout/dashboard/DashboardLayout/DashboardLayout';
-import Wrapper from './common/Wrapper/Wrapper';
+import CommonLayout from './common/CommonLayout';
+import DashboardLayout from '@/components/layout/dashboard/DashboardLayout';
+import Wrapper from './common/Wrapper';
 
 export { CommonLayout, DashboardLayout, Wrapper };

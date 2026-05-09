@@ -29,11 +29,11 @@ const FaqSection: FC<FaqSectionProps> = ({ projectId }) => {
   const answers = answersData?.getFaqAnswers ?? [];
 
   const navigateToCreate = () => {
-    router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}/create-answer`);
+    router.push(`/my-companies/${companyId}/projects/${projectId}/create-answer`);
   };
 
   const navigateToEdit = (answerId: string) => {
-    router.push(`/dashboard/my-companies/${companyId}/projects/${projectId}/edit-answer/${answerId}`);
+    router.push(`/my-companies/${companyId}/projects/${projectId}/edit-answer/${answerId}`);
   };
 
   return (

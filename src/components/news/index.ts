@@ -1,5 +1,5 @@
-import NewsList from './NewsList/NewsList';
-import PostEditor from './PostEditor/PostEditor';
+import NewsList from './NewsList';
+import PostEditor from './PostEditor';
 
 export { NewsList, PostEditor };
-export type { PostEditorHandle, PostEditorData } from './PostEditor/PostEditor';
+export type { PostEditorHandle, PostEditorData } from './PostEditor';
