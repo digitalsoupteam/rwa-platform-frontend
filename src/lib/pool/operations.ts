@@ -26,6 +26,8 @@ export const GET_POOL_BY_ID = gql`
       realHoldReserve
       virtualHoldReserve
       virtualRwaReserve
+      ownerId
+      ownerType
       incomingTranches {
         amount
         expiredAt

@@ -249,6 +249,7 @@ interface DocumentCardProps {
   doc: DocumentItem;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit?: boolean;
 }
 
 const getFilename = (link: string) => {
@@ -261,7 +262,7 @@ const getFilename = (link: string) => {
   }
 };
 
-const DocumentCard: FC<DocumentCardProps> = ({ doc, onEdit, onDelete }) => (
+const DocumentCard: FC<DocumentCardProps> = ({ doc, onEdit, onDelete, canEdit }) => (
   <div className={'w-full flex flex-col gap-2 p-4 border-stroke-primary border-1 rounded-xl'}>
     <Link
       href={process.env.NEXT_PUBLIC_FILE_ENDPOINT + doc.link}
@@ -282,28 +283,30 @@ const DocumentCard: FC<DocumentCardProps> = ({ doc, onEdit, onDelete }) => (
         <div className={'text-lg font-semibold leading-tight truncate'}>{doc.name}</div>
         {doc.link && <div className={'text-base text-label-tertiary truncate mt-1'}>{getFilename(doc.link)}</div>}
       </div>
-      <div className={'flex items-center gap-2 shrink-0'}>
-        <button
-          type={'button'}
-          onClick={onEdit}
-          className={
-            'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
-          }
-          aria-label={'Edit document'}
-        >
-          <Icon name={'edit'} className={'size-5'} />
-        </button>
-        <button
-          type={'button'}
-          onClick={onDelete}
-          className={
-            'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
-          }
-          aria-label={'Delete document'}
-        >
-          <Icon name={'trash'} className={'size-5'} />
-        </button>
-      </div>
+      {canEdit && (
+        <div className={'flex items-center gap-2 shrink-0'}>
+          <button
+            type={'button'}
+            onClick={onEdit}
+            className={
+              'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
+            }
+            aria-label={'Edit document'}
+          >
+            <Icon name={'edit'} className={'size-5'} />
+          </button>
+          <button
+            type={'button'}
+            onClick={onDelete}
+            className={
+              'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
+            }
+            aria-label={'Delete document'}
+          >
+            <Icon name={'trash'} className={'size-5'} />
+          </button>
+        </div>
+      )}
     </div>
   </div>
 );
@@ -315,9 +318,10 @@ type PopoverTarget = 'add-button' | { docId: string } | null;
 interface DocumentsSectionProps {
   projectId: string;
   companyId: string;
+  canEdit?: boolean;
 }
 
-const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId }) => {
+const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId, canEdit = false }) => {
   const [folderId, setFolderId] = useState<string | null>(null);
   const [popoverTarget, setPopoverTarget] = useState<PopoverTarget>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -436,11 +440,13 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId }) =
     }
   };
 
+  if (documents.length === 0 && !canEdit) return null;
+
   return (
     <>
       <div className={'flex items-center justify-between mb-6'}>
         <Title size={'xs'} level={2}>Documents</Title>
-        {documents.length > 0 && (
+        {documents.length > 0 && canEdit && (
           <div ref={addContainerRef} className={'relative'}>
             <Button
               visualType={'quaternary'}
@@ -463,7 +469,7 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId }) =
         )}
       </div>
 
-      {documents.length === 0 && (
+      {documents.length === 0 && canEdit && (
         <div ref={emptyContainerRef} className={'relative max-w-110'}>
           <ButtonBorderDash
             className={'min-h-74.5'}
@@ -495,6 +501,7 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId }) =
                 doc={doc}
                 onEdit={() => setPopoverTarget(t => typeof t === 'object' && t?.docId === doc.id ? null : { docId: doc.id })}
                 onDelete={() => setDeleteTarget(doc.id)}
+                canEdit={canEdit}
               />
               {typeof popoverTarget === 'object' && popoverTarget?.docId === doc.id && (
                 <DocumentPopover

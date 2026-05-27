@@ -8,9 +8,10 @@ import { GET_FAQ_ANSWERS, GET_FAQ_TOPICS } from '@/lib/faq/operations';
 
 interface FaqSectionProps {
   projectId: string;
+  canEdit?: boolean;
 }
 
-const FaqSection: FC<FaqSectionProps> = ({ projectId }) => {
+const FaqSection: FC<FaqSectionProps> = ({ projectId, canEdit = false }) => {
   const router = useRouter();
   const params = useParams();
   const companyId = params.id as string;
@@ -36,13 +37,15 @@ const FaqSection: FC<FaqSectionProps> = ({ projectId }) => {
     router.push(`/my-companies/${companyId}/projects/${projectId}/edit-answer/${answerId}`);
   };
 
+  if (answers.length === 0 && !canEdit) return null;
+
   return (
     <>
       <div className={'flex items-center justify-between mb-6'}>
         <Title size={'xs'} level={2}>
           FAQs
         </Title>
-        {answers.length > 0 && (
+        {answers.length > 0 && canEdit && (
           <Button visualType={'quaternary'} onClick={navigateToCreate}>
             <Icon name={'plus'} />
             Add answer
@@ -50,7 +53,7 @@ const FaqSection: FC<FaqSectionProps> = ({ projectId }) => {
         )}
       </div>
 
-      {answers.length === 0 && (
+      {answers.length === 0 && canEdit && (
         <ButtonBorderDash className={'min-h-42.5'} onClick={navigateToCreate}>
           Add answer
         </ButtonBorderDash>
@@ -67,12 +70,14 @@ const FaqSection: FC<FaqSectionProps> = ({ projectId }) => {
                 <div className={'text-base font-semibold mb-1'}>{answer.question}</div>
                 <p className={'text-sm text-label-secondary line-clamp-2'}>{answer.answer}</p>
               </div>
-              <div className={'shrink-0'}>
-                <Button visualType={'quinary'} type={'button'} onClick={() => navigateToEdit(answer.id)}>
-                  <Icon name={'edit'} className={'size-3.5'} />
-                  Edit
-                </Button>
-              </div>
+              {canEdit && (
+                <div className={'shrink-0'}>
+                  <Button visualType={'quinary'} type={'button'} onClick={() => navigateToEdit(answer.id)}>
+                    <Icon name={'edit'} className={'size-3.5'} />
+                    Edit
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
