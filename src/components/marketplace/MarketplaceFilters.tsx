@@ -76,7 +76,7 @@ const SORT_OPTIONS = [
   { value: 'goal_asc', label: 'Funding goal: low to high' },
 ] as const;
 
-const POOL_TYPES = [
+export const POOL_TYPES = [
   { value: 'fixed',    label: 'Fixed'    },
   { value: 'flexible', label: 'Flexible' },
 ] as const;

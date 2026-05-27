@@ -4,9 +4,13 @@ import React, { FC, useEffect } from 'react';
 import MarketplaceFilters, { type PoolStage, type PoolType } from './MarketplaceFilters';
 import {Icon} from "@/components/ui";
 
+export interface FilterChip {
+  label: string;
+  onRemove: () => void;
+}
+
 interface MobileFiltersModalProps {
-  activeChips: string[];
-  onRemoveChip: (chip: string) => void;
+  activeChips: FilterChip[];
   onClearAll: () => void;
   onClose: () => void;
   sortBy?: string;
@@ -24,7 +28,6 @@ interface MobileFiltersModalProps {
 
 const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
   activeChips,
-  onRemoveChip,
   onClearAll,
   onClose,
   sortBy,
@@ -64,13 +67,13 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
           {activeChips.length > 0 ? (
             activeChips.map(chip => (
               <button
-                key={chip}
-                onClick={() => onRemoveChip(chip)}
+                key={chip.label}
+                onClick={chip.onRemove}
                 className={
                   'shrink-0 flex items-center gap-4 bg-blue-dim text-black text-sm font-normal px-4 py-2 rounded-full'
                 }
               >
-                {chip}
+                {chip.label}
                 <Icon className={'size-4 rotate-45'} name={'plus'} />
               </button>
             ))

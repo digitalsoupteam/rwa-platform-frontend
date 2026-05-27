@@ -7,7 +7,8 @@ import { Button, Icon, Title } from '@/components/ui';
 import { FAQ } from '@/components/common';
 import { MarketplaceCard, MarketplaceFilters, MobileFiltersModal } from '@/components/marketplace';
 import type { MarketplaceProject } from '@/components/marketplace';
-import { RISK_SCORE_RANGES, POOL_STAGES, type PoolStage, type PoolType } from '@/components/marketplace/MarketplaceFilters';
+import { RISK_SCORE_RANGES, POOL_STAGES, POOL_TYPES, type PoolStage, type PoolType } from '@/components/marketplace/MarketplaceFilters';
+import type { FilterChip } from '@/components/marketplace/MobileFiltersModal';
 import { GET_POOLS } from '@/lib/pool/operations';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -79,8 +80,6 @@ function poolToProject(pool: AnyPool): MarketplaceProject {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ACTIVE_FILTER_CHIPS = ['Active', 'Blockchain', 'Commodity'];
-
 const VISIBLE_COUNT = 9;
 
 const FAQ_LIST = [
@@ -123,7 +122,6 @@ const FAQ_LIST = [
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const Marketplace: FC = () => {
-  const [activeChips, setActiveChips] = useState(ACTIVE_FILTER_CHIPS);
   const [showAll, setShowAll] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
@@ -132,7 +130,31 @@ const Marketplace: FC = () => {
   const [selectedStages, setSelectedStages] = useState<PoolStage[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<PoolType[]>([]);
 
-  const removeChip = (chip: string) => setActiveChips(prev => prev.filter(c => c !== chip));
+  const activeChips: FilterChip[] = [
+    ...selectedRanges.map(i => ({
+      label: RISK_SCORE_RANGES[i].label,
+      onRemove: () => setSelectedRanges(prev => prev.filter(r => r !== i)),
+    })),
+    ...selectedCategories.map(cat => ({
+      label: cat,
+      onRemove: () => setSelectedCategories(prev => prev.filter(c => c !== cat)),
+    })),
+    ...selectedStages.map(stage => ({
+      label: POOL_STAGES.find(s => s.value === stage)!.label,
+      onRemove: () => setSelectedStages(prev => prev.filter(s => s !== stage)),
+    })),
+    ...selectedTypes.map(type => ({
+      label: POOL_TYPES.find(t => t.value === type)!.label,
+      onRemove: () => setSelectedTypes(prev => prev.filter(t => t !== type)),
+    })),
+  ];
+
+  const clearAllFilters = () => {
+    setSelectedRanges([]);
+    setSelectedCategories([]);
+    setSelectedStages([]);
+    setSelectedTypes([]);
+  };
 
   const { data, loading, error } = useQuery(GET_POOLS, {
     variables: { input: { filter: {} } },
@@ -241,11 +263,11 @@ const Marketplace: FC = () => {
               <div className={'hidden lg:flex flex-wrap gap-3 mb-9'}>
                 {activeChips.map(chip => (
                   <button
-                    key={chip}
-                    onClick={() => removeChip(chip)}
+                    key={chip.label}
+                    onClick={chip.onRemove}
                     className={'shrink-0 flex items-center gap-4 bg-blue-dim text-black text-sm font-normal px-4 py-2 rounded-full tr-d-all hover:bg-blue-dim/70'}
                   >
-                    {chip}
+                    {chip.label}
                     <span className={'size-2 mask-contain mask-[url(/icons/cross.svg)] bg-black'} />
                   </button>
                 ))}
@@ -254,7 +276,7 @@ const Marketplace: FC = () => {
                 )}
                 {activeChips.length > 0 && (
                   <button
-                    onClick={() => setActiveChips([])}
+                    onClick={clearAllFilters}
                     className={'shrink-0 flex items-center gap-2 text-black text-sm font-normal py-2 tr-d-all hover:text-grey-dark'}
                   >
                     <span className={'size-5 mask-contain mask-[url(/icons/cross.svg)] bg-black'} />
@@ -299,8 +321,7 @@ const Marketplace: FC = () => {
       {mobileFiltersOpen && (
         <MobileFiltersModal
           activeChips={activeChips}
-          onRemoveChip={removeChip}
-          onClearAll={() => setActiveChips([])}
+          onClearAll={clearAllFilters}
           onClose={() => setMobileFiltersOpen(false)}
           sortBy={sortBy}
           onSortChange={setSortBy}
