@@ -20,6 +20,7 @@ import { NewsList } from '@/components/news';
 import { Modal } from '@/components/common';
 import { PoolsSection } from '@/components/pool';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 // Fee validated against backend test: tests/rwa_fast_tests/business-deployment.test.ts uses '100'
 const CREATE_RWA_FEE = '100';
@@ -56,6 +57,7 @@ const ProjectPage: FC = () => {
   const projectId = params.projectId as string;
 
   const { address: walletAddress } = useAccount();
+  const { user } = useAuth();
   const apolloClient = useApolloClient();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
@@ -87,6 +89,12 @@ const ProjectPage: FC = () => {
 
   const company = companyData?.getCompany;
   const project = businessData?.getBusiness;
+
+  const canEdit = user != null && company != null && (
+    company.ownerId === user.userId ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (company.users as any[])?.some((u: any) => u.userId === user.userId)
+  );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deployInfo = (deployInfoData as any)?.getBusiness;
 
@@ -353,7 +361,7 @@ const ProjectPage: FC = () => {
 
       <section className={'mb-12'}>
         <Wrapper>
-          <NewsList projectId={projectId} companyId={companyId} projectName={project?.name} />
+          <NewsList projectId={projectId} companyId={companyId} projectName={project?.name} canEdit={canEdit} />
         </Wrapper>
       </section>
 

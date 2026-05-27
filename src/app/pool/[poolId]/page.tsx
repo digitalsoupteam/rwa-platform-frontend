@@ -3,6 +3,7 @@
 import React, { FC, useState } from 'react';
 import { useParams } from 'next/navigation';
 import clsx from 'clsx';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { useQuery } from '@apollo/client/react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
@@ -166,6 +167,7 @@ type TimeFilter = (typeof TIME_FILTERS)[number];
 const PoolPage: FC = () => {
   const params = useParams();
   const poolId = params.poolId as string;
+  const { user } = useAuth();
 
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('1H');
   const [scheduleOpen, setScheduleOpen] = useState(true);
@@ -198,6 +200,16 @@ console.log(pool)
   });
 
   const company = companyData?.getCompany;
+
+  const canEditPool = user != null && pool != null && (
+    pool.ownerType === 'company'
+      ? company != null && (
+          company.ownerId === user.userId ||
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (company.users as any[])?.some((u: any) => u.userId === user.userId)
+        )
+      : pool.ownerId === user.userId
+  );
 
   const now = React.useMemo(() => Math.floor(Date.now() / 1000), []);
   const { data: priceHistoryData } = useQuery(GET_RAW_PRICE_DATA, {
@@ -289,10 +301,12 @@ console.log(pool)
 
             {/* Right: Edit / Share buttons */}
             <div className='flex gap-2 md:mt-2 md:shrink-0'>
-              <Button visualType={'quinary'} onClick={() => setEditOpen(true)}>
-                <Icon name={'edit'} />
-                Edit
-              </Button>
+              {canEditPool && (
+                <Button visualType={'quinary'} onClick={() => setEditOpen(true)}>
+                  <Icon name={'edit'} />
+                  Edit
+                </Button>
+              )}
               <Button visualType={'quinary'}>
                 <Icon name={'share'} />
                 Share
@@ -525,7 +539,7 @@ console.log(pool)
       {/* ── News ─────────────────────────────────────────────────────────────── */}
       <section className='mb-12'>
         <Wrapper>
-          {projectId && <NewsList projectId={projectId} companyId={companyId} />}
+          {projectId && <NewsList projectId={projectId} companyId={companyId} canEdit={canEditPool} />}
         </Wrapper>
       </section>
       <EditPoolModal pool={pool} isOpen={editOpen} onClose={() => setEditOpen(false)} />

@@ -45,9 +45,10 @@ interface NewsListProps {
   projectId: string;
   companyId?: string;
   projectName?: string;
+  canEdit?: boolean;
 }
 
-const NewsList: FC<NewsListProps> = ({ projectId, companyId }) => {
+const NewsList: FC<NewsListProps> = ({ projectId, companyId, canEdit = false }) => {
   const router = useRouter();
 
   const [page, setPage] = useState(1);
@@ -84,7 +85,7 @@ const NewsList: FC<NewsListProps> = ({ projectId, companyId }) => {
         <Title size={'xs'} level={2}>
           News
         </Title>
-        {posts.length > 0 && (
+        {posts.length > 0 && canEdit && (
           <Button visualType={'quaternary'} onClick={navigateToCreate}>
             <Icon name={'plus'} />
             Add post
@@ -92,7 +93,7 @@ const NewsList: FC<NewsListProps> = ({ projectId, companyId }) => {
         )}
       </div>
 
-      {posts.length === 0 && (
+      {posts.length === 0 && canEdit && (
         <ButtonBorderDash className={'min-h-42.5'} onClick={navigateToCreate}>
           Create post
         </ButtonBorderDash>
@@ -124,12 +125,14 @@ const NewsList: FC<NewsListProps> = ({ projectId, companyId }) => {
                   </div>
                   <p className={'text-sm text-label-secondary max-w-155 line-clamp-2'}>{extractText(post.content)}</p>
                 </div>
-                <div className={'shrink-0 flex items-center gap-2'}>
-                  <Button visualType={'quinary'} type={'button'} onClick={() => navigateToEdit(post.id)}>
-                    <Icon name={'edit'} className={'size-3.5'} />
-                    Edit
-                  </Button>
-                </div>
+                {canEdit && (
+                  <div className={'shrink-0 flex items-center gap-2'}>
+                    <Button visualType={'quinary'} type={'button'} onClick={() => navigateToEdit(post.id)}>
+                      <Icon name={'edit'} className={'size-3.5'} />
+                      Edit
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
