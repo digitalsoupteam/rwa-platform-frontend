@@ -130,7 +130,9 @@ const Marketplace: FC = () => {
   console.log('[Marketplace] pools query →', { loading, error, data });
 
   // @ts-ignore
-  const allProjects: MarketplaceProject[] = (data?.getPools ?? []).map(poolToProject);
+  const allProjects: MarketplaceProject[] = (data?.getPools ?? [])
+    .filter((pool: AnyPool) => !!pool.poolAddress)
+    .map(poolToProject);
   const visibleProjects = showAll ? allProjects : allProjects.slice(0, VISIBLE_COUNT);
 
   return (
