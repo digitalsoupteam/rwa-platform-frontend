@@ -163,6 +163,9 @@ const Tokenization: FC = () => {
           '/images/gallery-mock5.jpg',
           '/images/gallery-mock5.jpg',
           '/images/gallery-mock5.jpg',
+          '/images/gallery-mock5.jpg',
+          '/images/gallery-mock5.jpg',
+          '/images/gallery-mock5.jpg',
         ]}
       />
       <Gallery
@@ -172,6 +175,9 @@ const Tokenization: FC = () => {
           'Get a clear view of your token’s price movement and funds collection progress. Use these insights to make informed decisions'
         }
         images={[
+          '/images/gallery-mock2.jpg',
+          '/images/gallery-mock3.jpg',
+          '/images/gallery-mock4.jpg',
           '/images/gallery-mock2.jpg',
           '/images/gallery-mock3.jpg',
           '/images/gallery-mock4.jpg',
