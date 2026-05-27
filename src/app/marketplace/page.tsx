@@ -7,7 +7,7 @@ import { Button, Icon, Title } from '@/components/ui';
 import { FAQ } from '@/components/common';
 import { MarketplaceCard, MarketplaceFilters, MobileFiltersModal } from '@/components/marketplace';
 import type { MarketplaceProject } from '@/components/marketplace';
-import { RISK_SCORE_RANGES, POOL_STAGES, type PoolStage } from '@/components/marketplace/MarketplaceFilters';
+import { RISK_SCORE_RANGES, POOL_STAGES, type PoolStage, type PoolType } from '@/components/marketplace/MarketplaceFilters';
 import { GET_POOLS } from '@/lib/pool/operations';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -130,6 +130,7 @@ const Marketplace: FC = () => {
   const [selectedRanges, setSelectedRanges] = useState<number[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStages, setSelectedStages] = useState<PoolStage[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<PoolType[]>([]);
 
   const removeChip = (chip: string) => setActiveChips(prev => prev.filter(c => c !== chip));
 
@@ -158,6 +159,11 @@ const Marketplace: FC = () => {
     .filter((pool: AnyPool) => {
       if (selectedCategories.length === 0) return true;
       return selectedCategories.some(cat => (pool.tags ?? []).includes(cat));
+    })
+    .filter((pool: AnyPool) => {
+      if (selectedTypes.length === 0) return true;
+      const poolType: PoolType = pool.fixedSell ? 'fixed' : 'flexible';
+      return selectedTypes.includes(poolType);
     })
     .map(poolToProject)
     .filter((p: MarketplaceProject) => {
@@ -207,7 +213,7 @@ const Marketplace: FC = () => {
           <div className={'flex gap-5 items-start'}>
             {/* Sidebar (desktop only) */}
             <div className={'hidden lg:block w-[272px] shrink-0 sticky top-24'}>
-              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} selectedRanges={selectedRanges} onRangeChange={setSelectedRanges} categories={categories} selectedCategories={selectedCategories} onCategoryChange={setSelectedCategories} selectedStages={selectedStages} onStageChange={setSelectedStages} />
+              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} selectedRanges={selectedRanges} onRangeChange={setSelectedRanges} categories={categories} selectedCategories={selectedCategories} onCategoryChange={setSelectedCategories} selectedStages={selectedStages} onStageChange={setSelectedStages} selectedTypes={selectedTypes} onTypeChange={setSelectedTypes} />
             </div>
 
             {/* Content column */}
@@ -305,6 +311,8 @@ const Marketplace: FC = () => {
           onCategoryChange={setSelectedCategories}
           selectedStages={selectedStages}
           onStageChange={setSelectedStages}
+          selectedTypes={selectedTypes}
+          onTypeChange={setSelectedTypes}
         />
       )}
     </CommonLayout>

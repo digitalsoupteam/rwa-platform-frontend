@@ -1,7 +1,7 @@
 'use client';
 
 import React, { FC, useEffect } from 'react';
-import MarketplaceFilters, { type PoolStage } from './MarketplaceFilters';
+import MarketplaceFilters, { type PoolStage, type PoolType } from './MarketplaceFilters';
 import {Icon} from "@/components/ui";
 
 interface MobileFiltersModalProps {
@@ -18,6 +18,8 @@ interface MobileFiltersModalProps {
   onCategoryChange?: (categories: string[]) => void;
   selectedStages?: PoolStage[];
   onStageChange?: (stages: PoolStage[]) => void;
+  selectedTypes?: PoolType[];
+  onTypeChange?: (types: PoolType[]) => void;
 }
 
 const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
@@ -34,6 +36,8 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
   onCategoryChange,
   selectedStages,
   onStageChange,
+  selectedTypes,
+  onTypeChange,
 }) => {
   useEffect(() => {
     document.body.classList.add('locked');
@@ -78,7 +82,7 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
 
       {/* Scrollable filter body */}
       <div className={'flex-1 overflow-y-auto px-3'}>
-        <MarketplaceFilters sortBy={sortBy} onSortChange={onSortChange} selectedRanges={selectedRanges} onRangeChange={onRangeChange} categories={categories} selectedCategories={selectedCategories} onCategoryChange={onCategoryChange} selectedStages={selectedStages} onStageChange={onStageChange} />
+        <MarketplaceFilters sortBy={sortBy} onSortChange={onSortChange} selectedRanges={selectedRanges} onRangeChange={onRangeChange} categories={categories} selectedCategories={selectedCategories} onCategoryChange={onCategoryChange} selectedStages={selectedStages} onStageChange={onStageChange} selectedTypes={selectedTypes} onTypeChange={onTypeChange} />
       </div>
 
       {/* Fixed bottom bar */}

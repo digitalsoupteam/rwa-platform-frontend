@@ -48,6 +48,8 @@ interface MarketplaceFiltersProps {
   onCategoryChange?: (categories: string[]) => void;
   selectedStages?: PoolStage[];
   onStageChange?: (stages: PoolStage[]) => void;
+  selectedTypes?: PoolType[];
+  onTypeChange?: (types: PoolType[]) => void;
 }
 
 export const POOL_STAGES = [
@@ -74,20 +76,14 @@ const SORT_OPTIONS = [
   { value: 'goal_asc', label: 'Funding goal: low to high' },
 ] as const;
 
-const COUNTRIES = [
-  'Abkhazia', 'Australia', 'Austria', 'Azerbaijan', 'Albania',
-  'American Samoa', 'Anguilla', 'Angola', 'Andorra', 'Argentina',
-  'Armenia', 'Belgium', 'Brazil', 'Canada', 'China',
-  'Denmark', 'Estonia', 'Finland', 'France', 'Germany',
-];
+const POOL_TYPES = [
+  { value: 'fixed',    label: 'Fixed'    },
+  { value: 'flexible', label: 'Flexible' },
+] as const;
 
-const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange, selectedRanges = [], onRangeChange, categories = [], selectedCategories = [], onCategoryChange, selectedStages = [], onStageChange }) => {
-  const [countrySearch, setCountrySearch] = useState('');
+export type PoolType = typeof POOL_TYPES[number]['value'];
 
-  const filteredCountries = COUNTRIES.filter(c =>
-    c.toLowerCase().includes(countrySearch.toLowerCase())
-  );
-
+const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange, selectedRanges = [], onRangeChange, categories = [], selectedCategories = [], onCategoryChange, selectedStages = [], onStageChange, selectedTypes = [], onTypeChange }) => {
   return (
     <div className={clsx('flex flex-col', className)}>
       <FilterSection title={'Sort by'}>
@@ -159,25 +155,19 @@ const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = '
       </FilterSection>
 
       <FilterSection title={'Pool type'}>
-        <Checkbox label={'Fixed'} defaultChecked />
-        <Checkbox label={'Flexible'} />
-      </FilterSection>
-
-      <FilterSection title={'Location'} defaultOpen={false}>
-        <input
-          type={'text'}
-          placeholder={'Country name'}
-          value={countrySearch}
-          onChange={e => setCountrySearch(e.target.value)}
-          className={
-            'w-full border border-grey rounded-2xl h-[52px] px-5 py-[13px] text-base leading-[1.4] text-grey-dark outline-none focus:border-blue tr-d-all'
-          }
-        />
-        <div className={'flex flex-col gap-4 max-h-[280px] overflow-y-auto scrollbar-hidden'}>
-          {filteredCountries.map(country => (
-            <Checkbox key={country} label={country} />
-          ))}
-        </div>
+        {POOL_TYPES.map(pt => (
+          <Checkbox
+            key={pt.value}
+            label={pt.label}
+            checked={selectedTypes.includes(pt.value)}
+            onChange={e => {
+              const next = e.target.checked
+                ? [...selectedTypes, pt.value]
+                : selectedTypes.filter(t => t !== pt.value);
+              onTypeChange?.(next);
+            }}
+          />
+        ))}
       </FilterSection>
     </div>
   );
