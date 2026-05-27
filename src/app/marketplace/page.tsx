@@ -10,6 +10,7 @@ import type { MarketplaceProject } from '@/components/marketplace';
 import { RISK_SCORE_RANGES, POOL_STAGES, POOL_TYPES, type PoolStage, type PoolType } from '@/components/marketplace/MarketplaceFilters';
 import type { FilterChip } from '@/components/marketplace/MobileFiltersModal';
 import { GET_POOLS } from '@/lib/pool/operations';
+import { formatTicker } from '@/lib/formatTicker';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -54,18 +55,13 @@ function getMonthlyProfit(rewardPercent: number | null | undefined): string {
   return pct % 1 === 0 ? String(pct) : pct.toFixed(1);
 }
 
-function getTicker(name: string): string {
-  const initials = name.split(/\s+/).map(w => w[0] ?? '').join('').toUpperCase();
-  return initials.slice(0, 4) || name.slice(0, 3).toUpperCase();
-}
-
 function poolToProject(pool: AnyPool): MarketplaceProject {
   const price = getPoolPrice(pool);
   const priceNum = parseFloat(price) || 0;
   return {
     id:            pool.id,
     name:          pool.name,
-    tokenTicker:   getTicker(pool.name),
+    tokenTicker:   formatTicker(pool.name),
     logoUrl:       pool.image ?? undefined,
     price,
     priceNum,

@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, ButtonBorderDash, Card, Title } from '@/components/ui';
 import { GET_POOLS } from '@/lib/pool/operations';
+import { formatTicker } from '@/lib/formatTicker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Pool = any;
@@ -149,7 +150,7 @@ const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool, projectId }) =>
           <div>
             <div className={'text-black text-xl font-bold mb-1'}>
               {price} HOLD{' '}
-              <span className={'text-grey-dark text-base font-normal'}>/ 1 RWA</span>
+              <span className={'text-grey-dark text-base font-normal'}>/ 1 {formatTicker(pool.name)}</span>
             </div>
             <div className={'py-1 px-3 rounded-[20px] bg-blue-dim w-fit text-sm'}>
               ~{formatPercent(pool.rewardPercent)}% monthly profit

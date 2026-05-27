@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI, ERC1155_BALANCE_ABI, POOL_ABI } from '@/lib/contracts';
+import { formatTicker } from '@/lib/formatTicker';
 import { Button, toast } from '@/components/ui';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,12 +157,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
     query: { enabled: !!address && !!rwaAddress && poolTokenId != null },
   });
 
-  const tokenSymbol = pool?.name
-    ? pool.name
-        .replace(/[^a-zA-Z0-9]/g, '')
-        .slice(0, 4)
-        .toUpperCase()
-    : 'RWA';
+  const tokenSymbol = pool?.name ? formatTicker(pool.name) : 'RWA';
 
   const entryFeePercent = BigInt(pool?.entryFeePercent || '100');
   const exitFeePercent = BigInt(pool?.exitFeePercent || '100');
