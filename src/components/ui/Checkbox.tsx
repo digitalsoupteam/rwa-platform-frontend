@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, InputHTMLAttributes } from 'react';
+import React, { FC, InputHTMLAttributes, useId } from 'react';
 import clsx from 'clsx';
 
 interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
@@ -8,7 +8,8 @@ interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'typ
 }
 
 const Checkbox: FC<CheckboxProps> = ({ label, className, id, ...props }) => {
-  const inputId = id ?? label;
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
 
   return (
     <label

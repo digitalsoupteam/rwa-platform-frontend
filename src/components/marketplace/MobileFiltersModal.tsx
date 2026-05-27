@@ -1,0 +1,89 @@
+'use client';
+
+import React, { FC, useEffect } from 'react';
+import MarketplaceFilters from './MarketplaceFilters';
+import {Icon} from "@/components/ui";
+
+interface MobileFiltersModalProps {
+  activeChips: string[];
+  onRemoveChip: (chip: string) => void;
+  onClearAll: () => void;
+  onClose: () => void;
+}
+
+const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
+  activeChips,
+  onRemoveChip,
+  onClearAll,
+  onClose,
+}) => {
+  useEffect(() => {
+    document.body.classList.add('locked');
+    return () => document.body.classList.remove('locked');
+  }, []);
+
+  return (
+    <div className={'fixed inset-0 z-50 flex flex-col bg-grey-light'}>
+      {/* Header */}
+      <div className={'shrink-0 border-b border-blue-dim'}>
+        <div className={'flex items-center justify-between px-3 pt-4 pb-[14px]'}>
+          <span className={'text-xl font-semibold leading-[1.2] tracking-[-0.02em] text-grey-dark'}>Filters</span>
+          <button
+            onClick={onClose}
+            className={'text-grey-dark size-8 shrink-0 flex items-center justify-center'}
+            aria-label={'Close filters'}
+          >
+            <Icon className={'rotate-45 size-8'} name={'plus'} />
+          </button>
+        </div>
+
+        {/* Chips — horizontally scrollable */}
+        <div className={'flex gap-2 overflow-x-auto scrollbar-hidden px-3 pb-4'}>
+          {activeChips.length > 0 ? (
+            activeChips.map(chip => (
+              <button
+                key={chip}
+                onClick={() => onRemoveChip(chip)}
+                className={
+                  'shrink-0 flex items-center gap-4 bg-blue-dim text-black text-sm font-normal px-4 py-2 rounded-full'
+                }
+              >
+                {chip}
+                <Icon className={'size-4 rotate-45'} name={'plus'} />
+              </button>
+            ))
+          ) : (
+            <span className={'text-sm text-grey-dark py-2'}>No active filters</span>
+          )}
+        </div>
+      </div>
+
+      {/* Scrollable filter body */}
+      <div className={'flex-1 overflow-y-auto px-3'}>
+        <MarketplaceFilters />
+      </div>
+
+      {/* Fixed bottom bar */}
+      <div className={'shrink-0 h-[76px] border-t border-blue-dim bg-grey-light flex items-center px-3'}>
+        <div className={'flex-1 flex items-center justify-center'}>
+          <button
+            onClick={onClearAll}
+            className={'text-base font-semibold leading-[1.2] text-black tr-d-all hover:text-grey-dark'}
+          >
+            Clear All
+          </button>
+        </div>
+        <button
+          onClick={onClose}
+          className={
+            'w-[162px] h-[52px] flex items-center justify-center bg-blue-dark text-white text-base font-semibold leading-[1.2] rounded-2xl tr-d-all hover:bg-blue-hover'
+          }
+        >
+          Apply
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default MobileFiltersModal;
