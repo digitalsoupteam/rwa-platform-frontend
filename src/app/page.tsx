@@ -3,6 +3,8 @@
 import React, { FC } from 'react';
 import clsx from 'clsx';
 import { useQuery } from '@apollo/client/react';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
 
 import { AppDemo, Hero, HowItWorks, HowToStart, PoolProgress } from '@/components/home';
 import { FAQ, Gallery } from '@/components/common';
@@ -11,6 +13,7 @@ import { Button, Card, Title } from '@/components/ui';
 import { MarketplaceCard, type MarketplaceProject } from '@/components/marketplace';
 import { GET_POOLS } from '@/lib/pool/operations';
 import { formatTicker } from '@/lib/formatTicker';
+import Link from 'next/link';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPool = any;
@@ -34,15 +37,17 @@ function getPoolPrice(pool: AnyPool): string {
   try {
     if (pool.virtualHoldReserve && pool.virtualRwaReserve) {
       const hold = Number(BigInt(pool.virtualHoldReserve) / BigInt(10) ** BigInt(15)) / 1000;
-      const rwa  = Number(BigInt(pool.virtualRwaReserve)  / BigInt(10) ** BigInt(15)) / 1000;
+      const rwa = Number(BigInt(pool.virtualRwaReserve) / BigInt(10) ** BigInt(15)) / 1000;
       if (rwa > 0) return `${(hold / rwa).toFixed(2)} USDT`;
     }
     if (pool.expectedHoldAmount && pool.expectedRwaAmount) {
       const hold = Number(BigInt(pool.expectedHoldAmount) / BigInt(10) ** BigInt(15)) / 1000;
-      const rwa  = Number(BigInt(pool.expectedRwaAmount)  / BigInt(10) ** BigInt(15)) / 1000;
+      const rwa = Number(BigInt(pool.expectedRwaAmount) / BigInt(10) ** BigInt(15)) / 1000;
       if (rwa > 0) return `${(hold / rwa).toFixed(2)} USDT`;
     }
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
   return '— USDT';
 }
 
@@ -55,22 +60,24 @@ function getMonthlyProfit(rewardPercent: number | null | undefined): string {
 function poolToProject(pool: AnyPool): MarketplaceProject {
   const price = getPoolPrice(pool);
   return {
-    id:            pool.id,
-    name:          pool.name,
-    tokenTicker:   formatTicker(pool.name),
-    logoUrl:       pool.image ?? undefined,
+    id: pool.id,
+    name: pool.name,
+    tokenTicker: formatTicker(pool.name),
+    logoUrl: pool.image ?? undefined,
     price,
-    priceNum:      parseFloat(price) || 0,
+    priceNum: parseFloat(price) || 0,
     monthlyProfit: getMonthlyProfit(pool.rewardPercent),
-    collected:     parseWeiToNum(pool.realHoldReserve),
-    total:         parseWeiToNum(pool.expectedHoldAmount),
-    dueDate:       formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
-    createdAt:     pool.createdAt ?? 0,
-    riskScore:     pool.riskScore ?? 0,
+    collected: parseWeiToNum(pool.realHoldReserve),
+    total: parseWeiToNum(pool.expectedHoldAmount),
+    dueDate: formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
+    createdAt: pool.createdAt ?? 0,
+    riskScore: pool.riskScore ?? 0,
   };
 }
 
 const Home: FC = () => {
+  const { openConnectModal } = useConnectModal();
+  const { address } = useAccount();
   const { data } = useQuery(GET_POOLS, {
     variables: { input: { filter: {} } },
   });
@@ -98,11 +105,7 @@ const Home: FC = () => {
           </div>
           <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 sm:grid-cols-2 lg:grid-cols-3'}>
             {sectionOnePools.map((project, index) => (
-              <MarketplaceCard
-                className={clsx(index > 3 && 'max-md:hidden')}
-                project={project}
-                key={project.id}
-              />
+              <MarketplaceCard className={clsx(index > 3 && 'max-md:hidden')} project={project} key={project.id} />
             ))}
           </div>
           <Button className={'w-full'} visualType={'secondary'} href={'/marketplace'}>
@@ -114,6 +117,9 @@ const Home: FC = () => {
         id={'detailed-info'}
         title={'See detailed info about the token \non the project page'}
         images={[
+          '/images/gallery-mock.png',
+          '/images/gallery-mock.png',
+          '/images/gallery-mock.png',
           '/images/gallery-mock.png',
           '/images/gallery-mock.png',
           '/images/gallery-mock.png',
@@ -348,11 +354,26 @@ const Home: FC = () => {
               <p className={'text-grey-dark text-base/[1.4] mb-10'}>
                 Make your real world assets liquid and make a profit
               </p>
-              <span
-                className={
-                  'inline-flex items-center justify-center bg-grey-light size-13 rounded-2xl before:size-9 before:bg-blue before:mask-[url(/icons/tick.svg)] before:mask-contain'
-                }
-              />
+              {!address && (
+                <button className={'cursor-pointer mt-6'} onClick={openConnectModal}>
+                  <span className={'sr-only'}>Issue a token</span>
+                  <span
+                    className={
+                      'inline-flex items-center justify-center bg-grey-light size-13 rounded-2xl before:size-9 before:bg-blue before:mask-[url(/icons/tick.svg)] before:mask-contain'
+                    }
+                  />
+                </button>
+              )}
+              {address && (
+                <Link className={'cursor-pointer mt-6'} href={'/dashboard/'}>
+                  <span className={'sr-only'}>Issue a token</span>
+                  <span
+                    className={
+                      'inline-flex items-center justify-center bg-grey-light size-13 rounded-2xl before:size-9 before:bg-blue before:mask-[url(/icons/tick.svg)] before:mask-contain'
+                    }
+                  />
+                </Link>
+              )}
             </Card>
           </div>
         </Wrapper>

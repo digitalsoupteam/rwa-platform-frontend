@@ -24,7 +24,7 @@ const Header: FC = () => {
       text: 'Tokenize a business',
       link: '/tokenization/',
     },
-    { text: 'AirDrop', link: '#' },
+    { text: 'AirDrop', link: '/testnet/' },
     { text: 'Support', link: '#' },
   ];
 
@@ -56,7 +56,7 @@ const Header: FC = () => {
                   </li>
                 ))}
             </ul>
-            <Button className={'w-full'} visualType={'primary'}>
+            <Button className={'w-full'} visualType={'primary'} href={'/marketplace/'}>
               Start trading
             </Button>
           </div>

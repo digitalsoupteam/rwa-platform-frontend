@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
 import Image from 'next/image';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
 
 const HowToStart: FC = () => {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
@@ -39,6 +41,8 @@ const HowToStart: FC = () => {
       image: '/images/manage-stocks.jpg',
     },
   ];
+  const { openConnectModal } = useConnectModal();
+  const { address } = useAccount();
 
   if (!steps || !steps.length) return null;
 
@@ -90,9 +94,11 @@ const HowToStart: FC = () => {
                 </div>
               </Card>
             ))}
-            <Button className={'mt-3'} visualType={'secondary'}>
-              Connect wallet
-            </Button>
+            {!address && (
+              <Button className={'mt-3'} visualType={'secondary'} onClick={openConnectModal}>
+                Connect wallet
+              </Button>
+            )}
           </div>
           <div className={'relative h-full max-lg:hidden'}>
             <AnimatePresence mode='wait'>

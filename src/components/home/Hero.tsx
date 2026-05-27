@@ -49,7 +49,7 @@ const Hero: FC = () => {
             Buy and trade RWAs of diverse projects. <br />
             Build wealth that grows with time
           </p>
-          <Button className={'w-full mb-15 md:w-fit'} visualType={'primary'}>
+          <Button className={'w-full mb-15 md:w-fit'} visualType={'primary'} href={'/marketplace/'}>
             Start trading
           </Button>
 
@@ -108,7 +108,9 @@ const Hero: FC = () => {
           <Card className={'w-full'} size={'sm'}>
             <div className={'text-2xl/[1.2] font-semibold md:text-[2rem]/[1] tracking-tighter mb-4'}>Backed By</div>
             <div className={'grid grid-cols-2 gap-1 md:gap-3 md:grid-cols-4 lg:grid-cols-8'}>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/emc.svg'}
@@ -117,7 +119,9 @@ const Hero: FC = () => {
                   alt={'baza logo'}
                 />
               </div>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/eenviro.svg'}
@@ -126,7 +130,9 @@ const Hero: FC = () => {
                   alt={'baza logo'}
                 />
               </div>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/coreapp.svg'}
@@ -135,7 +141,9 @@ const Hero: FC = () => {
                   alt={'baza logo'}
                 />
               </div>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/baza.svg'}
@@ -144,7 +152,9 @@ const Hero: FC = () => {
                   alt={'baza logo'}
                 />
               </div>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/emc.svg'}
@@ -153,7 +163,9 @@ const Hero: FC = () => {
                   alt={'baza logo'}
                 />
               </div>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/eenviro.svg'}
@@ -162,7 +174,9 @@ const Hero: FC = () => {
                   alt={'baza logo'}
                 />
               </div>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/coreapp.svg'}
@@ -171,7 +185,9 @@ const Hero: FC = () => {
                   alt={'baza logo'}
                 />
               </div>
-              <div className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}>
+              <div
+                className={'flex items-center justify-center rounded-xl h-[58px] !bg-grey-light md:rounded-[1.25rem]'}
+              >
                 <Image
                   className={'h-[42px] w-[116px] object-contain object-center'}
                   src={'/images/baza.svg'}

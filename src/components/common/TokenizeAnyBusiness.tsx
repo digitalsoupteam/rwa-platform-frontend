@@ -2,6 +2,8 @@
 
 import React, { FC } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
+import { useAccount } from 'wagmi';
 
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
@@ -36,6 +38,9 @@ const TokenizeCard: FC<TokenizeCardProps> = ({ card }) => {
 };
 
 const CTA: FC = () => {
+  const { openConnectModal } = useConnectModal();
+  const { address } = useAccount();
+
   return (
     <Card className={'h-full flex flex-col text-white !bg-blue-gradient'} size={'lg'}>
       <Title className={'mb-3'} size={'md'} level={4}>
@@ -44,9 +49,16 @@ const CTA: FC = () => {
       <p className={'text-base whitespace-pre-wrap mb-auto'}>
         Sign up as a project owner and ask our AI-assistant for advice. Start getting funds today!
       </p>
-      <Button className={'w-fit mt-10.5'} visualType={'tertiary'}>
-        Sign up
-      </Button>
+      {!address && (
+        <Button className={'w-fit mt-10.5'} visualType={'tertiary'} onClick={openConnectModal}>
+          Sign up
+        </Button>
+      )}
+      {address && (
+        <Button className={'w-fit mt-10.5'} visualType={'tertiary'} href={'/dashboard/'}>
+          Sign up
+        </Button>
+      )}
     </Card>
   );
 };

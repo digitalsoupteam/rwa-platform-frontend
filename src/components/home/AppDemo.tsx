@@ -36,7 +36,7 @@ const AppDemo: FC<AppDemoProps> = ({ slides }) => {
             Get points for selling tokens, staking PLTs and inviting your friends to the platform. Get one governance
             token (GOV) for each point and manage the platform
           </p>
-          <Button className={'w-full mx-auto md:w-fit'} visualType={'primary'} href={'#'}>
+          <Button className={'w-full mx-auto md:w-fit'} visualType={'primary'} href={'/marketplace/'}>
             Start trading
           </Button>
         </div>
