@@ -2,7 +2,7 @@
 
 import React, { FC, useState } from 'react';
 import clsx from 'clsx';
-import { Checkbox, Icon } from '@/components/ui';
+import { Checkbox, Radio, Icon } from '@/components/ui';
 
 interface FilterSectionProps {
   title: string;
@@ -88,17 +88,14 @@ const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = '
     <div className={clsx('flex flex-col', className)}>
       <FilterSection title={'Sort by'}>
         {SORT_OPTIONS.map(opt => (
-          <label key={opt.value} className={'flex items-center gap-2.5 cursor-pointer'}>
-            <input
-              type={'radio'}
-              name={'sort-by'}
-              value={opt.value}
-              checked={sortBy === opt.value}
-              onChange={() => onSortChange?.(opt.value)}
-              className={'size-4 accent-blue-600 cursor-pointer shrink-0'}
-            />
-            <span className={'text-sm select-none'}>{opt.label}</span>
-          </label>
+          <Radio
+            key={opt.value}
+            label={opt.label}
+            name={'sort-by'}
+            value={opt.value}
+            checked={sortBy === opt.value}
+            onChange={() => onSortChange?.(opt.value)}
+          />
         ))}
       </FilterSection>
 

@@ -2,13 +2,12 @@
 
 import React, { FC, InputHTMLAttributes, useId } from 'react';
 import clsx from 'clsx';
-import Icon from './Icon';
 
-interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label?: string;
 }
 
-const Checkbox: FC<CheckboxProps> = ({ label, className, id, ...props }) => {
+const Radio: FC<RadioProps> = ({ label, className, id, ...props }) => {
   const generatedId = useId();
   const inputId = id ?? generatedId;
 
@@ -21,17 +20,19 @@ const Checkbox: FC<CheckboxProps> = ({ label, className, id, ...props }) => {
         className
       )}
     >
-      <input id={inputId} type="checkbox" className="sr-only" {...props} />
+      <input id={inputId} type="radio" className="sr-only" {...props} />
       <span
         className={clsx(
-          'shrink-0 size-5 rounded-[4px] border border-stroke-primary bg-transparent tr-d-all',
+          'shrink-0 size-5 rounded-full border border-stroke-primary bg-transparent tr-d-all',
           'flex items-center justify-center',
-          'group-has-[:checked]:bg-blue group-has-[:checked]:border-blue'
+          'group-has-[:checked]:border-blue'
         )}
       >
-        <Icon
-          name="check"
-          className="size-3 text-white opacity-0 group-has-[:checked]:opacity-100 tr-d-all"
+        <span
+          className={clsx(
+            'size-2.5 rounded-full bg-blue tr-d-all',
+            'opacity-0 scale-0 group-has-[:checked]:opacity-100 group-has-[:checked]:scale-100'
+          )}
         />
       </span>
       {label && (
@@ -41,4 +42,4 @@ const Checkbox: FC<CheckboxProps> = ({ label, className, id, ...props }) => {
   );
 };
 
-export default Checkbox;
+export default Radio;

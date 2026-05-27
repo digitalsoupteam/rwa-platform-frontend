@@ -12,6 +12,7 @@ import ShareSVG from '../../../public/icons/share.svg';
 import InfoSVG from '../../../public/icons/info.svg';
 import USDTSVG from '../../../public/icons/usdt.svg';
 import TriangleSVG from '../../../public/icons/triangle.svg';
+import CheckSVG from '../../../public/icons/check.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -26,6 +27,7 @@ const ICONS = {
   info: InfoSVG,
   usdt: USDTSVG,
   triangle: TriangleSVG,
+  check: CheckSVG
 } as const;
 
 export type IconType = keyof typeof ICONS;

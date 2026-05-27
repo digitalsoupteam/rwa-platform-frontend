@@ -11,8 +11,9 @@ import TextArea from './TextArea';
 import { Toast, toast } from './Toast';
 import Pagination from './Pagination';
 import Checkbox from './Checkbox';
+import Radio from './Radio';
 
 import type { IconType } from './Icon';
 
-export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination, Checkbox };
+export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination, Checkbox, Radio };
 export type { IconType };
