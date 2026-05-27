@@ -178,7 +178,7 @@ const PoolPage: FC = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pool: AnyPool = (poolData as any)?.getPool ?? null;
-
+console.log(pool)
   const projectId: string | undefined = pool?.businessId;
 
   const { data: businessData } = useQuery(GET_BUSINESS_WITH_RISK, {
@@ -491,7 +491,32 @@ const PoolPage: FC = () => {
               </div>
 
               {/* ── Buy / Sell widget ─────────────────────────────────────── */}
-              <BuyTokenWidget pool={pool} />
+              {(() => {
+                const now = Math.floor(Date.now() / 1000);
+                const start = pool?.entryPeriodStart;
+                const expired = pool?.entryPeriodExpired;
+                if (start && now < start) {
+                  return (
+                    <div className='bg-white border border-stroke-primary rounded-2xl p-5 flex flex-col gap-2'>
+                      <span className='text-base font-bold text-[#1D1D1F]'>Not open yet</span>
+                      <span className='text-sm text-grey-dark'>
+                        Collecting starts on {formatDate(start)}.
+                      </span>
+                    </div>
+                  );
+                }
+                if (expired && now > expired) {
+                  return (
+                    <div className='bg-white border border-stroke-primary rounded-2xl p-5 flex flex-col gap-2'>
+                      <span className='text-base font-bold text-[#1D1D1F]'>Collecting closed</span>
+                      <span className='text-sm text-grey-dark'>
+                        The entry period ended on {formatDate(expired)}.
+                      </span>
+                    </div>
+                  );
+                }
+                return <BuyTokenWidget pool={pool} />;
+              })()}
             </div>
           </div>
         </Wrapper>
