@@ -1,24 +1,87 @@
+'use client';
+
 import React, { FC } from 'react';
 import clsx from 'clsx';
+import { useQuery } from '@apollo/client/react';
 
 import { AppDemo, Hero, HowItWorks, HowToStart, PoolProgress } from '@/components/home';
 import { FAQ, Gallery } from '@/components/common';
 import { CommonLayout, Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
-import { ProjectCard } from '@/components/project';
+import { MarketplaceCard, type MarketplaceProject } from '@/components/marketplace';
+import { GET_POOLS } from '@/lib/pool/operations';
+import { formatTicker } from '@/lib/formatTicker';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyPool = any;
+
+function parseWeiToNum(raw: string | null | undefined): number {
+  if (!raw) return 0;
+  try {
+    return Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000;
+  } catch {
+    return 0;
+  }
+}
+
+function formatDate(ts: number | null | undefined): string {
+  if (!ts) return '—';
+  const d = new Date(ts * 1000);
+  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getFullYear()).slice(-2)}`;
+}
+
+function getPoolPrice(pool: AnyPool): string {
+  try {
+    if (pool.virtualHoldReserve && pool.virtualRwaReserve) {
+      const hold = Number(BigInt(pool.virtualHoldReserve) / BigInt(10) ** BigInt(15)) / 1000;
+      const rwa  = Number(BigInt(pool.virtualRwaReserve)  / BigInt(10) ** BigInt(15)) / 1000;
+      if (rwa > 0) return `${(hold / rwa).toFixed(2)} USDT`;
+    }
+    if (pool.expectedHoldAmount && pool.expectedRwaAmount) {
+      const hold = Number(BigInt(pool.expectedHoldAmount) / BigInt(10) ** BigInt(15)) / 1000;
+      const rwa  = Number(BigInt(pool.expectedRwaAmount)  / BigInt(10) ** BigInt(15)) / 1000;
+      if (rwa > 0) return `${(hold / rwa).toFixed(2)} USDT`;
+    }
+  } catch { /* fall through */ }
+  return '— USDT';
+}
+
+function getMonthlyProfit(rewardPercent: number | null | undefined): string {
+  if (rewardPercent == null) return '0';
+  const pct = rewardPercent > 100 ? rewardPercent / 100 : rewardPercent;
+  return pct % 1 === 0 ? String(pct) : pct.toFixed(1);
+}
+
+function poolToProject(pool: AnyPool): MarketplaceProject {
+  const price = getPoolPrice(pool);
+  return {
+    id:            pool.id,
+    name:          pool.name,
+    tokenTicker:   formatTicker(pool.name),
+    logoUrl:       pool.image ?? undefined,
+    price,
+    priceNum:      parseFloat(price) || 0,
+    monthlyProfit: getMonthlyProfit(pool.rewardPercent),
+    collected:     parseWeiToNum(pool.realHoldReserve),
+    total:         parseWeiToNum(pool.expectedHoldAmount),
+    dueDate:       formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
+    createdAt:     pool.createdAt ?? 0,
+    riskScore:     pool.riskScore ?? 0,
+  };
+}
 
 const Home: FC = () => {
-  const projects = [
-    { id: 'project-1', name: 'EcoGrow', description: 'Sustainable agriculture powered by IoT and AI', tags: ['Technology', 'Energy', 'Infrastructure'], riskScore: 82, poolsCount: 3, rewardPercent: '6.0' },
-    { id: 'project-2', name: 'UrbanVault', description: 'Premium real estate tokenization in major cities', tags: ['Real estate', 'Finance'], riskScore: 74, poolsCount: 5, rewardPercent: '4.5' },
-    { id: 'project-3', name: 'MediChain', description: 'Decentralized clinical trial data management', tags: ['Medicine', 'Technology'], riskScore: 91, poolsCount: 2, rewardPercent: '7.2' },
-    { id: 'project-4', name: 'ArtVault', description: 'Fractional ownership of blue-chip fine art', tags: ['Art', 'Collectibles', 'Finance'], riskScore: 67, poolsCount: 8, rewardPercent: '5.1' },
-    { id: 'project-5', name: 'GridLink', description: 'Renewable energy infrastructure bonds', tags: ['Energy', 'Infrastructure'], riskScore: 88, poolsCount: 4, rewardPercent: '6.8' },
-    { id: 'project-6', name: 'LuxeToken', description: 'Tokenized luxury goods and collectibles marketplace', tags: ['Luxury goods', 'Collectibles'], riskScore: 59, poolsCount: 1, rewardPercent: '3.9' },
-    { id: 'project-7', name: 'EnterpriseDAO', description: 'Enterprise software revenue sharing protocol', tags: ['Enterprise', 'Technology', 'Finance'], riskScore: 78, poolsCount: 6, rewardPercent: '5.5' },
-    { id: 'project-8', name: 'StageFund', description: 'Tokenized revenue from live entertainment venues', tags: ['Entertainment'], riskScore: 63, poolsCount: 2, rewardPercent: '8.0' },
-    { id: 'project-9', name: 'BridgeCapital', description: 'Infrastructure debt financing on-chain', tags: ['Infrastructure', 'Finance'], riskScore: 85, poolsCount: 7, rewardPercent: '4.2' },
-  ];
+  const { data } = useQuery(GET_POOLS, {
+    variables: { input: { filter: {} } },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const deployedPools: MarketplaceProject[] = ((data as any)?.getPools ?? [])
+    .filter((p: AnyPool) => p.poolAddress)
+    .map(poolToProject);
+
+  const sectionOnePools = deployedPools.slice(0, 9);
+  const sectionTwoPools = deployedPools.slice(0, 4);
 
   return (
     <CommonLayout>
@@ -34,20 +97,22 @@ const Home: FC = () => {
             <p className={'text-grey-dark text-base/[1.4]'}>Find assets that meet your goals</p>
           </div>
           <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 sm:grid-cols-2 lg:grid-cols-3'}>
-            {projects &&
-              projects.length > 0 &&
-              projects.map((project, index) => (
-                <ProjectCard className={clsx(index > 3 && 'max-md:hidden')} project={project} key={project.id} />
-              ))}
+            {sectionOnePools.map((project, index) => (
+              <MarketplaceCard
+                className={clsx(index > 3 && 'max-md:hidden')}
+                project={project}
+                key={project.id}
+              />
+            ))}
           </div>
-          <Button className={'w-full'} visualType={'secondary'} href={'#'}>
-            See 999 more projects
+          <Button className={'w-full'} visualType={'secondary'} href={'/marketplace'}>
+            See more projects
           </Button>
         </Wrapper>
       </section>
       <Gallery
         id={'detailed-info'}
-        title={'See detailed info about the\u00a0token \non the project page'}
+        title={'See detailed info about the token \non the project page'}
         images={[
           '/images/gallery-mock.png',
           '/images/gallery-mock.png',
@@ -110,7 +175,7 @@ const Home: FC = () => {
                   color={'white'}
                 >
                   <p>
-                    <strong>Project owner reliability</strong> — project owner’s score based on previous projects
+                    <strong>Project owner reliability</strong> — project owner's score based on previous projects
                   </p>
                 </Card>
               </div>
@@ -246,13 +311,13 @@ const Home: FC = () => {
           <Title className={'text-center mb-7 md:mb-10 lg:text-start'} size={'sm'}>
             Join most active projects
           </Title>
-          <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
-            {projects &&
-              projects.length > 0 &&
-              projects.slice(0, 4).map(project => <ProjectCard project={project} key={'rdy2earn' + project.id} />)}
+          <div className={'grid gap-3 mb-6 md:mb-5 md:gap-5 sm:grid-cols-2 lg:grid-cols-3'}>
+            {sectionTwoPools.map(project => (
+              <MarketplaceCard project={project} key={'rdy2earn' + project.id} />
+            ))}
           </div>
-          <Button className={'w-full'} visualType={'secondary'} href={'#'}>
-            See 999 more projects
+          <Button className={'w-full'} visualType={'secondary'} href={'/marketplace'}>
+            See more projects
           </Button>
         </Wrapper>
       </section>
@@ -262,7 +327,7 @@ const Home: FC = () => {
           { image: '/images/app-demo-1.png', title: 'Buy and sell tokens \nto get more points' },
           {
             image: '/images/app-demo-2.png',
-            title: 'Become a product owner: create your own pools\u00a0and get even more\u00a0points',
+            title: 'Become a product owner: create your own pools and get even more points',
           },
           {
             image: '/images/app-demo-3.png',

@@ -1,36 +1,37 @@
+'use client';
+
 import { Wrapper } from '@/components/layout';
 import React, { FC } from 'react';
 import { Button, Card, Title } from '@/components/ui';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useQuery } from '@apollo/client/react';
+import { GET_POOLS } from '@/lib/pool/operations';
+import { formatTicker } from '@/lib/formatTicker';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyPool = any;
+
+function getMonthlyProfit(rewardPercent: number | null | undefined): string {
+  if (rewardPercent == null) return '0';
+  const pct = rewardPercent > 100 ? rewardPercent / 100 : rewardPercent;
+  return pct % 1 === 0 ? String(pct) : pct.toFixed(1);
+}
 
 const Hero: FC = () => {
-  const projectBadges = [
-    {
-      network: 'WRY',
-      category: 'AT',
-      profit: '4',
-    },
-    {
-      network: 'GRW',
-      category: 'Real estate',
-      profit: '7',
-    },
-    {
-      network: 'TRX',
-      category: 'IE',
-      profit: '5',
-    },
-    {
-      network: 'CAP',
-      category: 'US',
-      profit: '8',
-    },
-    {
-      network: 'SOL',
-      category: 'Entertainment',
-      profit: '6',
-    },
-  ];
+  const { data } = useQuery(GET_POOLS, {
+    variables: { input: { filter: {} } },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pools: AnyPool[] = ((data as any)?.getPools ?? []).filter((p: AnyPool) => p.poolAddress).slice(0, 5);
+
+  const projectBadges = pools.map((pool: AnyPool) => ({
+    id: pool.id,
+    network: formatTicker(pool.name),
+    category: pool.tags?.[0] ?? '',
+    profit: getMonthlyProfit(pool.rewardPercent),
+  }));
 
   return (
     <section
@@ -59,24 +60,22 @@ const Hero: FC = () => {
           >
             {projectBadges &&
               projectBadges.length > 0 &&
-              projectBadges.map(({ network, category, profit }) => (
-                <Card
-                  className={'shrink-0 !bg-grey-transparent backdrop-blur-sm'}
-                  size={'xs'}
-                  key={network + category + profit}
-                >
-                  <div className={'flex items-center gap-3 mb-2'}>
-                    <span
-                      className={'text-white text-sm/[1.4] px-3 font-medium bg-blue-transparent rounded-[0.625rem]'}
-                    >
-                      {category}
-                    </span>
-                    <span className={'text-blue-ultra text-base/[1.2] font-semibold'}>{network}</span>
-                  </div>
-                  <div className={'text-white text-sm/[1.4]'}>
-                    <span className={'text-green'}>~{profit}% </span>/ monthly profit
-                  </div>
-                </Card>
+              projectBadges.map(({ id, network, category, profit }) => (
+                <Link href={`/pool/${id}`} key={id}>
+                  <Card className={'shrink-0 !bg-grey-transparent backdrop-blur-sm'} size={'xs'}>
+                    <div className={'flex items-center gap-3 mb-2'}>
+                      <span
+                        className={'text-white text-sm/[1.4] px-3 font-medium bg-blue-transparent rounded-[0.625rem]'}
+                      >
+                        {category}
+                      </span>
+                      <span className={'text-blue-ultra text-base/[1.2] font-semibold'}>{network}</span>
+                    </div>
+                    <div className={'text-white text-sm/[1.4]'}>
+                      <span className={'text-green'}>~{profit}% </span>/ monthly profit
+                    </div>
+                  </Card>
+                </Link>
               ))}
           </div>
 
