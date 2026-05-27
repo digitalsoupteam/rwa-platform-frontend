@@ -255,9 +255,10 @@ interface MemberCardProps {
   member: TeamMember;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit?: boolean;
 }
 
-const MemberCard: FC<MemberCardProps> = ({ member, onEdit, onDelete }) => (
+const MemberCard: FC<MemberCardProps> = ({ member, onEdit, onDelete, canEdit }) => (
   <div className={'w-full flex flex-col gap-2 p-4 border-stroke-primary border-1 rounded-xl'}>
     <div className={'w-full aspect-[0.855] rounded-xl overflow-hidden bg-grey-light'}>
       {member.photoUrl ? (
@@ -277,28 +278,30 @@ const MemberCard: FC<MemberCardProps> = ({ member, onEdit, onDelete }) => (
         <div className={'text-lg font-semibold leading-tight'}>{member.name}</div>
         {member.position && <div className={'text-base text-label-tertiary truncate mt-2'}>{member.position}</div>}
       </div>
-      <div className={'flex items-center gap-2 shrink-0'}>
-        <button
-          type={'button'}
-          onClick={onEdit}
-          className={
-            'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
-          }
-          aria-label={'Edit member'}
-        >
-          <Icon name={'edit'} className={'size-5'} />
-        </button>
-        <button
-          type={'button'}
-          onClick={onDelete}
-          className={
-            'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
-          }
-          aria-label={'Delete member'}
-        >
-          <Icon name={'trash'} className={'size-5'} />
-        </button>
-      </div>
+      {canEdit && (
+        <div className={'flex items-center gap-2 shrink-0'}>
+          <button
+            type={'button'}
+            onClick={onEdit}
+            className={
+              'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
+            }
+            aria-label={'Edit member'}
+          >
+            <Icon name={'edit'} className={'size-5'} />
+          </button>
+          <button
+            type={'button'}
+            onClick={onDelete}
+            className={
+              'cursor-pointer flex items-center justify-center size-10.5 p-1 text-black bg-bg-tertiary rounded-[10px] tr-d-all'
+            }
+            aria-label={'Delete member'}
+          >
+            <Icon name={'trash'} className={'size-5'} />
+          </button>
+        </div>
+      )}
     </div>
   </div>
 );
@@ -309,9 +312,10 @@ type PopoverTarget = 'add-button' | { memberId: string } | null;
 
 interface TeamSectionProps {
   companyId: string;
+  canEdit?: boolean;
 }
 
-const TeamSection: FC<TeamSectionProps> = ({ companyId }) => {
+const TeamSection: FC<TeamSectionProps> = ({ companyId, canEdit = false }) => {
   const { data: companyData, refetch } = useQuery(GET_COMPANY, {
     variables: { id: companyId },
     skip: !companyId,
@@ -399,11 +403,13 @@ const TeamSection: FC<TeamSectionProps> = ({ companyId }) => {
     }
   };
 
+  if (members.length === 0 && !canEdit) return null;
+
   return (
     <>
       <div className={'flex items-center justify-between mb-6'}>
         <Title size={'xs'} level={2}>Team</Title>
-        {members.length > 0 && (
+        {members.length > 0 && canEdit && (
           <div ref={addContainerRef} className={'relative'}>
             <Button
               visualType={'quaternary'}
@@ -426,7 +432,7 @@ const TeamSection: FC<TeamSectionProps> = ({ companyId }) => {
         )}
       </div>
 
-      {members.length === 0 && (
+      {members.length === 0 && canEdit && (
         <div ref={emptyContainerRef} className={'relative max-w-110'}>
           <ButtonBorderDash
             className={'min-h-74.5'}
@@ -458,6 +464,7 @@ const TeamSection: FC<TeamSectionProps> = ({ companyId }) => {
                 member={member}
                 onEdit={() => setPopoverTarget(t => typeof t === 'object' && t?.memberId === member.id ? null : { memberId: member.id })}
                 onDelete={() => setDeleteTarget(member.id)}
+                canEdit={canEdit}
               />
               {typeof popoverTarget === 'object' && popoverTarget?.memberId === member.id && (
                 <MemberPopover

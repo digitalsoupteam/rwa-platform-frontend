@@ -14,6 +14,7 @@ import { CategoryCheckboxes, TeamSection } from '@/components/dashboard';
 import { ProjectCard } from '@/components/project';
 import { BusinessOwnerType } from '@/gql/graphql';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 const CompanyPage: FC = () => {
   const [isEditModalOpened, setIsEditModalOpened] = useState(false);
@@ -32,6 +33,7 @@ const CompanyPage: FC = () => {
   const params = useParams();
   const id = params.companyId as string;
   const router = useRouter();
+  const { user } = useAuth();
 
   const {
     data: companyData,
@@ -208,6 +210,13 @@ const CompanyPage: FC = () => {
     setAboutValue(companyData.getCompany.description);
   }, [companyData]);
 
+  const company = companyData?.getCompany;
+  const canEdit = user != null && company != null && (
+    company.ownerId === user.userId ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (company.users as any[])?.some((u: any) => u.userId === user.userId)
+  );
+
   return (
     <DashboardLayout>
       <section className={'mb-12'}>
@@ -229,15 +238,17 @@ const CompanyPage: FC = () => {
                   </div>
                 </div>
                 <div className={'flex gap-2 lg:items-end lg:justify-end'}>
-                  <Button
-                    className={
-                      'max-md:w-full before:size-3.5 before:mask-[url(/icons/edit.svg)] mask-contain before:bg-current'
-                    }
-                    visualType={'quinary'}
-                    onClick={() => setIsEditModalOpened(true)}
-                  >
-                    Update
-                  </Button>
+                  {canEdit && (
+                    <Button
+                      className={
+                        'max-md:w-full before:size-3.5 before:mask-[url(/icons/edit.svg)] mask-contain before:bg-current'
+                      }
+                      visualType={'quinary'}
+                      onClick={() => setIsEditModalOpened(true)}
+                    >
+                      Update
+                    </Button>
+                  )}
                   <Button
                     className={
                       'max-md:w-full before:size-3.5 before:mask-[url(/icons/share.svg)] mask-contain before:bg-current'
@@ -305,7 +316,7 @@ const CompanyPage: FC = () => {
 
       <section className={'mb-12'}>
         <Wrapper>
-          <TeamSection companyId={id} />
+          <TeamSection companyId={id} canEdit={canEdit} />
         </Wrapper>
       </section>
 
