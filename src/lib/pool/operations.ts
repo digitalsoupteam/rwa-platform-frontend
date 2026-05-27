@@ -93,6 +93,7 @@ export const GET_POOLS = gql`
       virtualHoldReserve
       virtualRwaReserve
       isFullyReturned
+      tags
     }
   }
 `;

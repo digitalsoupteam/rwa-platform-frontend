@@ -4,7 +4,7 @@ import React, { FC, useMemo, useState, useCallback } from 'react';
 import clsx from 'clsx';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI, ERC1155_BALANCE_ABI, POOL_ABI } from '@/lib/pool/factoryAbi';
+import { HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI, ERC1155_BALANCE_ABI, POOL_ABI } from '@/lib/contracts';
 import { Button, toast } from '@/components/ui';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

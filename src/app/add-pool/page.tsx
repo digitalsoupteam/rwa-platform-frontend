@@ -9,7 +9,7 @@ import { useMutation, useApolloClient } from '@apollo/client/react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import clsx from 'clsx';
 import { CREATE_POOL, REQUEST_POOL_APPROVAL_SIGNATURES, GET_SIGNATURE_TASK } from '@/lib/pool/operations';
-import { FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI } from '@/lib/pool/factoryAbi';
+import { FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI } from '@/lib/contracts';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const TIMING_OPTIONS = Array.from({ length: 67 }, (_, i) => `${(i + 1) * 5} days`); // max 335 days: completionPeriod = timing + 30 ≤ 365
@@ -382,7 +382,14 @@ const AddPoolContent: FC = () => {
 
         if (field === 'percent') {
           const pct = parseFloat(clampedValue) || 0;
-          t.amount = debtAmount > 0 && pct > 0 ? String(Math.round((pct / 100) * debtAmount)) : '';
+          if (debtAmount > 0 && pct > 0) {
+            const otherAmt = prev.reduce((sum, t, j) => j !== index ? sum + (parseFloat(t.amount) || 0) : sum, 0);
+            const maxAmt = Math.floor(debtAmount - otherAmt);
+            const rawAmt = Math.round((pct / 100) * debtAmount);
+            t.amount = String(Math.min(rawAmt, maxAmt));
+          } else {
+            t.amount = '';
+          }
         } else if (field === 'amount') {
           const amt = parseFloat(clampedValue) || 0;
           t.percent = debtAmount > 0 && amt > 0 ? String(+((amt / debtAmount) * 100).toFixed(2)) : '';
@@ -424,13 +431,13 @@ const AddPoolContent: FC = () => {
     const incomingAmounts = filledTranches.map(t => toWei(t.amount));
     const incomingDeadlines = filledTranches.map(t => BigInt(endUnix + daysFromTimingOption(t.timing) * 86400));
 
-    const lastDeadline = incomingDeadlines.length > 0 ? incomingDeadlines[incomingDeadlines.length - 1] : BigInt(endUnix);
+    const lastDeadline = incomingDeadlines.length > 0 ? incomingDeadlines[incomingDeadlines.length - 1] : BigInt(endUnix + 86400);
     const completionPeriodExpired = lastDeadline + BigInt(30 * 86400);
 
-    // Single outgoing tranche: full financial goal disbursed to owner at fundraising end
+    // Single outgoing tranche: full financial goal disbursed to owner 1 day after fundraising end
     const holdAmount = toWei(goalNum);
     const outgoingAmounts = [holdAmount];
-    const outgoingTimestamps = [BigInt(endUnix)];
+    const outgoingTimestamps = [BigInt(endUnix + 86400)];
 
     return {
       startUnix,
@@ -478,7 +485,7 @@ const AddPoolContent: FC = () => {
         buildTranches();
 
       const holdAmount = toWei(goalNum);
-      const rewardBps = BigInt(Math.round(profitNum * 100));
+      const rewardBps = BigInt(Math.round(+((profitNum * 100).toFixed(2))));
 
       const totalExpected = holdAmount + (holdAmount * rewardBps) / BigInt(10000);
       const totalIncoming = incomingAmounts.reduce((a, b) => a + b, BigInt(0));
@@ -575,6 +582,31 @@ const AddPoolContent: FC = () => {
 
       // Step 5: Call the Factory contract
       setDeployStatus('Sending transaction…');
+      console.log('[deployPool] args', {
+        createPoolFeeRatio: CREATE_POOL_FEE_RATIO,
+        entityId: pool.id,
+        rwa: pool.rwaAddress,
+        expectedHoldAmount: holdAmount.toString(),
+        expectedRwaAmount: goalNum.toString(),
+        priceImpactPercent: PRICE_IMPACT_PERCENT.toString(),
+        rewardPercent: rewardBps.toString(),
+        entryPeriodStart: startUnix,
+        entryPeriodExpired: endUnix,
+        completionPeriodExpired: completionPeriodExpiredUnix.toString(),
+        entryFeePercent: '100',
+        exitFeePercent: '100',
+        fixedSell: poolType === 'fixed',
+        allowEntryBurn: false,
+        awaitCompletionExpired: true,
+        floatingOutTranchesTimestamps: false,
+        outgoingAmounts: outgoingAmounts.map(a => a.toString()),
+        outgoingTimestamps: outgoingTimestamps.map(t => t.toString()),
+        incomingAmounts: incomingAmounts.map(a => a.toString()),
+        incomingDeadlines: incomingDeadlines.map(d => d.toString()),
+        signers,
+        signatures,
+        expired: expired.toString(),
+      });
       const txHash = await writeContractAsync({
         address: FACTORY_ADDRESS,
         abi: FACTORY_ABI,

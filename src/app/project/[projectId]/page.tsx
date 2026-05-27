@@ -14,7 +14,7 @@ import {
   REQUEST_BUSINESS_APPROVAL_SIGNATURES,
 } from '@/lib/business/operations';
 import { GET_SIGNATURE_TASK } from '@/lib/pool/operations';
-import { ERC20_APPROVE_ABI, FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS } from '@/lib/pool/factoryAbi';
+import { ERC20_APPROVE_ABI, FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS } from '@/lib/contracts';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { NewsList } from '@/components/news';
 import { Modal } from '@/components/common';

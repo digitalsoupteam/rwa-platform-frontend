@@ -43,13 +43,12 @@ const CompanyPage: FC = () => {
   const [updateCompany, { data: updatedCompany, loading: updatingCompany }] = useMutation(UPDATE_COMPANY);
   const [deleteCompany] = useMutation(DELETE_COMPANY);
 
-  const {
-    data: businessesData,
-    refetch: refetchBusinesses,
-  } = useQuery(GET_BUSINESSES, {
+  const { data: businessesData, refetch: refetchBusinesses } = useQuery(GET_BUSINESSES, {
     variables: { input: { filter: { ownerId: id, ownerType: BusinessOwnerType.Company } } },
     skip: !id,
   });
+  
+  console.log(businessesData);
 
   const [createBusiness, { loading: creatingBusiness }] = useMutation(CREATE_BUSINESS);
 

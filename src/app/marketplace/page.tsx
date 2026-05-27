@@ -1,29 +1,81 @@
 'use client';
 
 import React, { FC, useState } from 'react';
+import { useQuery } from '@apollo/client/react';
 import { CommonLayout, Wrapper } from '@/components/layout';
-import { Button, Title } from '@/components/ui';
+import { Button, Icon, Title } from '@/components/ui';
 import { FAQ } from '@/components/common';
 import { MarketplaceCard, MarketplaceFilters, MobileFiltersModal } from '@/components/marketplace';
 import type { MarketplaceProject } from '@/components/marketplace';
-import { Icon } from '@/components/ui';
+import { GET_POOLS } from '@/lib/pool/operations';
 
-const ALL_PROJECTS: MarketplaceProject[] = [
-  { id: 'proj-1',  name: 'EcoGrow',      tokenTicker: 'ECG', price: '71.03 USDT',  monthlyProfit: '6',   collected: 71000,  total: 100000, dueDate: '30.06.26', iconBg: 'linear-gradient(135deg, #1D58E9, #38abe3)' },
-  { id: 'proj-2',  name: 'UrbanVault',   tokenTicker: 'URV', price: '64.55 USDT',  monthlyProfit: '4.5', collected: 48000,  total: 80000,  dueDate: '15.07.26', iconBg: 'linear-gradient(135deg, #18E53A, #1D58E9)' },
-  { id: 'proj-3',  name: 'MediChain',    tokenTicker: 'MDC', price: '71.03 USDT',  monthlyProfit: '7',   collected: 22000,  total: 120000, dueDate: '01.08.26', iconBg: 'linear-gradient(135deg, #BE142A, #1D58E9)' },
-  { id: 'proj-4',  name: 'ArtVault',     tokenTicker: 'ATV', price: '22.00 USDT',  monthlyProfit: '5',   collected: 15000,  total: 50000,  dueDate: '20.06.26', iconBg: 'linear-gradient(135deg, #6DBDFF, #1D58E9)' },
-  { id: 'proj-5',  name: 'GridLink',     tokenTicker: 'GRL', price: '51.01 USDT',  monthlyProfit: '6.8', collected: 63000,  total: 90000,  dueDate: '10.07.26', iconBg: 'linear-gradient(135deg, #38abe3, #18E53A)' },
-  { id: 'proj-6',  name: 'LuxeToken',    tokenTicker: 'LXT', price: '71.03 USDT',  monthlyProfit: '3.9', collected: 95000,  total: 100000, dueDate: '30.05.26', iconBg: 'linear-gradient(135deg, #202E46, #6DBDFF)' },
-  { id: 'proj-7',  name: 'EnterpriseDAO',tokenTicker: 'END', price: '64.55 USDT',  monthlyProfit: '5.5', collected: 41000,  total: 150000, dueDate: '01.09.26', iconBg: 'linear-gradient(135deg, #1D58E9, #BE142A)' },
-  { id: 'proj-8',  name: 'StageFund',    tokenTicker: 'STF', price: '22.00 USDT',  monthlyProfit: '8',   collected: 18000,  total: 60000,  dueDate: '15.08.26', iconBg: 'linear-gradient(135deg, #38abe3, #6DBDFF)' },
-  { id: 'proj-9',  name: 'BridgeCapital',tokenTicker: 'BRC', price: '71.03 USDT',  monthlyProfit: '4.2', collected: 85000,  total: 110000, dueDate: '20.07.26', iconBg: 'linear-gradient(135deg, #202E46, #1D58E9)' },
-  { id: 'proj-10', name: 'GreenField',   tokenTicker: 'GRF', price: '51.01 USDT',  monthlyProfit: '5.9', collected: 8000,   total: 75000,  dueDate: '30.09.26', iconBg: 'linear-gradient(135deg, #18E53A, #38abe3)' },
-  { id: 'proj-11', name: 'CityBlock',    tokenTicker: 'CTB', price: '64.55 USDT',  monthlyProfit: '4.8', collected: 92000,  total: 100000, dueDate: '10.06.26', iconBg: 'linear-gradient(135deg, #6DBDFF, #18E53A)' },
-  { id: 'proj-12', name: 'DataCore',     tokenTicker: 'DTC', price: '22.00 USDT',  monthlyProfit: '6.3', collected: 35000,  total: 80000,  dueDate: '25.08.26', iconBg: 'linear-gradient(135deg, #1D58E9, #202E46)' },
-];
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyPool = any;
+
+function parseWeiToNum(raw: string | null | undefined): number {
+  if (!raw) return 0;
+  try {
+    return Number(BigInt(raw) / BigInt(10) ** BigInt(15)) / 1000;
+  } catch {
+    return 0;
+  }
+}
+
+function formatDate(ts: number | null | undefined): string {
+  if (!ts) return '—';
+  const d = new Date(ts * 1000);
+  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getFullYear()).slice(-2)}`;
+}
+
+function getPoolPrice(pool: AnyPool): string {
+  try {
+    if (pool.virtualHoldReserve && pool.virtualRwaReserve) {
+      const hold = Number(BigInt(pool.virtualHoldReserve) / BigInt(10) ** BigInt(15)) / 1000;
+      const rwa  = Number(BigInt(pool.virtualRwaReserve)  / BigInt(10) ** BigInt(15)) / 1000;
+      if (rwa > 0) return `${(hold / rwa).toFixed(2)} USDT`;
+    }
+    if (pool.expectedHoldAmount && pool.expectedRwaAmount) {
+      const hold = Number(BigInt(pool.expectedHoldAmount) / BigInt(10) ** BigInt(15)) / 1000;
+      const rwa  = Number(BigInt(pool.expectedRwaAmount)  / BigInt(10) ** BigInt(15)) / 1000;
+      if (rwa > 0) return `${(hold / rwa).toFixed(2)} USDT`;
+    }
+  } catch { /* fall through */ }
+  return '— USDT';
+}
+
+function getMonthlyProfit(rewardPercent: number | null | undefined): string {
+  if (rewardPercent == null) return '0';
+  // stored as basis points (e.g. 600 → 6%) or as plain percent (e.g. 6)
+  const pct = rewardPercent > 100 ? rewardPercent / 100 : rewardPercent;
+  return pct % 1 === 0 ? String(pct) : pct.toFixed(1);
+}
+
+function getTicker(name: string): string {
+  const initials = name.split(/\s+/).map(w => w[0] ?? '').join('').toUpperCase();
+  return initials.slice(0, 4) || name.slice(0, 3).toUpperCase();
+}
+
+function poolToProject(pool: AnyPool): MarketplaceProject {
+  return {
+    id:            pool.id,
+    name:          pool.name,
+    tokenTicker:   getTicker(pool.name),
+    logoUrl:       pool.image ?? undefined,
+    price:         getPoolPrice(pool),
+    monthlyProfit: getMonthlyProfit(pool.rewardPercent),
+    collected:     parseWeiToNum(pool.realHoldReserve),
+    total:         parseWeiToNum(pool.expectedHoldAmount),
+    dueDate:       formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
+  };
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const ACTIVE_FILTER_CHIPS = ['Active', 'Blockchain', 'Commodity'];
+
+const VISIBLE_COUNT = 9;
 
 const FAQ_LIST = [
   {
@@ -62,7 +114,7 @@ const FAQ_LIST = [
   },
 ];
 
-const VISIBLE_COUNT = 9;
+// ── Component ─────────────────────────────────────────────────────────────────
 
 const Marketplace: FC = () => {
   const [activeChips, setActiveChips] = useState(ACTIVE_FILTER_CHIPS);
@@ -71,7 +123,15 @@ const Marketplace: FC = () => {
 
   const removeChip = (chip: string) => setActiveChips(prev => prev.filter(c => c !== chip));
 
-  const visibleProjects = showAll ? ALL_PROJECTS : ALL_PROJECTS.slice(0, VISIBLE_COUNT);
+  const { data, loading, error } = useQuery(GET_POOLS, {
+    variables: { input: { filter: {} } },
+  });
+
+  console.log('[Marketplace] pools query →', { loading, error, data });
+
+  // @ts-ignore
+  const allProjects: MarketplaceProject[] = (data?.getPools ?? []).map(poolToProject);
+  const visibleProjects = showAll ? allProjects : allProjects.slice(0, VISIBLE_COUNT);
 
   return (
     <CommonLayout>
@@ -99,7 +159,6 @@ const Marketplace: FC = () => {
       {/* Marketplace content */}
       <section className={'relative z-10 mb-25 md:mb-50'}>
         <Wrapper>
-          {/* Main layout */}
           <div className={'flex gap-5 items-start'}>
             {/* Sidebar (desktop only) */}
             <div className={'hidden lg:block w-[272px] shrink-0 sticky top-24'}>
@@ -133,9 +192,7 @@ const Marketplace: FC = () => {
                   <button
                     key={chip}
                     onClick={() => removeChip(chip)}
-                    className={
-                      'shrink-0 flex items-center gap-4 bg-blue-dim text-black text-sm font-normal px-4 py-2 rounded-full tr-d-all hover:bg-blue-dim/70'
-                    }
+                    className={'shrink-0 flex items-center gap-4 bg-blue-dim text-black text-sm font-normal px-4 py-2 rounded-full tr-d-all hover:bg-blue-dim/70'}
                   >
                     {chip}
                     <span className={'size-2 mask-contain mask-[url(/icons/cross.svg)] bg-black'} />
@@ -155,19 +212,30 @@ const Marketplace: FC = () => {
                 )}
               </div>
 
-              <div className={'grid gap-3 sm:grid-cols-2 xl:grid-cols-3 mb-5'}>
-                {visibleProjects.map(project => (
-                  <MarketplaceCard key={project.id} project={project} />
-                ))}
-              </div>
-              {!showAll && ALL_PROJECTS.length > VISIBLE_COUNT && (
-                <Button
-                  className={'w-full'}
-                  visualType={'secondary'}
-                  onClick={() => setShowAll(true)}
-                >
-                  Show more projects
-                </Button>
+              {/* Cards */}
+              {loading ? (
+                <div className={'grid gap-3 sm:grid-cols-2 xl:grid-cols-3 mb-5'}>
+                  {Array.from({ length: VISIBLE_COUNT }).map((_, i) => (
+                    <div key={i} className={'bg-grey-light rounded-[2.5rem] h-[330px] animate-pulse'} />
+                  ))}
+                </div>
+              ) : allProjects.length === 0 ? (
+                <p className={'text-grey-dark text-base py-12 text-center'}>
+                  {error ? `Error: ${error.message}` : 'No pools available yet.'}
+                </p>
+              ) : (
+                <>
+                  <div className={'grid gap-3 sm:grid-cols-2 xl:grid-cols-3 mb-5'}>
+                    {visibleProjects.map(project => (
+                      <MarketplaceCard key={project.id} project={project} />
+                    ))}
+                  </div>
+                  {!showAll && allProjects.length > VISIBLE_COUNT && (
+                    <Button className={'w-full'} visualType={'secondary'} onClick={() => setShowAll(true)}>
+                      Show more projects
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
