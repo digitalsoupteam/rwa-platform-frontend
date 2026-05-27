@@ -7,6 +7,7 @@ import { Button, Icon, Title } from '@/components/ui';
 import { FAQ } from '@/components/common';
 import { MarketplaceCard, MarketplaceFilters, MobileFiltersModal } from '@/components/marketplace';
 import type { MarketplaceProject } from '@/components/marketplace';
+import { RISK_SCORE_RANGES } from '@/components/marketplace/MarketplaceFilters';
 import { GET_POOLS } from '@/lib/pool/operations';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -72,6 +73,7 @@ function poolToProject(pool: AnyPool): MarketplaceProject {
     total:         parseWeiToNum(pool.expectedHoldAmount),
     dueDate:       formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
     createdAt:     pool.createdAt ?? 0,
+    riskScore:     pool.riskScore ?? 0,
   };
 }
 
@@ -125,6 +127,7 @@ const Marketplace: FC = () => {
   const [showAll, setShowAll] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
+  const [selectedRanges, setSelectedRanges] = useState<number[]>([]);
 
   const removeChip = (chip: string) => setActiveChips(prev => prev.filter(c => c !== chip));
 
@@ -138,6 +141,13 @@ const Marketplace: FC = () => {
   const allProjects: MarketplaceProject[] = (data?.getPools ?? [])
     .filter((pool: AnyPool) => !!pool.poolAddress)
     .map(poolToProject)
+    .filter((p: MarketplaceProject) => {
+      if (selectedRanges.length === 0) return true;
+      return selectedRanges.some(i => {
+        const range = RISK_SCORE_RANGES[i];
+        return p.riskScore >= range.min && p.riskScore <= range.max;
+      });
+    })
     .sort((a: MarketplaceProject, b: MarketplaceProject) => {
       switch (sortBy) {
         case 'price_desc': return b.priceNum - a.priceNum;
@@ -178,7 +188,7 @@ const Marketplace: FC = () => {
           <div className={'flex gap-5 items-start'}>
             {/* Sidebar (desktop only) */}
             <div className={'hidden lg:block w-[272px] shrink-0 sticky top-24'}>
-              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} />
+              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} selectedRanges={selectedRanges} onRangeChange={setSelectedRanges} />
             </div>
 
             {/* Content column */}
@@ -269,6 +279,8 @@ const Marketplace: FC = () => {
           onClose={() => setMobileFiltersOpen(false)}
           sortBy={sortBy}
           onSortChange={setSortBy}
+          selectedRanges={selectedRanges}
+          onRangeChange={setSelectedRanges}
         />
       )}
     </CommonLayout>

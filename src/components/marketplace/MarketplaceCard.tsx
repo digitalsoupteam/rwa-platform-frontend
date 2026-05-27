@@ -16,6 +16,7 @@ export interface MarketplaceProject {
   total: number;
   dueDate: string;
   createdAt: number;
+  riskScore: number;
 }
 
 interface MarketplaceCardProps extends HTMLAttributes<HTMLAnchorElement> {

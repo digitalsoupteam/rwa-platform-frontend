@@ -94,6 +94,7 @@ export const GET_POOLS = gql`
       virtualRwaReserve
       isFullyReturned
       tags
+      riskScore
     }
   }
 `;

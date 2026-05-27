@@ -41,7 +41,17 @@ interface MarketplaceFiltersProps {
   className?: string;
   sortBy?: string;
   onSortChange?: (value: string) => void;
+  selectedRanges?: number[];
+  onRangeChange?: (ranges: number[]) => void;
 }
+
+export const RISK_SCORE_RANGES = [
+  { label: '0 – 29',   min: 0,  max: 29  },
+  { label: '30 – 49',  min: 30, max: 49  },
+  { label: '50 – 69',  min: 50, max: 69  },
+  { label: '70 – 89',  min: 70, max: 89  },
+  { label: '90 – 100', min: 90, max: 100 },
+] as const;
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest first' },
@@ -58,7 +68,7 @@ const COUNTRIES = [
   'Denmark', 'Estonia', 'Finland', 'France', 'Germany',
 ];
 
-const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange }) => {
+const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange, selectedRanges = [], onRangeChange }) => {
   const [countrySearch, setCountrySearch] = useState('');
 
   const filteredCountries = COUNTRIES.filter(c =>
@@ -83,11 +93,20 @@ const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = '
         ))}
       </FilterSection>
 
-      <FilterSection title={'AI rating'}>
-        <Checkbox label={'High ROI'} defaultChecked />
-        <Checkbox label={'Verified'} defaultChecked />
-        <Checkbox label={'Low risk'} />
-        <Checkbox label={'New'} />
+      <FilterSection title={'AI risk score'}>
+        {RISK_SCORE_RANGES.map((range, i) => (
+          <Checkbox
+            key={range.label}
+            label={range.label}
+            checked={selectedRanges.includes(i)}
+            onChange={e => {
+              const next = e.target.checked
+                ? [...selectedRanges, i]
+                : selectedRanges.filter(r => r !== i);
+              onRangeChange?.(next);
+            }}
+          />
+        ))}
       </FilterSection>
 
       <FilterSection title={'Field'}>

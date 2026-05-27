@@ -11,6 +11,8 @@ interface MobileFiltersModalProps {
   onClose: () => void;
   sortBy?: string;
   onSortChange?: (value: string) => void;
+  selectedRanges?: number[];
+  onRangeChange?: (ranges: number[]) => void;
 }
 
 const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
@@ -20,6 +22,8 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
   onClose,
   sortBy,
   onSortChange,
+  selectedRanges,
+  onRangeChange,
 }) => {
   useEffect(() => {
     document.body.classList.add('locked');
@@ -64,7 +68,7 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
 
       {/* Scrollable filter body */}
       <div className={'flex-1 overflow-y-auto px-3'}>
-        <MarketplaceFilters sortBy={sortBy} onSortChange={onSortChange} />
+        <MarketplaceFilters sortBy={sortBy} onSortChange={onSortChange} selectedRanges={selectedRanges} onRangeChange={onRangeChange} />
       </div>
 
       {/* Fixed bottom bar */}
