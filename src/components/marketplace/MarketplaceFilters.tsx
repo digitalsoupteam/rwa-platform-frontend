@@ -43,7 +43,20 @@ interface MarketplaceFiltersProps {
   onSortChange?: (value: string) => void;
   selectedRanges?: number[];
   onRangeChange?: (ranges: number[]) => void;
+  categories?: string[];
+  selectedCategories?: string[];
+  onCategoryChange?: (categories: string[]) => void;
+  selectedStages?: PoolStage[];
+  onStageChange?: (stages: PoolStage[]) => void;
 }
+
+export const POOL_STAGES = [
+  { value: 'collecting',    label: 'Collecting'    },
+  { value: 'paying_debt',   label: 'Paying debt'   },
+  { value: 'paying_profit', label: 'Paying profit' },
+] as const;
+
+export type PoolStage = typeof POOL_STAGES[number]['value'];
 
 export const RISK_SCORE_RANGES = [
   { label: '0 – 29',   min: 0,  max: 29  },
@@ -68,7 +81,7 @@ const COUNTRIES = [
   'Denmark', 'Estonia', 'Finland', 'France', 'Germany',
 ];
 
-const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange, selectedRanges = [], onRangeChange }) => {
+const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange, selectedRanges = [], onRangeChange, categories = [], selectedCategories = [], onCategoryChange, selectedStages = [], onStageChange }) => {
   const [countrySearch, setCountrySearch] = useState('');
 
   const filteredCountries = COUNTRIES.filter(c =>
@@ -109,20 +122,40 @@ const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = '
         ))}
       </FilterSection>
 
-      <FilterSection title={'Field'}>
-        <Checkbox label={'Real estate'} defaultChecked />
-        <Checkbox label={'Startups'} />
-        <Checkbox label={'Entertainment'} defaultChecked />
-        <Checkbox label={'Art and collecting'} />
-        <Checkbox label={'Education'} />
-        <Checkbox label={'Intellectual property'} defaultChecked />
-        <Checkbox label={'Medicine'} />
+      <FilterSection title={'Category'}>
+        {categories.length === 0 ? (
+          <span className={'text-sm text-grey-dark'}>No categories available</span>
+        ) : (
+          categories.map(cat => (
+            <Checkbox
+              key={cat}
+              label={cat}
+              checked={selectedCategories.includes(cat)}
+              onChange={e => {
+                const next = e.target.checked
+                  ? [...selectedCategories, cat]
+                  : selectedCategories.filter(c => c !== cat);
+                onCategoryChange?.(next);
+              }}
+            />
+          ))
+        )}
       </FilterSection>
 
       <FilterSection title={'Pool stage'}>
-        <Checkbox label={'Collecting'} defaultChecked />
-        <Checkbox label={'Paying debt'} />
-        <Checkbox label={'Paying profit'} />
+        {POOL_STAGES.map(stage => (
+          <Checkbox
+            key={stage.value}
+            label={stage.label}
+            checked={selectedStages.includes(stage.value)}
+            onChange={e => {
+              const next = e.target.checked
+                ? [...selectedStages, stage.value]
+                : selectedStages.filter(s => s !== stage.value);
+              onStageChange?.(next);
+            }}
+          />
+        ))}
       </FilterSection>
 
       <FilterSection title={'Pool type'}>

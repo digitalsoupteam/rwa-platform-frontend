@@ -7,7 +7,7 @@ import { Button, Icon, Title } from '@/components/ui';
 import { FAQ } from '@/components/common';
 import { MarketplaceCard, MarketplaceFilters, MobileFiltersModal } from '@/components/marketplace';
 import type { MarketplaceProject } from '@/components/marketplace';
-import { RISK_SCORE_RANGES } from '@/components/marketplace/MarketplaceFilters';
+import { RISK_SCORE_RANGES, POOL_STAGES, type PoolStage } from '@/components/marketplace/MarketplaceFilters';
 import { GET_POOLS } from '@/lib/pool/operations';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -128,6 +128,8 @@ const Marketplace: FC = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const [selectedRanges, setSelectedRanges] = useState<number[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedStages, setSelectedStages] = useState<PoolStage[]>([]);
 
   const removeChip = (chip: string) => setActiveChips(prev => prev.filter(c => c !== chip));
 
@@ -137,9 +139,26 @@ const Marketplace: FC = () => {
 
   console.log('[Marketplace] pools query →', { loading, error, data });
 
-  // @ts-ignore
-  const allProjects: MarketplaceProject[] = (data?.getPools ?? [])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawPools: AnyPool[] = (data as any)?.getPools ?? [];
+  const categories: string[] = Array.from(new Set<string>(rawPools.flatMap((p: AnyPool) => p.tags ?? []))).sort();
+
+  function getPoolStage(pool: AnyPool): PoolStage {
+    if (pool.isFullyReturned) return 'paying_profit';
+    if (pool.isTargetReached) return 'paying_debt';
+    return 'collecting';
+  }
+
+  const allProjects: MarketplaceProject[] = rawPools
     .filter((pool: AnyPool) => !!pool.poolAddress)
+    .filter((pool: AnyPool) => {
+      if (selectedStages.length === 0) return true;
+      return selectedStages.includes(getPoolStage(pool));
+    })
+    .filter((pool: AnyPool) => {
+      if (selectedCategories.length === 0) return true;
+      return selectedCategories.some(cat => (pool.tags ?? []).includes(cat));
+    })
     .map(poolToProject)
     .filter((p: MarketplaceProject) => {
       if (selectedRanges.length === 0) return true;
@@ -188,7 +207,7 @@ const Marketplace: FC = () => {
           <div className={'flex gap-5 items-start'}>
             {/* Sidebar (desktop only) */}
             <div className={'hidden lg:block w-[272px] shrink-0 sticky top-24'}>
-              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} selectedRanges={selectedRanges} onRangeChange={setSelectedRanges} />
+              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} selectedRanges={selectedRanges} onRangeChange={setSelectedRanges} categories={categories} selectedCategories={selectedCategories} onCategoryChange={setSelectedCategories} selectedStages={selectedStages} onStageChange={setSelectedStages} />
             </div>
 
             {/* Content column */}
@@ -281,6 +300,11 @@ const Marketplace: FC = () => {
           onSortChange={setSortBy}
           selectedRanges={selectedRanges}
           onRangeChange={setSelectedRanges}
+          categories={categories}
+          selectedCategories={selectedCategories}
+          onCategoryChange={setSelectedCategories}
+          selectedStages={selectedStages}
+          onStageChange={setSelectedStages}
         />
       )}
     </CommonLayout>

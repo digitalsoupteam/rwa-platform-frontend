@@ -33,7 +33,7 @@ const MarketplaceCard: FC<MarketplaceCardProps> = ({ project, className, ...prop
 
   return (
     <Link
-      href={`/pools/${id}`}
+      href={`/pool/${id}`}
       className={clsx(
         'bg-grey-light rounded-[2.5rem] p-6 flex flex-col justify-between gap-7 tr-d-all',
         className
