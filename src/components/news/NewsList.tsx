@@ -79,6 +79,8 @@ const NewsList: FC<NewsListProps> = ({ projectId, companyId, canEdit = false }) 
   const totalPages = Math.ceil(posts.length / PAGE_SIZE);
   const pagePosts = posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  if (posts.length === 0 && !canEdit) return null;
+
   return (
     <>
       <div className={'flex items-center justify-between mb-6'}>

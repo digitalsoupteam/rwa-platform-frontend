@@ -320,7 +320,7 @@ const ProjectPage: FC = () => {
                 </div>
               </div>
               <div className={'flex flex-wrap gap-2 lg:items-end lg:justify-end'}>
-                {!isDeployed && (
+                {!isDeployed && canEdit && (
                   <div className={'flex items-center gap-3'}>
                     <Button visualType={'quaternary'} disabled={isDeploying} onClick={handleDeploy}>
                       {isDeploying ? 'Deploying…' : 'Deploy project'}
@@ -330,15 +330,17 @@ const ProjectPage: FC = () => {
                     )}
                   </div>
                 )}
-                <Button
-                  className={
-                    'max-md:w-full before:size-3.5 before:mask-[url(/icons/edit.svg)] mask-contain before:bg-current'
-                  }
-                  visualType={'quinary'}
-                  onClick={() => setIsEditModalOpened(true)}
-                >
-                  Update
-                </Button>
+                {canEdit && (
+                  <Button
+                    className={
+                      'max-md:w-full before:size-3.5 before:mask-[url(/icons/edit.svg)] mask-contain before:bg-current'
+                    }
+                    visualType={'quinary'}
+                    onClick={() => setIsEditModalOpened(true)}
+                  >
+                    Update
+                  </Button>
+                )}
                 <Button
                   className={
                     'max-md:w-full before:size-3.5 before:mask-[url(/icons/share.svg)] mask-contain before:bg-current'
@@ -367,13 +369,13 @@ const ProjectPage: FC = () => {
 
       <section className={'mb-12'}>
         <Wrapper>
-          <DocumentsSection projectId={projectId} companyId={companyId} />
+          <DocumentsSection projectId={projectId} companyId={companyId} canEdit={canEdit} />
         </Wrapper>
       </section>
 
       <section className={'mb-12'}>
         <Wrapper>
-          <FaqSection projectId={projectId} />
+          <FaqSection projectId={projectId} canEdit={canEdit} />
         </Wrapper>
       </section>
 
