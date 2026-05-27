@@ -41,6 +41,14 @@ interface MarketplaceFiltersProps {
   className?: string;
 }
 
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'price_desc', label: 'Token price: high to low' },
+  { value: 'price_asc', label: 'Token price: low to high' },
+  { value: 'goal_desc', label: 'Funding goal: high to low' },
+  { value: 'goal_asc', label: 'Funding goal: low to high' },
+] as const;
+
 const COUNTRIES = [
   'Abkhazia', 'Australia', 'Austria', 'Azerbaijan', 'Albania',
   'American Samoa', 'Anguilla', 'Angola', 'Andorra', 'Argentina',
@@ -49,6 +57,7 @@ const COUNTRIES = [
 ];
 
 const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className }) => {
+  const [sortBy, setSortBy] = useState<string>('newest');
   const [countrySearch, setCountrySearch] = useState('');
 
   const filteredCountries = COUNTRIES.filter(c =>
@@ -58,11 +67,19 @@ const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className }) => {
   return (
     <div className={clsx('flex flex-col', className)}>
       <FilterSection title={'Sort by'}>
-        <Checkbox label={'Newest first'} />
-        <Checkbox label={'Token price: high to low'} defaultChecked />
-        <Checkbox label={'Token price: low to high'} />
-        <Checkbox label={'Funding goal: high to low'} defaultChecked />
-        <Checkbox label={'Funding goal: low to high'} />
+        {SORT_OPTIONS.map(opt => (
+          <label key={opt.value} className={'flex items-center gap-2.5 cursor-pointer'}>
+            <input
+              type={'radio'}
+              name={'sort-by'}
+              value={opt.value}
+              checked={sortBy === opt.value}
+              onChange={() => setSortBy(opt.value)}
+              className={'size-4 accent-blue-600 cursor-pointer shrink-0'}
+            />
+            <span className={'text-sm select-none'}>{opt.label}</span>
+          </label>
+        ))}
       </FilterSection>
 
       <FilterSection title={'AI rating'}>
