@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, FormEventHandler, useRef } from 'react';
+import React, { FC, FormEventHandler, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
@@ -12,7 +12,7 @@ import { GET_COMPANY } from '@/lib/company/operations';
 import { BlogParentTypes } from '@/gql/graphql';
 import { PostEditor, PostEditorHandle } from '@/components/news';
 
-const CreatePostPage: FC = () => {
+const CreatePostContent: FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get('projectId') ?? '';
@@ -106,5 +106,11 @@ const CreatePostPage: FC = () => {
     </DashboardLayout>
   );
 };
+
+const CreatePostPage: FC = () => (
+  <Suspense>
+    <CreatePostContent />
+  </Suspense>
+);
 
 export default CreatePostPage;
