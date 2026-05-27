@@ -3,6 +3,12 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const FILES_BASE = process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/';
+
+function resolveImageUrl(url: string): string {
+  return url.startsWith('http') ? url : FILES_BASE + url.split('/').pop();
+}
+
 export interface MarketplaceProject {
   id: string;
   name: string;
@@ -34,10 +40,7 @@ const MarketplaceCard: FC<MarketplaceCardProps> = ({ project, className, ...prop
   return (
     <Link
       href={`/pool/${id}`}
-      className={clsx(
-        'bg-grey-light rounded-[2.5rem] p-6 flex flex-col justify-between gap-7 tr-d-all',
-        className
-      )}
+      className={clsx('bg-grey-light rounded-[2.5rem] p-6 flex flex-col justify-between gap-7 tr-d-all', className)}
       {...(props as HTMLAttributes<HTMLAnchorElement>)}
     >
       {/* Top section */}
@@ -46,11 +49,19 @@ const MarketplaceCard: FC<MarketplaceCardProps> = ({ project, className, ...prop
         <div className={'flex items-center justify-between'}>
           <div className={'flex items-center gap-3'}>
             <div
-              className={'size-11 rounded-full shrink-0 overflow-hidden flex items-center justify-center text-white text-base font-bold'}
-              style={{ background: iconBg || '#202E46' }}
+              className={
+                'size-11 rounded-full shrink-0 overflow-hidden flex items-center justify-center text-white text-base font-bold'
+              }
+              style={{ background: logoUrl ? 'transparent' : '#202E46' }}
             >
               {logoUrl ? (
-                <Image src={logoUrl} alt={name} width={44} height={44} className={'object-cover size-full'} />
+                <Image
+                  src={resolveImageUrl(logoUrl)}
+                  alt={name}
+                  width={44}
+                  height={44}
+                  className={'object-cover size-full'}
+                />
               ) : (
                 name.charAt(0)
               )}
@@ -88,7 +99,9 @@ const MarketplaceCard: FC<MarketplaceCardProps> = ({ project, className, ...prop
               className={'absolute left-0 top-0 h-full bg-blue-accent rounded-lg tr-d-all'}
               style={{ width: `${progressPercent}%` }}
             />
-            <span className={'absolute inset-0 flex items-center justify-center text-sm font-bold text-black leading-none'}>
+            <span
+              className={'absolute inset-0 flex items-center justify-center text-sm font-bold text-black leading-none'}
+            >
               {collectedFormatted} /{totalFormatted}
             </span>
           </div>

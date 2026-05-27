@@ -64,7 +64,7 @@ const Header: FC = () => {
       </div>
       <Wrapper>
         <div className={'relative z-2 pt-5 flex justify-between items-center md:pt-8'}>
-          <Link className={'flex items-center justify-center w-[85px] md:w-[147px]'} href={'/public'}>
+          <Link className={'flex items-center justify-center w-[85px] md:w-[147px]'} href={'/'}>
             <Image className={'w-full h-auto'} src={'/images/logo.svg'} width={'85'} height={'24'} alt={' '} />
           </Link>
           <div className={'flex gap-4 items-center lg:hidden'}>
