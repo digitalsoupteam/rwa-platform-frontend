@@ -58,16 +58,20 @@ function getTicker(name: string): string {
 }
 
 function poolToProject(pool: AnyPool): MarketplaceProject {
+  const price = getPoolPrice(pool);
+  const priceNum = parseFloat(price) || 0;
   return {
     id:            pool.id,
     name:          pool.name,
     tokenTicker:   getTicker(pool.name),
     logoUrl:       pool.image ?? undefined,
-    price:         getPoolPrice(pool),
+    price,
+    priceNum,
     monthlyProfit: getMonthlyProfit(pool.rewardPercent),
     collected:     parseWeiToNum(pool.realHoldReserve),
     total:         parseWeiToNum(pool.expectedHoldAmount),
     dueDate:       formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
+    createdAt:     pool.createdAt ?? 0,
   };
 }
 
@@ -120,6 +124,7 @@ const Marketplace: FC = () => {
   const [activeChips, setActiveChips] = useState(ACTIVE_FILTER_CHIPS);
   const [showAll, setShowAll] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('newest');
 
   const removeChip = (chip: string) => setActiveChips(prev => prev.filter(c => c !== chip));
 
@@ -132,7 +137,16 @@ const Marketplace: FC = () => {
   // @ts-ignore
   const allProjects: MarketplaceProject[] = (data?.getPools ?? [])
     .filter((pool: AnyPool) => !!pool.poolAddress)
-    .map(poolToProject);
+    .map(poolToProject)
+    .sort((a: MarketplaceProject, b: MarketplaceProject) => {
+      switch (sortBy) {
+        case 'price_desc': return b.priceNum - a.priceNum;
+        case 'price_asc':  return a.priceNum - b.priceNum;
+        case 'goal_desc':  return b.total - a.total;
+        case 'goal_asc':   return a.total - b.total;
+        default:           return b.createdAt - a.createdAt; // newest first
+      }
+    });
   const visibleProjects = showAll ? allProjects : allProjects.slice(0, VISIBLE_COUNT);
 
   return (
@@ -164,7 +178,7 @@ const Marketplace: FC = () => {
           <div className={'flex gap-5 items-start'}>
             {/* Sidebar (desktop only) */}
             <div className={'hidden lg:block w-[272px] shrink-0 sticky top-24'}>
-              <MarketplaceFilters />
+              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} />
             </div>
 
             {/* Content column */}
@@ -253,6 +267,8 @@ const Marketplace: FC = () => {
           onRemoveChip={removeChip}
           onClearAll={() => setActiveChips([])}
           onClose={() => setMobileFiltersOpen(false)}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
         />
       )}
     </CommonLayout>

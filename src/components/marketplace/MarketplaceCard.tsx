@@ -10,10 +10,12 @@ export interface MarketplaceProject {
   logoUrl?: string;
   iconBg?: string;
   price: string;
+  priceNum: number;
   monthlyProfit: string;
   collected: number;
   total: number;
   dueDate: string;
+  createdAt: number;
 }
 
 interface MarketplaceCardProps extends HTMLAttributes<HTMLAnchorElement> {

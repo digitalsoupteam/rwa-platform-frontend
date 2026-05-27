@@ -39,6 +39,8 @@ const FilterSection: FC<FilterSectionProps> = ({ title, children, defaultOpen = 
 
 interface MarketplaceFiltersProps {
   className?: string;
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
 }
 
 const SORT_OPTIONS = [
@@ -56,8 +58,7 @@ const COUNTRIES = [
   'Denmark', 'Estonia', 'Finland', 'France', 'Germany',
 ];
 
-const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className }) => {
-  const [sortBy, setSortBy] = useState<string>('newest');
+const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange }) => {
   const [countrySearch, setCountrySearch] = useState('');
 
   const filteredCountries = COUNTRIES.filter(c =>
@@ -74,7 +75,7 @@ const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className }) => {
               name={'sort-by'}
               value={opt.value}
               checked={sortBy === opt.value}
-              onChange={() => setSortBy(opt.value)}
+              onChange={() => onSortChange?.(opt.value)}
               className={'size-4 accent-blue-600 cursor-pointer shrink-0'}
             />
             <span className={'text-sm select-none'}>{opt.label}</span>

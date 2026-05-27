@@ -9,6 +9,8 @@ interface MobileFiltersModalProps {
   onRemoveChip: (chip: string) => void;
   onClearAll: () => void;
   onClose: () => void;
+  sortBy?: string;
+  onSortChange?: (value: string) => void;
 }
 
 const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
@@ -16,6 +18,8 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
   onRemoveChip,
   onClearAll,
   onClose,
+  sortBy,
+  onSortChange,
 }) => {
   useEffect(() => {
     document.body.classList.add('locked');
@@ -60,7 +64,7 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
 
       {/* Scrollable filter body */}
       <div className={'flex-1 overflow-y-auto px-3'}>
-        <MarketplaceFilters />
+        <MarketplaceFilters sortBy={sortBy} onSortChange={onSortChange} />
       </div>
 
       {/* Fixed bottom bar */}
