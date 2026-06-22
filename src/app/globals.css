@@ -51,7 +51,12 @@ html {
     scroll-smooth
     scroll-pt-20
     min-w-[360px]
-    bg-blue-light
+    bg-blue-light;
+    overflow-x: hidden;
+}
+
+body {
+    overflow-x: hidden;
 }
 
 .visually-hidden {

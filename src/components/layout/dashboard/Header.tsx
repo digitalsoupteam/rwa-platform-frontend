@@ -58,6 +58,9 @@ const Header: FC = () => {
               <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
                 Withdrawals
               </Link>
+              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/dao/'}>
+                Governance
+              </Link>
             </div>
 
             <div className={'flex gap-2.5'}>
@@ -158,6 +161,9 @@ const Header: FC = () => {
             </Link>
             <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
               Withdrawals
+            </Link>
+            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/dao/'}>
+              Governance
             </Link>
           </div>
           <div className={'flex flex-col'}>
