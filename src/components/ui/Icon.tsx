@@ -13,6 +13,23 @@ import InfoSVG from '../../../public/icons/info.svg';
 import USDTSVG from '../../../public/icons/usdt.svg';
 import TriangleSVG from '../../../public/icons/triangle.svg';
 import CheckSVG from '../../../public/icons/check.svg';
+import ChartSVG from '../../../public/icons/chart.svg';
+import ChartSquaredSVG from '../../../public/icons/chart-squared.svg';
+import CoinsSVG from '../../../public/icons/coins.svg';
+import FinishSVG from '../../../public/icons/finish.svg';
+import FlashSVG from '../../../public/icons/flash.svg';
+import GiftSVG from '../../../public/icons/gift.svg';
+import HandCoinsSVG from '../../../public/icons/hand-coins.svg';
+import HandSVG from '../../../public/icons/hand.svg';
+import JudgeHammerSVG from '../../../public/icons/judge-hammer.svg';
+import PercentSVG from '../../../public/icons/percent.svg';
+import PlusTightSVG from '../../../public/icons/plus-tight.svg';
+import ProvenSVG from '../../../public/icons/proven.svg';
+import RocketSVG from '../../../public/icons/rocket.svg';
+import SparklesSVG from '../../../public/icons/sparkles.svg';
+import StarSVG from '../../../public/icons/star.svg';
+import TickSquaredSVG from '../../../public/icons/tick-squared.svg';
+import WalletSVG from '../../../public/icons/wallet.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -27,7 +44,24 @@ const ICONS = {
   info: InfoSVG,
   usdt: USDTSVG,
   triangle: TriangleSVG,
-  check: CheckSVG
+  check: CheckSVG,
+  chart: ChartSVG,
+  chartSquared: ChartSquaredSVG,
+  coins: CoinsSVG,
+  finish: FinishSVG,
+  flash: FlashSVG,
+  gift: GiftSVG,
+  handCoins: HandCoinsSVG,
+  hand: HandSVG,
+  judgeHammer: JudgeHammerSVG,
+  percent: PercentSVG,
+  plusTight: PlusTightSVG,
+  proven: ProvenSVG,
+  rocket: RocketSVG,
+  sparkles: SparklesSVG,
+  star: StarSVG,
+  tickSquared: TickSquaredSVG,
+  wallet: WalletSVG,
 } as const;
 
 export type IconType = keyof typeof ICONS;

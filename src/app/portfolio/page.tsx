@@ -161,39 +161,39 @@ const Portfolio: FC = () => {
                   value="+128.61"
                   sublabel="REALIZED"
                   label="PNL, USDT"
-                  icon={<Icon name="check" className="size-5 text-black" />}
+                  icon={<Icon name="tickSquared" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value="-16.54"
                   sublabel="UNREALIZED"
                   label="PNL, USDT"
-                  icon={<Icon name="triangle" className="size-5 text-black rotate-180" />}
+                  icon={<Icon name="chartSquared" className="size-5 text-black" />}
                 />
               </div>
               <div className="flex gap-2.5">
                 <PortfolioStatCard
                   value="8.5%"
                   label="AVERAGE ROI"
-                  icon={<Icon name="share" className="size-5 text-black" />}
+                  icon={<Icon name="percent" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value="654"
                   label="AIRDROP POINTS"
-                  icon={<Icon name="plus" className="size-5 text-black" />}
+                  icon={<Icon name="gift" className="size-5 text-black" />}
                 />
               </div>
               <div className="flex gap-2.5">
                 <PortfolioStatCard
                   value="47"
                   label="TRADING EARNINGS, USDT"
-                  icon={<Icon name="triangle" className="size-5 text-black" />}
+                  icon={<Icon name="flash" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value="458"
                   label="CLAIMABLE AMOUNT, USDT"
                   onAction={() => {}}
                   actionLabel="Withdraw"
-                  icon={<Icon name="person" className="size-5 text-black" />}
+                  icon={<Icon name="wallet" className="size-5 text-black" />}
                 />
               </div>
             </div>
