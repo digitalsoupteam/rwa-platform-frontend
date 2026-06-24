@@ -2,98 +2,66 @@
 
 import React, { FC, useState } from 'react';
 import clsx from 'clsx';
-import { CommonLayout, DashboardLayout, Wrapper } from '@/components/layout';
+import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Icon, Button, Pagination } from '@/components/ui';
 import { PortfolioDonutChart, PortfolioStatCard, PortfolioPoolRow } from '@/components/portfolio';
-import type { PortfolioPool } from '@/components/portfolio';
+import type { PortfolioPool, DonutSegment } from '@/components/portfolio';
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
 
 const MOCK_POOLS: PortfolioPool[] = [
-  {
-    id: '1',
-    name: 'Smart Farm Expansion',
-    aiRating: 4.96,
-    amount: 5500,
-    poolShare: '3.1%',
-    returned: 0,
-    currentValue: 24.38,
-    profit: '4%',
-    status: 'collecting',
-    collected: 50000,
-    goal: 99000,
-  },
-  {
-    id: '2',
-    name: 'Smart Farm Expansion',
-    aiRating: 4.96,
-    amount: 5500,
-    poolShare: '3.1%',
-    returned: 0,
-    currentValue: 24.38,
-    profit: '4%',
-    status: 'completed',
-    collected: 99000,
-    goal: 99000,
-  },
-  {
-    id: '3',
-    name: 'Urban Solar Grid',
-    aiRating: 4.12,
-    amount: 3200,
-    poolShare: '1.8%',
-    returned: 1500,
-    currentValue: 18.75,
-    profit: '+6.2%',
-    status: 'active',
-    collected: 72000,
-    goal: 120000,
-  },
-  {
-    id: '4',
-    name: 'Coastal Aquaculture',
-    aiRating: 3.88,
-    amount: 8000,
-    poolShare: '4.5%',
-    returned: 4200,
-    currentValue: 42.10,
-    profit: '+3.8%',
-    status: 'active',
-    collected: 95000,
-    goal: 150000,
-  },
-  {
-    id: '5',
-    name: 'Tech Hub Development',
-    aiRating: 4.67,
-    amount: 12000,
-    poolShare: '6.7%',
-    returned: 0,
-    currentValue: 63.44,
-    profit: '-1.2%',
-    status: 'collecting',
-    collected: 35000,
-    goal: 200000,
-  },
-  {
-    id: '6',
-    name: 'Green Logistics Fleet',
-    aiRating: 4.31,
-    amount: 6750,
-    poolShare: '3.8%',
-    returned: 6750,
-    currentValue: 0,
-    profit: '+8.5%',
-    status: 'completed',
-    collected: 180000,
-    goal: 180000,
-  },
+  { id: '1', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'collecting', collected: 50000, goal: 99000 },
+  { id: '2', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'paying_out', collected: 99000, goal: 99000 },
+  { id: '3', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '4', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '5', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '6', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '7', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '8', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '9', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '10', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'completed', collected: 99000, goal: 99000 },
+  { id: '11', name: 'Smart Farm Expansion', aiRating: 4.96, amount: 5500, poolShare: '3.1%', returned: 0, currentValue: 24.38, profit: '4%', status: 'failed', collected: 50000, goal: 99000 },
 ];
 
-type TabKey = 'all' | 'payouts' | 'favourites';
-type SortKey = 'pool' | 'rating' | 'amount' | 'share' | 'returned' | 'value' | 'profit' | 'status';
+// Both breakdowns regroup the same 9,354 USDT across the same 38 pools — only the grouping differs.
+const INDUSTRY_SEGMENTS: DonutSegment[] = [
+  { label: 'Agriculture', value: 1450, poolCount: 6 },
+  { label: 'Real estate', value: 3254, poolCount: 7 },
+  { label: 'Energy', value: 980, poolCount: 4 },
+  { label: 'Logistics', value: 760, poolCount: 3 },
+  { label: 'Technology', value: 1120, poolCount: 5 },
+  { label: 'Manufacturing', value: 640, poolCount: 3 },
+  { label: 'Hospitality', value: 420, poolCount: 2 },
+  { label: 'Healthcare', value: 230, poolCount: 2 },
+  { label: 'Retail', value: 100, poolCount: 1 },
+  { label: 'Mining', value: 120, poolCount: 1 },
+  { label: 'Aquaculture', value: 90, poolCount: 1 },
+  { label: 'Forestry', value: 70, poolCount: 1 },
+  { label: 'Other', value: 120, poolCount: 2 },
+];
 
-const ROWS_PER_PAGE = 5;
+const PROJECT_SEGMENTS: DonutSegment[] = [
+  { label: 'Smart Farm Expansion', value: 2340, poolCount: 8 },
+  { label: 'Urban Solar Grid', value: 2020, poolCount: 7 },
+  { label: 'Coastal Aquaculture', value: 1280, poolCount: 6 },
+  { label: 'Tech Hub Development', value: 980, poolCount: 5 },
+  { label: 'Green Logistics Fleet', value: 870, poolCount: 4 },
+  { label: 'Med Park Residences', value: 640, poolCount: 3 },
+  { label: 'Highland Vineyards', value: 520, poolCount: 2 },
+  { label: 'Riverside Logistics Hub', value: 410, poolCount: 2 },
+  { label: 'Sunrise Hospitality Group', value: 294, poolCount: 1 },
+];
+
+const CHART_VIEWS = {
+  industry: { totalUsdt: '9,354', subtitle: '24 industries · 38 pools', segments: INDUSTRY_SEGMENTS },
+  projects: { totalUsdt: '9,354', subtitle: '9 projects · 38 pools', segments: PROJECT_SEGMENTS },
+} as const;
+
+type TabKey = 'all' | 'payouts' | 'favourites';
+type SortKey = 'pool' | 'rating' | 'amount' | 'share' | 'returned' | 'value' | 'profit';
+
+const ROWS_PER_PAGE = 11;
+const TOTAL_MOCK_PAGES = 10;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -103,7 +71,6 @@ const Portfolio: FC = () => {
   const [sortKey, setSortKey] = useState<SortKey>('pool');
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
 
   const TABS: { key: TabKey; label: string }[] = [
     { key: 'all', label: 'All pools' },
@@ -111,15 +78,14 @@ const Portfolio: FC = () => {
     { key: 'favourites', label: 'Favourites' },
   ];
 
-  const TABLE_COLS: { key: SortKey; label: string; align?: 'left' | 'right' }[] = [
-    { key: 'pool', label: 'Pool', align: 'left' },
-    { key: 'rating', label: 'AI Rating', align: 'right' },
-    { key: 'amount', label: 'Amount (USDT)', align: 'right' },
-    { key: 'share', label: 'Pool share', align: 'right' },
-    { key: 'returned', label: 'Returned (USDT)', align: 'right' },
-    { key: 'value', label: 'Current value (USDT)', align: 'right' },
-    { key: 'profit', label: 'Profit', align: 'right' },
-    { key: 'status', label: 'Status', align: 'left' },
+  const TABLE_COLS: { key: SortKey; label: string; width: string }[] = [
+    { key: 'pool', label: 'Pool', width: 'w-[200px]' },
+    { key: 'rating', label: 'AI Rating', width: 'flex-1' },
+    { key: 'amount', label: 'Amount (USDT)', width: 'flex-1' },
+    { key: 'share', label: 'Pool share', width: 'flex-1' },
+    { key: 'returned', label: 'Returned (USDT)', width: 'flex-1' },
+    { key: 'value', label: 'Current value (USDT)', width: 'flex-1' },
+    { key: 'profit', label: 'Profit', width: 'flex-1' },
   ];
 
   const handleSort = (key: SortKey) => {
@@ -131,12 +97,10 @@ const Portfolio: FC = () => {
     }
   };
 
-  const filtered = MOCK_POOLS.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
-  const paginated = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  const totalPages = TOTAL_MOCK_PAGES;
+  const paginated = MOCK_POOLS.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  // 'countries' has no button yet (backend not ready), so this only ever sees 'industry' | 'projects'.
+  const chartView = CHART_VIEWS[chartFilter as 'industry' | 'projects'] ?? CHART_VIEWS.industry;
 
   return (
     <DashboardLayout>
@@ -145,7 +109,7 @@ const Portfolio: FC = () => {
           {/* ── Page title ── */}
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-[36px] font-semibold leading-[1.2] text-black">Portfolio</h1>
-            <Button visualType="quaternary" className="flex items-center gap-2 h-[46px]">
+            <Button visualType="quaternary" className="flex items-center gap-2 h-[46px] rounded-xl">
               <Icon name="plus" className="size-3.5" />
               New investment
             </Button>
@@ -177,63 +141,56 @@ const Portfolio: FC = () => {
           </div>
 
           {/* ── Main two-column layout ── */}
-          <div className="flex gap-2.5 mb-6" style={{ minHeight: 524 }}>
+          <div className="flex gap-2.5 mb-6">
             {/* Left – Donut chart */}
-            <div className="flex flex-[1_0_0] min-w-0 rounded-xl p-0">
+            <div className="flex flex-[1_0_0] min-w-0">
               <PortfolioDonutChart
-                totalUsdt="9,354"
-                subtitle="24 industries · 38 pools"
+                key={chartFilter}
+                totalUsdt={chartView.totalUsdt}
+                subtitle={chartView.subtitle}
+                segments={chartView.segments}
                 activeFilter={chartFilter}
                 onFilterChange={setChartFilter}
               />
             </div>
 
             {/* Right – Stats grid */}
-            <div className="flex flex-[1_0_0] flex-col gap-2.5 min-w-0 overflow-hidden">
-              {/* Row 1 */}
-              <div className="flex gap-2.5 flex-1 min-h-0">
+            <div className="flex flex-[1_0_0] flex-col gap-2.5 min-w-0">
+              <div className="flex gap-2.5">
                 <PortfolioStatCard
                   value="+128.61"
-                  label="PNL, USDT"
                   sublabel="REALIZED"
-                  valueClassName="text-black"
+                  label="PNL, USDT"
                   icon={<Icon name="check" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value="-16.54"
-                  label="PNL, USDT"
                   sublabel="UNREALIZED"
-                  valueClassName="text-red"
+                  label="PNL, USDT"
                   icon={<Icon name="triangle" className="size-5 text-black rotate-180" />}
                 />
               </div>
-              {/* Row 2 */}
-              <div className="flex gap-2.5 flex-1 min-h-0">
+              <div className="flex gap-2.5">
                 <PortfolioStatCard
-                  value="12.4%"
+                  value="8.5%"
                   label="AVERAGE ROI"
-                  valueClassName="text-black"
                   icon={<Icon name="share" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value="654"
                   label="AIRDROP POINTS"
-                  valueClassName="text-black"
                   icon={<Icon name="plus" className="size-5 text-black" />}
                 />
               </div>
-              {/* Row 3 */}
-              <div className="flex gap-2.5 flex-1 min-h-0">
+              <div className="flex gap-2.5">
                 <PortfolioStatCard
                   value="47"
                   label="TRADING EARNINGS, USDT"
-                  valueClassName="text-black"
                   icon={<Icon name="triangle" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value="458"
                   label="CLAIMABLE AMOUNT, USDT"
-                  valueClassName="text-black"
                   onAction={() => {}}
                   actionLabel="Withdraw"
                   icon={<Icon name="person" className="size-5 text-black" />}
@@ -243,45 +200,29 @@ const Portfolio: FC = () => {
           </div>
 
           {/* ── Table section ── */}
-          <div className="flex flex-col gap-6">
-            {/* Table controls */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {/* Pagination at top */}
-                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-              </div>
-              <div className="flex items-center gap-3">
-                {/* Search */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    placeholder="Search pools..."
-                    className="border border-stroke-primary rounded-xl h-[46px] px-4 pr-10 text-sm text-black placeholder:text-label-tertiary bg-white outline-none focus:border-blue tr-d-all w-[220px]"
-                  />
-                  <Icon name="info" className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-grey" />
-                </div>
-                {/* Filter button */}
-                <button className="flex items-center gap-2 border border-stroke-primary rounded-xl h-[46px] px-4 text-sm font-medium text-grey-dark tr-d-all hover:bg-bg-tertiary">
+          <div className="flex flex-col gap-4">
+            {/* Top pagination */}
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+            <div className="rounded-lg overflow-hidden">
+              {/* Filter row */}
+              <div className="bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-end px-3 py-4">
+                <button className="flex items-center gap-2 border border-stroke-primary rounded-lg pl-3 pr-4 py-3 text-sm font-medium text-grey-dark tr-d-all hover:bg-bg-tertiary">
                   <Icon name="burger" className="size-3.5" />
                   Filter
                 </button>
               </div>
-            </div>
 
-            {/* Table */}
-            <div className="w-full overflow-x-auto rounded-lg border border-stroke-primary">
               {/* Header */}
-              <div className="bg-white border-b border-stroke-primary h-[52px] flex items-center px-3 min-w-[1100px]">
+              <div className="bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2">
                 {TABLE_COLS.map(col => (
                   <button
                     key={col.key}
                     onClick={() => handleSort(col.key)}
                     className={clsx(
                       'flex items-center gap-1 text-sm font-medium text-grey-dark tr-d-all hover:text-black',
-                      col.key === 'pool' ? 'flex-[2_0_0] text-left' : 'flex-[1_0_0]',
-                      col.align === 'right' ? 'justify-end' : 'justify-start'
+                      col.width,
+                      col.key === 'pool' ? 'shrink-0 justify-start' : 'justify-end'
                     )}
                   >
                     {col.label}
@@ -295,23 +236,28 @@ const Portfolio: FC = () => {
                     />
                   </button>
                 ))}
-                <div className="flex-[1_0_0] text-sm font-medium text-grey-dark text-right">Collected</div>
+                <div className="w-[110px] shrink-0 text-sm font-medium text-grey-dark text-right">Status</div>
+                <div className="w-[213px] shrink-0 text-sm font-medium text-grey-dark text-right">Collected</div>
               </div>
 
               {/* Rows */}
-              <div className="min-w-[1100px]">
+              <div className="flex flex-col">
                 {paginated.length === 0 ? (
-                  <div className="py-12 text-center text-sm text-label-tertiary">No pools found.</div>
+                  <div className="py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary">
+                    No pools found.
+                  </div>
                 ) : (
-                  paginated.map(pool => <PortfolioPoolRow key={pool.id} pool={pool} />)
+                  paginated.map(pool => (
+                    <div key={pool.id} className="-mt-px">
+                      <PortfolioPoolRow pool={pool} />
+                    </div>
+                  ))
                 )}
               </div>
             </div>
 
             {/* Bottom pagination */}
-            <div className="flex items-center">
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-            </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         </Wrapper>
       </section>
