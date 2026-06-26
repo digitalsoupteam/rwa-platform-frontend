@@ -75,7 +75,7 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full w-full justify-between">
+    <div className="flex flex-col h-full w-full">
       {/* Header */}
       <div className="flex items-center justify-between w-full">
         <div className="flex flex-col gap-1">
@@ -104,7 +104,7 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
       </div>
 
       {/* Segmented ring */}
-      <div className="relative flex items-center justify-center mx-auto" style={{ width: SIZE, height: SIZE }}>
+      <div className="grow-1 relative flex items-center justify-center mx-auto" style={{ width: SIZE, height: SIZE }}>
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
           <g transform={`translate(${SIZE / 2}, ${SIZE / 2}) rotate(-90)`}>
             {segments.map((seg, i) => {
