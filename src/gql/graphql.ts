@@ -18,6 +18,17 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
+export type SocialLink = {
+  __typename?: 'SocialLink';
+  type: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type SocialLinkInput = {
+  type: Scalars['String']['input'];
+  url: Scalars['String']['input'];
+};
+
 export type AddMemberInput = {
   companyId: Scalars['ID']['input'];
   name: Scalars['String']['input'];
@@ -88,7 +99,9 @@ export type Business = {
   __typename?: 'Business';
   approvalSignaturesTaskExpired?: Maybe<Scalars['Float']['output']>;
   approvalSignaturesTaskId?: Maybe<Scalars['String']['output']>;
+  businessType?: Maybe<Scalars['String']['output']>;
   chainId: Scalars['String']['output'];
+  country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Float']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -98,7 +111,9 @@ export type Business = {
   ownerType: Scalars['String']['output'];
   ownerWallet?: Maybe<Scalars['String']['output']>;
   paused: Scalars['Boolean']['output'];
-  riskScore: Scalars['Float']['output'];
+  riskScore?: Maybe<Scalars['Int']['output']>;
+  riskScoreEvaluationProcess: Scalars['Boolean']['output'];
+  socials: Array<SocialLink>;
   tags?: Maybe<Array<Scalars['String']['output']>>;
   tokenAddress?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Float']['output'];
@@ -108,23 +123,33 @@ export enum BusinessOwnerType {
   Company = 'company'
 }
 
+export enum BusinessType {
+  Franchise = 'franchise',
+  Growth = 'growth',
+  Startup = 'startup'
+}
+
 export type Company = {
   __typename?: 'Company';
+  country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Int']['output'];
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   ownerId: Scalars['String']['output'];
+  socials: Array<SocialLink>;
   updatedAt: Scalars['Int']['output'];
 };
 
 export type CompanyWithDetails = {
   __typename?: 'CompanyWithDetails';
+  country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Int']['output'];
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   ownerId: Scalars['String']['output'];
+  socials: Array<SocialLink>;
   updatedAt: Scalars['Int']['output'];
   users: Array<UserWithPermissions>;
 };
@@ -141,11 +166,14 @@ export type CreateBlogInput = {
 };
 
 export type CreateBusinessInput = {
+  businessType?: InputMaybe<BusinessType>;
   chainId: Scalars['String']['input'];
+  country?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   ownerId: Scalars['String']['input'];
   ownerType: BusinessOwnerType;
+  socials?: InputMaybe<Array<SocialLinkInput>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -157,8 +185,10 @@ export type CreateBusinessWithAiInput = {
 };
 
 export type CreateCompanyInput = {
+  country?: InputMaybe<Scalars['String']['input']>;
   description: Scalars['String']['input'];
   name: Scalars['String']['input'];
+  socials?: InputMaybe<Array<SocialLinkInput>>;
 };
 
 export type CreateDocumentInput = {
@@ -218,7 +248,6 @@ export type CreatePoolInput = {
   expectedRwaAmount?: InputMaybe<Scalars['String']['input']>;
   fixedSell?: InputMaybe<Scalars['Boolean']['input']>;
   floatingOutTranchesTimestamps?: InputMaybe<Scalars['Boolean']['input']>;
-  image?: InputMaybe<Scalars['String']['input']>;
   incomingTranches?: InputMaybe<Array<IncomingTrancheInput>>;
   name: Scalars['String']['input'];
   outgoingTranches?: InputMaybe<Array<OutgoingTrancheInput>>;
@@ -266,22 +295,28 @@ export type Document = {
   __typename?: 'Document';
   createdAt: Scalars['Float']['output'];
   creator: Scalars['String']['output'];
+  fileId: Scalars['String']['output'];
   folderId: Scalars['String']['output'];
   grandParentId: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  link: Scalars['String']['output'];
+  mimeType: Scalars['String']['output'];
   name: Scalars['String']['output'];
   ownerId: Scalars['String']['output'];
   ownerType: Scalars['String']['output'];
   parentId: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  size: Scalars['Float']['output'];
   updatedAt: Scalars['Float']['output'];
+  url: Scalars['String']['output'];
 };
 
 export type EditBusinessDataInput = {
+  businessType?: InputMaybe<BusinessType>;
   chainId?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
-  image?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  socials?: InputMaybe<Array<SocialLinkInput>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -304,7 +339,6 @@ export type EditPoolDataInput = {
   expectedRwaAmount?: InputMaybe<Scalars['String']['input']>;
   fixedSell?: InputMaybe<Scalars['Boolean']['input']>;
   floatingOutTranchesTimestamps?: InputMaybe<Scalars['Boolean']['input']>;
-  image?: InputMaybe<Scalars['String']['input']>;
   incomingTranches?: InputMaybe<Array<IncomingTrancheInput>>;
   name?: InputMaybe<Scalars['String']['input']>;
   outgoingTranches?: InputMaybe<Array<OutgoingTrancheInput>>;
@@ -657,15 +691,19 @@ export type Image = {
   createdAt: Scalars['Float']['output'];
   creator: Scalars['String']['output'];
   description: Scalars['String']['output'];
+  fileId: Scalars['String']['output'];
   galleryId: Scalars['String']['output'];
   grandParentId: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  link: Scalars['String']['output'];
+  mimeType: Scalars['String']['output'];
   name: Scalars['String']['output'];
   ownerId: Scalars['String']['output'];
   ownerType: Scalars['String']['output'];
   parentId: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  size: Scalars['Float']['output'];
   updatedAt: Scalars['Float']['output'];
+  url: Scalars['String']['output'];
 };
 
 export type IncomingTranche = {
@@ -1206,7 +1244,8 @@ export type Pool = {
   priceImpactPercent?: Maybe<Scalars['String']['output']>;
   realHoldReserve?: Maybe<Scalars['String']['output']>;
   rewardPercent?: Maybe<Scalars['String']['output']>;
-  riskScore: Scalars['Float']['output'];
+  riskScore?: Maybe<Scalars['Int']['output']>;
+  riskScoreEvaluationProcess: Scalars['Boolean']['output'];
   rwaAddress: Scalars['String']['output'];
   tags?: Maybe<Array<Scalars['String']['output']>>;
   tokenId?: Maybe<Scalars['String']['output']>;
@@ -1923,8 +1962,10 @@ export type UpdateBlogInput = {
 };
 
 export type UpdateCompanyDataInput = {
+  country?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  socials?: InputMaybe<Array<SocialLinkInput>>;
 };
 
 export type UpdateCompanyInput = {
