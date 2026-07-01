@@ -186,6 +186,16 @@ export const GET_OHLC_PRICE_DATA = gql`
   }
 `;
 
+export const GET_VOLUME_DATA = gql`
+  query GetVolumeData($input: GetVolumeDataInput!) {
+    getVolumeData(input: $input) {
+      timestamp
+      mintVolume
+      burnVolume
+    }
+  }
+`;
+
 export const GET_SIGNATURE_TASK = gql`
   query GetSignatureTask($input: GetSignatureTaskInput!) {
     getSignatureTask(input: $input) {
