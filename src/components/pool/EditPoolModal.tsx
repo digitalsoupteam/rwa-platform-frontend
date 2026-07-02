@@ -13,7 +13,6 @@ import { CategoryCheckboxes } from '@/components/dashboard';
 type AnyPool = any;
 
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT ?? 'http://localhost:443';
-const FILES_BASE = process.env.NEXT_PUBLIC_FILES_BASE_URL ?? 'https://192.168.100.20/files/';
 
 async function uploadPoolImage(poolId: string, file: File): Promise<string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
@@ -30,7 +29,7 @@ async function uploadPoolImage(poolId: string, file: File): Promise<string> {
     throw new Error(text || 'Failed to upload image');
   }
   const json = await res.json();
-  return json.url as string;
+  return json.imageUrl as string;
 }
 
 const STEPS = [
@@ -147,9 +146,7 @@ const EditPoolModal: FC<EditPoolModalProps> = ({ pool, isOpen, onClose }) => {
     setDescriptionValue(e.target.value);
   };
 
-  const imageSrc = imageLink
-    ? (imageLink.startsWith('http') ? imageLink : FILES_BASE + imageLink.split('/').pop())
-    : null;
+  const imageSrc = imageLink;
 
   const isLast = step === STEPS.length - 1;
 

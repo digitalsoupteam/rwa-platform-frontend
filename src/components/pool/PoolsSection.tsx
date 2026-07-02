@@ -82,8 +82,6 @@ function getPoolPrice(pool: Pool): string {
   return '—';
 }
 
-const FILES_BASE = process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/';
-
 const CHAIN_NAMES: Record<string, string> = {
   '97': 'BSC Testnet',
   '56': 'BSC',
@@ -108,7 +106,7 @@ const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool, projectId }) =>
         <div className={'relative w-12 h-12 rounded-full overflow-hidden shrink-0'}>
           {pool.image ? (
             <Image
-              src={pool.image.startsWith('http') ? pool.image : FILES_BASE + pool.image.split('/').pop()}
+              src={pool.imageUrl}
               alt={pool.name}
               fill
               className={'object-cover'}

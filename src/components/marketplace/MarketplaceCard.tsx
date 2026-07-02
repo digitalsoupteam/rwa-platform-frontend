@@ -3,12 +3,6 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import Image from 'next/image';
 
-const FILES_BASE = process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/';
-
-function resolveImageUrl(url: string): string {
-  return url.startsWith('http') ? url : FILES_BASE + url.split('/').pop();
-}
-
 export interface MarketplaceProject {
   id: string;
   name: string;
@@ -56,7 +50,7 @@ const MarketplaceCard: FC<MarketplaceCardProps> = ({ project, className, ...prop
             >
               {logoUrl ? (
                 <Image
-                  src={resolveImageUrl(logoUrl)}
+                  src={logoUrl}
                   alt={name}
                   width={44}
                   height={44}

@@ -11,6 +11,9 @@ export const GET_BUSINESS_WITH_RISK = gql`
       riskScore
       ownerId
       ownerType
+      image
+      imageUrl
+      fileId
     }
   }
 `;
@@ -27,6 +30,9 @@ export const GET_BUSINESS = graphql(`
       chainId
       createdAt
       updatedAt
+      image
+      imageUrl
+      fileId
     }
   }
 `);
@@ -41,6 +47,9 @@ export const GET_BUSINESS_DEPLOY_INFO = gql`
       tokenAddress
       approvalSignaturesTaskId
       approvalSignaturesTaskExpired
+      image
+      imageUrl
+      fileId
     }
   }
 `;
@@ -70,6 +79,9 @@ export const CREATE_BUSINESS = graphql(`
       chainId
       createdAt
       updatedAt
+      image
+      imageUrl
+      fileId
     }
   }
 `);
@@ -80,6 +92,9 @@ export const EDIT_BUSINESS = graphql(`
       id
       name
       description
+      image
+      imageUrl
+      fileId
     }
   }
 `);
@@ -97,6 +112,9 @@ export const GET_BUSINESSES = graphql(`
       chainId
       createdAt
       updatedAt
+      image
+      imageUrl
+      fileId
     }
   }
 `);
