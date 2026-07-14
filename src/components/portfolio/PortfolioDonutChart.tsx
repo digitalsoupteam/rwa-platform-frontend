@@ -16,6 +16,7 @@ interface PortfolioDonutChartProps {
   segments?: DonutSegment[];
   activeFilter: 'industry' | 'projects' | 'countries';
   onFilterChange: (filter: 'industry' | 'projects' | 'countries') => void;
+  poolStats?: { active: number; completed: number; failed: number };
 }
 
 const SIZE = 396;
@@ -45,6 +46,7 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
   segments = DEFAULT_SEGMENTS,
   activeFilter,
   onFilterChange,
+  poolStats,
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const leaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,7 +85,11 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
             <span className="text-base text-grey-dark uppercase">Total Contributed</span>
             <Icon name="info" className="size-[18px] text-grey" />
           </div>
-          <span className="text-sm text-grey-dark">5 active · 28 completed · 3 failed</span>
+          <span className="text-sm text-grey-dark">
+            {poolStats
+              ? `${poolStats.active} active · ${poolStats.completed} completed · ${poolStats.failed} failed`
+              : '5 active · 28 completed · 3 failed'}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {FILTERS.map(f => (
