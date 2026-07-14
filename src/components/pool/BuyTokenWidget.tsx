@@ -3,6 +3,7 @@
 import React, { FC, useMemo, useState, useCallback } from 'react';
 import clsx from 'clsx';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
+import { parseUnits, formatUnits, BaseError } from 'viem';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI, ERC1155_BALANCE_ABI, POOL_ABI } from '@/lib/contracts';
 import { formatTicker } from '@/lib/formatTicker';
@@ -14,25 +15,23 @@ type AnyPool = any;
 const ZERO = BigInt(0);
 const SLIPPAGE_BPS = BigInt(50);
 const HOLD_DECIMALS = 18;
-const HOLD_DIVISOR = BigInt(10) ** BigInt(HOLD_DECIMALS);
 
 // USDT/HOLD amounts use 18 decimals
 function formatUsdtAmount(wei: bigint | undefined): string {
   if (!wei || wei === ZERO) return '0';
-  const whole = wei / HOLD_DIVISOR;
-  const frac = wei % HOLD_DIVISOR;
-  if (frac === ZERO) return whole.toLocaleString('en-US').replace(/,/g, ' ');
-  const fracStr = frac.toString().padStart(HOLD_DECIMALS, '0').replace(/0+$/, '').slice(0, 4);
-  return `${whole.toLocaleString('en-US').replace(/,/g, ' ')}.${fracStr}`;
+  const [whole, frac] = formatUnits(wei, HOLD_DECIMALS).split('.');
+  const wholeStr = BigInt(whole).toLocaleString('en-US').replace(/,/g, ' ');
+  if (!frac) return wholeStr;
+  const fracStr = frac.slice(0, 4);
+  return fracStr ? `${wholeStr}.${fracStr}` : wholeStr;
 }
 
 function parseUsdtInput(input: string): bigint {
-  if (!input || isNaN(parseFloat(input))) return ZERO;
+  if (!input) return ZERO;
   const trimmed = input.replace(/\s/g, '');
-  const [whole, frac = ''] = trimmed.split('.');
-  const fracPadded = frac.padEnd(HOLD_DECIMALS, '0').slice(0, HOLD_DECIMALS);
+  if (!trimmed || isNaN(parseFloat(trimmed))) return ZERO;
   try {
-    return BigInt(whole || '0') * HOLD_DIVISOR + BigInt(fracPadded);
+    return parseUnits(trimmed, HOLD_DECIMALS);
   } catch {
     return ZERO;
   }
@@ -74,7 +73,16 @@ function computeRwaFromUsdt(usdtWei: bigint, pool: AnyPool): { rwaWei: bigint; f
 
     const newHoldReserve = effectiveHold + holdAmount;
     const newRwaReserve = k / newHoldReserve;
-    const rwaWei = virtualRwa > newRwaReserve ? virtualRwa - newRwaReserve : ZERO;
+    let rwaWei = virtualRwa > newRwaReserve ? virtualRwa - newRwaReserve : ZERO;
+
+    // Fixed-sell pools cap the total RWA that can ever be minted — clamp to
+    // what's actually left so we never request more than the pool can fill.
+    if (pool?.fixedSell) {
+      const expectedRwa = BigInt(pool?.expectedRwaAmount || '0');
+      const awaitingRwa = BigInt(pool?.awaitingRwaAmount || '0');
+      const remainingRwa = expectedRwa > awaitingRwa ? expectedRwa - awaitingRwa : ZERO;
+      if (rwaWei > remainingRwa) rwaWei = remainingRwa;
+    }
 
     return { rwaWei, fee };
   } catch {
@@ -229,15 +237,50 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
     if (!publicClient) return;
     setIsSubmitting(true);
     try {
-      // inputWei is USDT in 18 decimals; derive the RWA amount from it
-      const { rwaWei } = computeRwaFromUsdt(inputWei, pool);
-      if (rwaWei === ZERO) {
+      // inputWei is USDT in 18 decimals; derive a rough RWA amount to quote from
+      const { rwaWei: estimatedRwaWei } = computeRwaFromUsdt(inputWei, pool);
+      if (estimatedRwaWei === ZERO) {
         toast('Invalid amount', 'error');
         return;
       }
 
-      const maxHold = inputWei + (inputWei * SLIPPAGE_BPS) / BigInt(10000);
       const validUntil = BigInt(Math.floor(Date.now() / 1000) + 300);
+
+      // Ask the contract for the authoritative cost of this rwaAmount rather than
+      // reverse-deriving maxHold client-side — the two AMM calculations round in
+      // opposite directions and can disagree, tripping "Pool: excessive input amount".
+      let rwaWei: bigint;
+      let maxHold: bigint;
+      try {
+        const [holdAmountWithFee, , actualRwaAmount] = (await publicClient.readContract({
+          address: poolAddress,
+          abi: POOL_ABI,
+          functionName: 'estimateMint',
+          args: [estimatedRwaWei, true],
+        })) as [bigint, bigint, bigint];
+        rwaWei = actualRwaAmount;
+        maxHold = holdAmountWithFee + (holdAmountWithFee * SLIPPAGE_BPS) / BigInt(10000);
+      } catch (estErr) {
+        console.error('estimateMint reverted', estErr);
+        const reason = estErr instanceof BaseError ? estErr.shortMessage : 'This amount is unavailable';
+        toast(reason, 'error');
+        return;
+      }
+
+      try {
+        await publicClient.simulateContract({
+          address: poolAddress,
+          abi: POOL_ABI,
+          functionName: 'mint',
+          args: [rwaWei, maxHold, validUntil, true],
+          account: address,
+        });
+      } catch (simErr) {
+        console.error('mint simulation reverted', simErr);
+        const reason = simErr instanceof BaseError ? simErr.shortMessage : 'Transaction would fail';
+        toast(reason, 'error');
+        return;
+      }
 
       const allowance = (await publicClient.readContract({
         address: HOLD_TOKEN_ADDRESS,
@@ -262,7 +305,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         address: poolAddress,
         abi: POOL_ABI,
         functionName: 'mint',
-        args: [rwaWei, maxHold, validUntil, false],
+        args: [rwaWei, maxHold, validUntil, true],
       });
 
       toast('Tokens purchased successfully!');
