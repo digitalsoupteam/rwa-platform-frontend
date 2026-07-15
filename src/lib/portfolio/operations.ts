@@ -20,6 +20,7 @@ export const GET_POOLS_FOR_PORTFOLIO = gql`
       id
       name
       poolAddress
+      businessId
       tags
       riskScore
       expectedHoldAmount
@@ -33,6 +34,15 @@ export const GET_POOLS_FOR_PORTFOLIO = gql`
       entryPeriodExpired
       completionPeriodExpired
       image
+    }
+  }
+`;
+
+export const GET_BUSINESSES_FOR_PORTFOLIO = gql`
+  query GetBusinessesForPortfolio($input: FilterInput!) {
+    getBusinesses(input: $input) {
+      id
+      tags
     }
   }
 `;

@@ -13,8 +13,9 @@ import {
   GET_BALANCES,
   GET_POOLS_FOR_PORTFOLIO,
   GET_POOL_TRANSACTIONS_FOR_PORTFOLIO,
+  GET_BUSINESSES_FOR_PORTFOLIO,
 } from '@/lib/portfolio/operations';
-import type { TokenBalance, Pool, PoolTransaction } from '@/gql/graphql';
+import type { TokenBalance, Pool, PoolTransaction, Business } from '@/gql/graphql';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -88,6 +89,7 @@ function derivePortfolioData(
   balances: TokenBalance[],
   pools: Pool[],
   txns: PoolTransaction[],
+  businesses: Business[],
 ): {
   poolRows: PoolDerivedData[];
   industrySegments: DonutSegment[];
@@ -103,6 +105,11 @@ function derivePortfolioData(
   const poolByAddress = new Map<string, Pool>();
   for (const p of pools) {
     if (p.poolAddress) poolByAddress.set(p.poolAddress.toLowerCase(), p);
+  }
+
+  const businessById = new Map<string, Business>();
+  for (const b of businesses) {
+    businessById.set(b.id, b);
   }
 
   const txnsByPool = new Map<string, PoolTransaction[]>();
@@ -193,8 +200,9 @@ function derivePortfolioData(
     else if (status === 'failed') poolStats.failed++;
     else poolStats.active++;
 
-    // Donut — industry
-    const industry = (pool.tags && pool.tags.length > 0) ? pool.tags[0] : 'Other';
+    // Donut — industry: pool tags first, then parent business tags, then "Other"
+    const business = pool.businessId ? businessById.get(pool.businessId) : undefined;
+    const industry = pool.tags?.[0] ?? business?.tags?.[0] ?? 'Other';
     const ind = industryMap.get(industry) ?? { value: 0, count: 0 };
     industryMap.set(industry, { value: ind.value + currentValue, count: ind.count + 1 });
 
@@ -282,12 +290,29 @@ const Portfolio: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const txns: PoolTransaction[] = (txnsData as any)?.getPoolTransactions ?? [];
 
+  const businessIds = useMemo(() => [...new Set(pools.map(p => p.businessId).filter(Boolean))], [pools]);
+
+  // Query 4: business metadata for category fallback (fires after pools resolve)
+  const { data: businessesData } = useQuery(GET_BUSINESSES_FOR_PORTFOLIO, {
+    variables: { input: { filter: { _id: { $in: businessIds } } } },
+    skip: businessIds.length === 0,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const businesses: Business[] = (businessesData as any)?.getBusinesses ?? [];
+
+  console.log('[Portfolio] wallet:', wallet);
+  console.log('[Portfolio] balancesData:', balancesData, '| loading:', balancesLoading);
+  console.log('[Portfolio] poolAddresses:', poolAddresses);
+  console.log('[Portfolio] poolsData:', poolsData, '| loading:', poolsLoading);
+  console.log('[Portfolio] txnsData:', txnsData, '| loading:', txnsLoading);
+
   const isLoading = balancesLoading || poolsLoading || txnsLoading;
 
   // Derive everything
   const derived = useMemo(
-    () => derivePortfolioData(balances, pools, txns),
-    [balances, pools, txns],
+    () => derivePortfolioData(balances, pools, txns, businesses),
+    [balances, pools, txns, businesses],
   );
 
   // Tab filter
@@ -430,8 +455,6 @@ const Portfolio: FC = () => {
                 <PortfolioStatCard
                   value={fmtStat(derived.claimableAmount)}
                   label="CLAIMABLE AMOUNT, USDT"
-                  onAction={() => {}}
-                  actionLabel="Withdraw"
                   icon={<Icon name="wallet" className="size-5 text-black" />}
                 />
               </div>
