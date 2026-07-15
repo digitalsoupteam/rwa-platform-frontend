@@ -23,6 +23,8 @@ export const GET_POOLS_FOR_PORTFOLIO = gql`
       businessId
       tags
       riskScore
+      rewardPercent
+      fixedSell
       expectedHoldAmount
       expectedRwaAmount
       awaitingRwaAmount
@@ -43,6 +45,8 @@ export const GET_BUSINESSES_FOR_PORTFOLIO = gql`
     getBusinesses(input: $input) {
       id
       tags
+      businessType
+      country
     }
   }
 `;

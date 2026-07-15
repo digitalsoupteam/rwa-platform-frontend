@@ -7,15 +7,22 @@ import { useAccount } from 'wagmi';
 import { useQuery } from '@apollo/client/react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Icon, Button, Pagination } from '@/components/ui';
-import { PortfolioDonutChart, PortfolioStatCard, PortfolioPoolRow } from '@/components/portfolio';
-import type { PortfolioPool, DonutSegment } from '@/components/portfolio';
+import { PortfolioDonutChart, PortfolioStatCard, PortfolioPoolRow, PortfolioFilterModal } from '@/components/portfolio';
+import type { PortfolioPool, DonutSegment, FilterCategory } from '@/components/portfolio';
 import {
   GET_BALANCES,
   GET_POOLS_FOR_PORTFOLIO,
   GET_POOL_TRANSACTIONS_FOR_PORTFOLIO,
   GET_BUSINESSES_FOR_PORTFOLIO,
 } from '@/lib/portfolio/operations';
-import type { TokenBalance, Pool, PoolTransaction, Business } from '@/gql/graphql';
+import type { TokenBalance, Pool, PoolTransaction } from '@/gql/graphql';
+
+type BusinessForPortfolio = {
+  id: string;
+  tags?: string[] | null;
+  businessType?: string | null;
+  country?: string | null;
+};
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -68,6 +75,14 @@ function deriveStatus(pool: Pool): PortfolioPool['status'] {
   return 'collecting';
 }
 
+function fmtRewardPct(v: string | null | undefined): string {
+  if (!v) return '';
+  const n = parseFloat(v);
+  if (isNaN(n)) return '';
+  const pct = n > 100 ? n / 100 : n;
+  return `${pct.toFixed(0)}%`;
+}
+
 function fmtStat(n: number, decimals = 2): string {
   if (!isFinite(n) || n === 0) return '0';
   const sign = n > 0 ? '+' : '';
@@ -83,13 +98,17 @@ interface PoolDerivedData {
   unrealizedPNL: number;
   totalInvested: number;
   status: PortfolioPool['status'];
+  industry: string;
+  poolType: 'Fixed' | 'Flexible';
+  // country: string; // not available yet
+  rewardPct: string;
 }
 
 function derivePortfolioData(
   balances: TokenBalance[],
   pools: Pool[],
   txns: PoolTransaction[],
-  businesses: Business[],
+  businesses: BusinessForPortfolio[],
 ): {
   poolRows: PoolDerivedData[];
   industrySegments: DonutSegment[];
@@ -107,7 +126,7 @@ function derivePortfolioData(
     if (p.poolAddress) poolByAddress.set(p.poolAddress.toLowerCase(), p);
   }
 
-  const businessById = new Map<string, Business>();
+  const businessById = new Map<string, BusinessForPortfolio>();
   for (const b of businesses) {
     businessById.set(b.id, b);
   }
@@ -169,6 +188,9 @@ function derivePortfolioData(
     const collected = holdToNum(pool.realHoldReserve);
     const goal = holdToNum(pool.expectedHoldAmount);
 
+    const business = pool.businessId ? businessById.get(pool.businessId) : undefined;
+    const industry = pool.tags?.[0] ?? business?.tags?.[0] ?? 'Other';
+
     poolRows.push({
       pool: {
         id: pool.id,
@@ -188,6 +210,10 @@ function derivePortfolioData(
       unrealizedPNL,
       totalInvested: totalBuyHold,
       status,
+      industry,
+      poolType: pool.fixedSell ? 'Fixed' : 'Flexible',
+      // country: business?.country ?? '', // not available yet
+      rewardPct: fmtRewardPct(pool.rewardPercent),
     });
 
     totalContributed += currentValue;
@@ -200,9 +226,7 @@ function derivePortfolioData(
     else if (status === 'failed') poolStats.failed++;
     else poolStats.active++;
 
-    // Donut — industry: pool tags first, then parent business tags, then "Other"
-    const business = pool.businessId ? businessById.get(pool.businessId) : undefined;
-    const industry = pool.tags?.[0] ?? business?.tags?.[0] ?? 'Other';
+    // Donut — industry
     const ind = industryMap.get(industry) ?? { value: 0, count: 0 };
     industryMap.set(industry, { value: ind.value + currentValue, count: ind.count + 1 });
 
@@ -257,6 +281,9 @@ const Portfolio: FC = () => {
   const [sortKey, setSortKey] = useState<SortKey>('pool');
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [activeFilterCategory, setActiveFilterCategory] = useState<FilterCategory>('AI-Rating');
+  const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
 
   // owner/userAddress are stored checksummed on the backend (straight from
   // decoded blockchain events) — do not lowercase, or the exact-match filter
@@ -299,7 +326,7 @@ const Portfolio: FC = () => {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const businesses: Business[] = (businessesData as any)?.getBusinesses ?? [];
+  const businesses: BusinessForPortfolio[] = (businessesData as any)?.getBusinesses ?? [];
 
   console.log('[Portfolio] wallet:', wallet);
   console.log('[Portfolio] balancesData:', balancesData, '| loading:', balancesLoading);
@@ -315,13 +342,89 @@ const Portfolio: FC = () => {
     [balances, pools, txns, businesses],
   );
 
-  // Tab filter
+  const categoryOptions = useMemo<Partial<Record<FilterCategory, string[]>>>(() => ({
+    'AI-Rating': ['80 — 100', '40 — 79', '0 — 39'],
+    'Type': ['Fixed', 'Flexible'],
+    'Status': ['Collecting', 'Pays out', 'Completed', 'Failed'],
+    'Pools': [...new Set(derived.poolRows.map(r => r.pool.name))],
+    'Industry': derived.industrySegments.map(s => s.label).filter(l => l !== 'Other'),
+    // 'Country': [...new Set(derived.poolRows.map(r => r.country).filter(Boolean))], // not available yet
+    'Planned ROI': [...new Set(derived.poolRows.map(r => r.rewardPct).filter(Boolean))].sort(),
+  }), [derived.poolRows]);
+
+  const activeFilterCount = useMemo(
+    () => Object.values(filterSelections).filter(v => v.length > 0).length,
+    [filterSelections],
+  );
+
+  const handleToggle = (category: FilterCategory, value: string) => {
+    if (value === '__all__') {
+      setFilterSelections(prev => ({ ...prev, [category]: [] }));
+      return;
+    }
+    setFilterSelections(prev => {
+      const current = prev[category] ?? [];
+      const next = current.includes(value)
+        ? current.filter(v => v !== value)
+        : [...current, value];
+      return { ...prev, [category]: next };
+    });
+  };
+
+  // Tab + modal filter
   const tabFiltered = useMemo(() => {
-    const rows = derived.poolRows;
-    if (activeTab === 'payouts') return rows.filter(r => r.status === 'paying_out');
-    if (activeTab === 'favourites') return [];
+    let rows = derived.poolRows;
+    if (activeTab === 'payouts') rows = rows.filter(r => r.status === 'paying_out');
+    else if (activeTab === 'favourites') rows = [];
+
+    const statusSel = filterSelections['Status'] ?? [];
+    if (statusSel.length > 0) {
+      const statusMap: Record<string, string> = {
+        'Collecting': 'collecting',
+        'Pays out': 'paying_out',
+        'Completed': 'completed',
+        'Failed': 'failed',
+      };
+      rows = rows.filter(r => statusSel.some(s => statusMap[s] === r.status));
+    }
+
+    const ratingSel = filterSelections['AI-Rating'] ?? [];
+    if (ratingSel.length > 0) {
+      rows = rows.filter(r => ratingSel.some(s => {
+        const score = r.pool.aiRating;
+        if (s === '80 — 100') return score >= 80;
+        if (s === '40 — 79') return score >= 40 && score < 80;
+        return score < 40; // '0 — 39'
+      }));
+    }
+
+    const typeSel = filterSelections['Type'] ?? [];
+    if (typeSel.length > 0) {
+      rows = rows.filter(r => typeSel.includes(r.poolType));
+    }
+
+    const poolsSel = filterSelections['Pools'] ?? [];
+    if (poolsSel.length > 0) {
+      rows = rows.filter(r => poolsSel.includes(r.pool.name));
+    }
+
+    const industrySel = filterSelections['Industry'] ?? [];
+    if (industrySel.length > 0) {
+      rows = rows.filter(r => industrySel.includes(r.industry));
+    }
+
+    // const countrySel = filterSelections['Country'] ?? []; // not available yet
+    // if (countrySel.length > 0) {
+    //   rows = rows.filter(r => countrySel.includes(r.country));
+    // }
+
+    const roiSel = filterSelections['Planned ROI'] ?? [];
+    if (roiSel.length > 0) {
+      rows = rows.filter(r => roiSel.includes(r.rewardPct));
+    }
+
     return rows;
-  }, [derived.poolRows, activeTab]);
+  }, [derived.poolRows, activeTab, filterSelections]);
 
   // Sort
   const sorted = useMemo(() => {
@@ -465,15 +568,38 @@ const Portfolio: FC = () => {
           <div className="flex flex-col gap-4">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
-            <div className="rounded-lg overflow-hidden">
-              {/* Filter row */}
-              <div className="bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-end px-3 py-4">
-                <button className="flex items-center gap-2 border border-stroke-primary rounded-lg pl-3 pr-4 py-3 text-sm font-medium text-grey-dark tr-d-all hover:bg-bg-tertiary">
-                  <Icon name="burger" className="size-3.5" />
+            <div className="flex flex-col">
+              {/* Filter row — outside overflow-hidden so dropdown can escape */}
+              <div className="bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10">
+                <button
+                  onClick={() => setFilterOpen(prev => !prev)}
+                  className={clsx(
+                    'flex items-center gap-2 rounded-lg pl-3 pr-4 py-3 text-sm font-medium tr-d-all hover:bg-bg-tertiary',
+                    filterOpen
+                      ? 'border-2 border-blue text-label-tertiary'
+                      : 'border border-stroke-primary text-grey-dark',
+                  )}
+                >
+                  <Icon name="plus" className="size-3.5" />
                   Filter
+                  {activeFilterCount > 0 && (
+                    <span className="bg-blue text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center leading-none">
+                      {activeFilterCount}
+                    </span>
+                  )}
                 </button>
+                <PortfolioFilterModal
+                  open={filterOpen}
+                  onClose={() => setFilterOpen(false)}
+                  activeCategory={activeFilterCategory}
+                  onCategoryChange={setActiveFilterCategory}
+                  selections={filterSelections}
+                  onToggle={handleToggle}
+                  categoryOptions={categoryOptions}
+                />
               </div>
 
+              <div className="overflow-hidden rounded-b-lg">
               {/* Header */}
               <div className="bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2">
                 {TABLE_COLS.map(col => (
@@ -519,6 +645,7 @@ const Portfolio: FC = () => {
                   ))
                 )}
               </div>
+              </div>{/* end overflow-hidden */}
             </div>
 
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
