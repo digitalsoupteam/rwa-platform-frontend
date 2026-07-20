@@ -267,21 +267,6 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         return;
       }
 
-      try {
-        await publicClient.simulateContract({
-          address: poolAddress,
-          abi: POOL_ABI,
-          functionName: 'mint',
-          args: [rwaWei, maxHold, validUntil, true],
-          account: address,
-        });
-      } catch (simErr) {
-        console.error('mint simulation reverted', simErr);
-        const reason = simErr instanceof BaseError ? simErr.shortMessage : 'Transaction would fail';
-        toast(reason, 'error');
-        return;
-      }
-
       const allowance = (await publicClient.readContract({
         address: HOLD_TOKEN_ADDRESS,
         abi: ERC20_APPROVE_ABI,
@@ -298,6 +283,21 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
           args: [poolAddress, BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')],
         });
         await publicClient.waitForTransactionReceipt({ hash: approveTx });
+      }
+
+      try {
+        await publicClient.simulateContract({
+          address: poolAddress,
+          abi: POOL_ABI,
+          functionName: 'mint',
+          args: [rwaWei, maxHold, validUntil, true],
+          account: address,
+        });
+      } catch (simErr) {
+        console.error('mint simulation reverted', simErr);
+        const reason = simErr instanceof BaseError ? simErr.shortMessage : 'Transaction would fail';
+        toast(reason, 'error');
+        return;
       }
 
       toast('Sending transaction…');

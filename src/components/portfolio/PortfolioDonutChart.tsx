@@ -57,9 +57,20 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
     { key: 'projects', label: 'Projects' },
   ];
 
-  const segmentCount = segments.length;
   const circumference = 2 * Math.PI * RADIUS;
   const segmentsTotal = segments.reduce((sum, s) => sum + s.value, 0);
+
+  // Each wedge's length is proportional to its share of the total; a small
+  // gap is carved out of the visible stroke while offsets stay cumulative
+  // over the full (un-trimmed) share so wedges don't drift apart.
+  let cumulativeOffset = 0;
+  const segmentArcs = segments.map(seg => {
+    const rawLen = segmentsTotal > 0 ? (seg.value / segmentsTotal) * circumference : 0;
+    const arcLen = Math.max(rawLen - GAP_PX, 0);
+    const offset = cumulativeOffset;
+    cumulativeOffset += rawLen;
+    return { arcLen, offset };
+  });
 
   const selected = selectedIndex !== null ? segments[selectedIndex] : null;
   const selectedPercent = selected && segmentsTotal > 0 ? Math.round((selected.value / segmentsTotal) * 100) : 0;
@@ -114,8 +125,7 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
           <g transform={`translate(${SIZE / 2}, ${SIZE / 2}) rotate(-90)`}>
             {segments.map((seg, i) => {
-              const arcLen = (circumference / segmentCount) - GAP_PX;
-              const offset = i * (circumference / segmentCount);
+              const { arcLen, offset } = segmentArcs[i];
               const isSelected = selectedIndex === i;
               const isDimmed = selectedIndex !== null && !isSelected;
               return (

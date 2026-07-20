@@ -1,6 +1,7 @@
 'use client';
 
 import React, { FC, useMemo, useState } from 'react';
+import Link from 'next/link';
 import clsx from 'clsx';
 import { formatUnits } from 'viem';
 import { useAccount } from 'wagmi';
@@ -278,7 +279,7 @@ const Portfolio: FC = () => {
 
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [chartFilter, setChartFilter] = useState<'industry' | 'projects' | 'countries'>('industry');
-  const [sortKey, setSortKey] = useState<SortKey>('pool');
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -286,7 +287,7 @@ const Portfolio: FC = () => {
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
 
   // owner/userAddress are stored checksummed on the backend (straight from
-  // decoded blockchain events) — do not lowercase, or the exact-match filter
+  // decoded blockchain events) — do not lowercase, or the exact-matchс filter
   // silently returns nothing.
   const wallet = address ?? '';
 
@@ -428,6 +429,7 @@ const Portfolio: FC = () => {
 
   // Sort
   const sorted = useMemo(() => {
+    if (!sortKey) return tabFiltered;
     const rows = [...tabFiltered];
     rows.sort((a, b) => {
       let av = 0, bv = 0;
@@ -463,8 +465,9 @@ const Portfolio: FC = () => {
   }, [chartFilter, derived]);
 
   const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortAsc(prev => !prev);
-    else { setSortKey(key); setSortAsc(true); }
+    if (sortKey !== key) { setSortKey(key); setSortAsc(true); }
+    else if (sortAsc) setSortAsc(false);
+    else setSortKey(null);
     setPage(1);
   };
 
@@ -475,10 +478,12 @@ const Portfolio: FC = () => {
           {/* ── Page title ── */}
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-[36px] font-semibold leading-[1.2] text-black">Portfolio</h1>
-            <Button visualType="quaternary" className="flex items-center gap-2 h-[46px] rounded-xl">
-              <Icon name="plus" className="size-3.5" />
-              New investment
-            </Button>
+            <Link href="/marketplace">
+              <Button visualType="quaternary" className="flex items-center gap-2 h-[46px] rounded-xl">
+                <Icon name="plus" className="size-3.5" />
+                New investment
+              </Button>
+            </Link>
           </div>
 
           {/* ── Tabs ── */}
@@ -613,14 +618,22 @@ const Portfolio: FC = () => {
                     )}
                   >
                     {col.label}
-                    <Icon
-                      name="tick"
-                      className={clsx(
-                        'size-3.5 shrink-0 transition-transform',
-                        sortKey === col.key && !sortAsc ? '-rotate-90' : 'rotate-90',
-                        sortKey === col.key ? 'text-blue' : 'text-grey'
-                      )}
-                    />
+                    <span className="flex items-center shrink-0">
+                      <Icon
+                        name="arrowUp"
+                        className={clsx(
+                          'size-3.5',
+                          sortKey === col.key && sortAsc ? 'text-blue' : 'text-grey'
+                        )}
+                      />
+                      <Icon
+                        name="arrowDown"
+                        className={clsx(
+                          'size-3.5 -ml-1.5',
+                          sortKey === col.key && !sortAsc ? 'text-blue' : 'text-grey'
+                        )}
+                      />
+                    </span>
                   </button>
                 ))}
                 <div className="w-[110px] shrink-0 text-sm font-medium text-grey-dark text-right">Status</div>

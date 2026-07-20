@@ -30,6 +30,8 @@ import SparklesSVG from '../../../public/icons/sparkles.svg';
 import StarSVG from '../../../public/icons/star.svg';
 import TickSquaredSVG from '../../../public/icons/tick-squared.svg';
 import WalletSVG from '../../../public/icons/wallet.svg';
+import ArrowUpSVG from '../../../public/icons/arrow-up.svg';
+import ArrowDownSVG from '../../../public/icons/arrow-down.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -62,6 +64,8 @@ const ICONS = {
   star: StarSVG,
   tickSquared: TickSquaredSVG,
   wallet: WalletSVG,
+  arrowUp: ArrowUpSVG,
+  arrowDown: ArrowDownSVG,
 } as const;
 
 export type IconType = keyof typeof ICONS;
