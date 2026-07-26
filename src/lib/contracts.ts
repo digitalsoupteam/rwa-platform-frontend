@@ -101,6 +101,19 @@ export const POOL_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  {
+    inputs: [{ internalType: 'uint256', name: 'rwaAmount', type: 'uint256' }],
+    name: 'estimateBurn',
+    outputs: [
+      { internalType: 'uint256', name: 'holdAmountWithoutFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'holdFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'bonusAmountWithoutFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'bonusFee', type: 'uint256' },
+      { internalType: 'uint256', name: 'eligibleRwaAmount', type: 'uint256' },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
 ] as const;
 
 export const FACTORY_ABI = [
