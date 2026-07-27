@@ -313,8 +313,8 @@ const DebtRepaymentsPage: FC = () => {
                   <Tooltip
                     content={
                       tab.key === 'schedule'
-                        ? 'All tranches owed across the pools you own, ordered by payout date.'
-                        : 'Past debt repayment transactions across your pools.'
+                        ? 'Track scheduled tranches, including amounts, dates, and statuses'
+                        : 'View all repayment transactions'
                     }
                   />
                 </span>
