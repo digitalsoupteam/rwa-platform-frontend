@@ -27,10 +27,17 @@ type BusinessForPortfolio = {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-type TabKey = 'all' | 'payouts' | 'favourites';
-type SortKey = 'pool' | 'rating' | 'amount' | 'share' | 'returned' | 'value' | 'profit';
+type TabKey = 'all' | 'payouts';
+type SortKey = 'pool' | 'rating' | 'amount' | 'share' | 'returned' | 'value' | 'profit' | 'status';
 
 const ROWS_PER_PAGE = 11;
+
+const STATUS_SORT_PRIORITY: Record<PortfolioPool['status'], number> = {
+  collecting: 0,
+  paying_out: 1,
+  completed: 2,
+  failed: 3,
+};
 
 const TABLE_COLS: { key: SortKey; label: string; width: string }[] = [
   { key: 'pool', label: 'Pool', width: 'w-[200px]' },
@@ -279,7 +286,7 @@ const Portfolio: FC = () => {
 
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [chartFilter, setChartFilter] = useState<'industry' | 'projects' | 'countries'>('industry');
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey | null>('status');
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -429,7 +436,11 @@ const Portfolio: FC = () => {
 
   // Sort
   const sorted = useMemo(() => {
-    if (!sortKey) return tabFiltered;
+    if (!sortKey) {
+      return [...tabFiltered].sort(
+        (a, b) => STATUS_SORT_PRIORITY[a.status] - STATUS_SORT_PRIORITY[b.status]
+      );
+    }
     const rows = [...tabFiltered];
     rows.sort((a, b) => {
       let av = 0, bv = 0;
@@ -442,6 +453,7 @@ const Portfolio: FC = () => {
         case 'value':    av = a.currentValue; bv = b.currentValue; break;
         case 'profit':   av = a.pool.amount > 0 ? (a.currentValue + a.pool.returned - a.pool.amount) / a.pool.amount : 0;
                          bv = b.pool.amount > 0 ? (b.currentValue + b.pool.returned - b.pool.amount) / b.pool.amount : 0; break;
+        case 'status':   av = STATUS_SORT_PRIORITY[a.status]; bv = STATUS_SORT_PRIORITY[b.status]; break;
       }
       return sortAsc ? av - bv : bv - av;
     });
@@ -636,7 +648,28 @@ const Portfolio: FC = () => {
                     </span>
                   </button>
                 ))}
-                <div className="w-[110px] shrink-0 text-sm font-medium text-grey-dark text-right">Status</div>
+                <button
+                  onClick={() => handleSort('status')}
+                  className="flex items-center justify-end gap-1 w-[110px] shrink-0 text-sm font-medium text-grey-dark tr-d-all hover:text-black"
+                >
+                  Status
+                  <span className="flex items-center shrink-0">
+                    <Icon
+                      name="arrowUp"
+                      className={clsx(
+                        'size-3.5',
+                        sortKey === 'status' && sortAsc ? 'text-blue' : 'text-grey'
+                      )}
+                    />
+                    <Icon
+                      name="arrowDown"
+                      className={clsx(
+                        'size-3.5 -ml-1.5',
+                        sortKey === 'status' && !sortAsc ? 'text-blue' : 'text-grey'
+                      )}
+                    />
+                  </span>
+                </button>
                 <div className="w-[213px] shrink-0 text-sm font-medium text-grey-dark text-right">Collected</div>
               </div>
 
