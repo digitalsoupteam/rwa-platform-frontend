@@ -36,6 +36,7 @@ import TimeSVG from '../../../public/icons/time.svg';
 import InProgressSVG from '../../../public/icons/in-progress.svg';
 import CompletedSVG from '../../../public/icons/completed.svg';
 import FailedSVG from '../../../public/icons/failed.svg';
+import DocumentSVG from '../../../public/icons/document.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -54,8 +55,8 @@ const ICONS = {
   time: TimeSVG,
   inProgress: InProgressSVG,
   completed: CompletedSVG,
-  failed: FailedSVG
-  check: CheckSVG,
+  failed: FailedSVG,
+  document: DocumentSVG,
   chart: ChartSVG,
   chartSquared: ChartSquaredSVG,
   coins: CoinsSVG,

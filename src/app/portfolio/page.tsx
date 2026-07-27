@@ -646,6 +646,21 @@ const Portfolio: FC = () => {
                   Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="-mt-px"><SkeletonRow /></div>
                   ))
+                ) : paginated.length === 0 && derived.poolRows.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-4 py-24 px-4 border-x border-b border-stroke-primary text-center">
+                    <Icon name="document" className="size-16" />
+                    <div className="flex flex-col items-center gap-2 max-w-[311px]">
+                      <p className="text-xl font-semibold text-grey-dark">Nothing here yet</p>
+                      <p className="text-sm font-medium leading-[1.2] text-grey-dark">
+                        You haven&rsquo;t bought any tokens yet. Head to the marketplace and choose a project you like
+                      </p>
+                    </div>
+                    <Link href="/marketplace">
+                      <Button visualType="quaternary" className="rounded-lg">
+                        Go to Marketplace
+                      </Button>
+                    </Link>
+                  </div>
                 ) : paginated.length === 0 ? (
                   <div className="py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary">
                     No pools found.

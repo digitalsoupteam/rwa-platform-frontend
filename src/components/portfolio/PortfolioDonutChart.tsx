@@ -124,28 +124,39 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
       <div className="grow-1 relative flex items-center justify-center mx-auto" style={{ width: SIZE, height: SIZE }}>
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
           <g transform={`translate(${SIZE / 2}, ${SIZE / 2}) rotate(-90)`}>
-            {segments.map((seg, i) => {
-              const { arcLen, offset } = segmentArcs[i];
-              const isSelected = selectedIndex === i;
-              const isDimmed = selectedIndex !== null && !isSelected;
-              return (
-                <circle
-                  key={seg.label}
-                  r={RADIUS}
-                  cx={0}
-                  cy={0}
-                  fill="transparent"
-                  stroke={isDimmed ? '#9DBDF9' : '#1D58E9'}
-                  strokeWidth={STROKE}
-                  strokeDasharray={`${arcLen} ${circumference - arcLen}`}
-                  strokeDashoffset={-offset}
-                  className="tr-d-all"
-                  pointerEvents="visibleStroke"
-                  onMouseEnter={() => handleSegmentHover(i)}
-                  onMouseLeave={handleSegmentLeave}
-                />
-              );
-            })}
+            {segmentsTotal > 0 ? (
+              segments.map((seg, i) => {
+                const { arcLen, offset } = segmentArcs[i];
+                const isSelected = selectedIndex === i;
+                const isDimmed = selectedIndex !== null && !isSelected;
+                return (
+                  <circle
+                    key={seg.label}
+                    r={RADIUS}
+                    cx={0}
+                    cy={0}
+                    fill="transparent"
+                    stroke={isDimmed ? '#9DBDF9' : '#1D58E9'}
+                    strokeWidth={STROKE}
+                    strokeDasharray={`${arcLen} ${circumference - arcLen}`}
+                    strokeDashoffset={-offset}
+                    className="tr-d-all"
+                    pointerEvents="visibleStroke"
+                    onMouseEnter={() => handleSegmentHover(i)}
+                    onMouseLeave={handleSegmentLeave}
+                  />
+                );
+              })
+            ) : (
+              <circle
+                r={RADIUS}
+                cx={0}
+                cy={0}
+                fill="transparent"
+                stroke="#9B9BA5"
+                strokeWidth={STROKE}
+              />
+            )}
           </g>
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none">
