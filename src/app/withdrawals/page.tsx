@@ -12,6 +12,7 @@ import {
   WithdrawalFilterModal,
   TransactionHistoryTable,
   STATUS_LABELS,
+  TX_STATUS_LABELS,
 } from '@/components/withdrawals';
 import type {
   WithdrawalPool,
@@ -20,6 +21,7 @@ import type {
   WithdrawalTx,
   WithdrawModalPoolContext,
   AmountRange,
+  PeriodRange,
 } from '@/components/withdrawals';
 import {
   GET_BALANCES_FOR_WITHDRAWALS,
@@ -108,6 +110,12 @@ const WithdrawalsPage: FC = () => {
   const [amountRange, setAmountRange] = useState<AmountRange | null>(null);
   const [mobileVisibleCount, setMobileVisibleCount] = useState(ROWS_PER_PAGE);
   const [withdrawTarget, setWithdrawTarget] = useState<(WithdrawalPool & WithdrawModalPoolContext) | null>(null);
+
+  const [historyFilterOpen, setHistoryFilterOpen] = useState(false);
+  const [historyActiveFilterCategory, setHistoryActiveFilterCategory] = useState<FilterCategory>('Status');
+  const [historyFilterSelections, setHistoryFilterSelections] = useState<Record<string, string[]>>({});
+  const [historyAmountRange, setHistoryAmountRange] = useState<AmountRange | null>(null);
+  const [historyPeriodRange, setHistoryPeriodRange] = useState<PeriodRange | null>(null);
 
   // Query 1: user's token balances (one per pool the user has ever held RWA in)
   const { data: balancesData, loading: balancesLoading } = useQuery(GET_BALANCES_FOR_WITHDRAWALS, {
@@ -282,11 +290,76 @@ const WithdrawalsPage: FC = () => {
     return MOCK_HISTORY_TXS;
   }, [rawTxs, pools]);
 
-  const historyTotalPages = Math.max(1, Math.ceil(historyTxs.length / ROWS_PER_PAGE));
+  const historyCategoryOptions = useMemo<Partial<Record<FilterCategory, string[]>>>(
+    () => ({
+      Status: Object.values(TX_STATUS_LABELS),
+      Pool: [...new Set(historyTxs.map(tx => tx.poolName))],
+    }),
+    [historyTxs]
+  );
+
+  const historyAmountBounds = useMemo<AmountRange>(() => {
+    if (historyTxs.length === 0) return { min: 0, max: 0 };
+    const amounts = historyTxs.map(tx => tx.amountRwa);
+    return { min: Math.min(...amounts), max: Math.max(...amounts) };
+  }, [historyTxs]);
+
+  const historyActiveFilterCount = useMemo(
+    () =>
+      Object.values(historyFilterSelections).filter(v => v.length > 0).length +
+      (historyAmountRange ? 1 : 0) +
+      (historyPeriodRange ? 1 : 0),
+    [historyFilterSelections, historyAmountRange, historyPeriodRange]
+  );
+
+  const handleHistoryToggle = (category: FilterCategory, value: string) => {
+    if (value === '__all__') {
+      setHistoryFilterSelections(prev => ({ ...prev, [category]: [] }));
+      return;
+    }
+    setHistoryFilterSelections(prev => {
+      const current = prev[category] ?? [];
+      const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+      return { ...prev, [category]: next };
+    });
+  };
+
+  const filteredHistoryTxs = useMemo(() => {
+    let rows = historyTxs;
+
+    const statusSel = historyFilterSelections['Status'] ?? [];
+    if (statusSel.length > 0) {
+      rows = rows.filter(tx => statusSel.includes(TX_STATUS_LABELS[tx.status]));
+    }
+
+    const poolSel = historyFilterSelections['Pool'] ?? [];
+    if (poolSel.length > 0) {
+      rows = rows.filter(tx => poolSel.includes(tx.poolName));
+    }
+
+    if (historyAmountRange) {
+      rows = rows.filter(tx => tx.amountRwa >= historyAmountRange.min && tx.amountRwa <= historyAmountRange.max);
+    }
+
+    if (historyPeriodRange) {
+      const fromTs = new Date(historyPeriodRange.from).getTime() / 1000;
+      const toTs = new Date(historyPeriodRange.to).getTime() / 1000 + 86400; // inclusive of the whole "to" day
+      rows = rows.filter(tx => tx.date >= fromTs && tx.date < toTs);
+    }
+
+    return rows;
+  }, [historyTxs, historyFilterSelections, historyAmountRange, historyPeriodRange]);
+
+  const historyTotalPages = Math.max(1, Math.ceil(filteredHistoryTxs.length / ROWS_PER_PAGE));
   const [historyPage, setHistoryPage] = useState(1);
-  const paginatedHistory = historyTxs.slice((historyPage - 1) * ROWS_PER_PAGE, historyPage * ROWS_PER_PAGE);
+  const paginatedHistory = filteredHistoryTxs.slice((historyPage - 1) * ROWS_PER_PAGE, historyPage * ROWS_PER_PAGE);
   const [historyMobileVisibleCount, setHistoryMobileVisibleCount] = useState(ROWS_PER_PAGE);
-  const mobileHistory = historyTxs.slice(0, historyMobileVisibleCount);
+  const mobileHistory = filteredHistoryTxs.slice(0, historyMobileVisibleCount);
+
+  useEffect(() => {
+    setHistoryMobileVisibleCount(ROWS_PER_PAGE);
+    setHistoryPage(1);
+  }, [historyFilterSelections, historyAmountRange, historyPeriodRange]);
 
   const handleWithdrawn = () => {
     toast('Refresh the page to see your updated balance.');
@@ -369,6 +442,7 @@ const WithdrawalsPage: FC = () => {
                   </Button>
                   <WithdrawalFilterModal
                     open={filterOpen}
+                    categories={['Status', 'Amount', 'Pool']}
                     activeCategory={activeFilterCategory}
                     onCategoryChange={setActiveFilterCategory}
                     selections={filterSelections}
@@ -572,23 +646,180 @@ const WithdrawalsPage: FC = () => {
             </div>
           ) : (
             <div className={'flex flex-col gap-4'}>
-              <div className={'max-lg:hidden flex flex-col gap-4'}>
-                <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
-                <TransactionHistoryTable txs={paginatedHistory} isLoading={txLoading} />
+              <div className={'max-lg:hidden'}>
                 <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
               </div>
 
-              <div className={'lg:hidden flex flex-col gap-3'}>
-                <TransactionHistoryTable txs={mobileHistory} isLoading={txLoading} />
-                {historyMobileVisibleCount < historyTxs.length && (
-                  <Button
-                    visualType={'quinary'}
-                    className={'w-full justify-center'}
-                    onClick={() => setHistoryMobileVisibleCount(c => c + ROWS_PER_PAGE)}
-                  >
-                    Show more
+              <div className={'flex flex-col'}>
+                <div
+                  className={
+                    'bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10 ' +
+                    'max-lg:bg-transparent max-lg:border-0 max-lg:rounded-none max-lg:px-0 max-lg:py-0'
+                  }
+                >
+                  <Button visualType={'quinary'} onClick={() => setHistoryFilterOpen(prev => !prev)}>
+                    <Icon name={'plus'} className={'size-3.5'} />
+                    Filter
+                    {historyActiveFilterCount > 0 && (
+                      <span
+                        className={
+                          'bg-blue text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center leading-none'
+                        }
+                      >
+                        {historyActiveFilterCount}
+                      </span>
+                    )}
                   </Button>
-                )}
+                  <WithdrawalFilterModal
+                    open={historyFilterOpen}
+                    categories={['Status', 'Amount', 'Period', 'Pool']}
+                    activeCategory={historyActiveFilterCategory}
+                    onCategoryChange={setHistoryActiveFilterCategory}
+                    selections={historyFilterSelections}
+                    onToggle={handleHistoryToggle}
+                    categoryOptions={historyCategoryOptions}
+                    amountBounds={historyAmountBounds}
+                    amountRange={historyAmountRange}
+                    onAmountRangeChange={setHistoryAmountRange}
+                    periodRange={historyPeriodRange}
+                    onPeriodRangeChange={setHistoryPeriodRange}
+                  />
+
+                  {/* Active-filter pills — mobile only; desktop shows the count badge on the Filter button instead */}
+                  <div className={'lg:hidden flex items-center gap-2 overflow-x-auto ml-2'}>
+                    {(historyFilterSelections['Status'] ?? []).length > 0 && (
+                      <button
+                        type={'button'}
+                        onClick={() => {
+                          setHistoryActiveFilterCategory('Status');
+                          setHistoryFilterOpen(true);
+                        }}
+                        className={'shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-2 rounded-full border border-stroke-primary text-xs whitespace-nowrap'}
+                      >
+                        <span
+                          role={'button'}
+                          tabIndex={0}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleHistoryToggle('Status', '__all__');
+                          }}
+                          className={'flex items-center'}
+                        >
+                          <Icon name={'plus'} className={'size-3 rotate-45 text-grey-dark'} />
+                        </span>
+                        <span className={'text-grey-dark'}>Status</span>
+                        <span className={'text-blue font-medium'}>
+                          {historyFilterSelections['Status'].length === 1
+                            ? historyFilterSelections['Status'][0]
+                            : `${historyFilterSelections['Status'].length} selected`}
+                        </span>
+                      </button>
+                    )}
+
+                    {historyAmountRange && (
+                      <button
+                        type={'button'}
+                        onClick={() => {
+                          setHistoryActiveFilterCategory('Amount');
+                          setHistoryFilterOpen(true);
+                        }}
+                        className={'shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-2 rounded-full border border-stroke-primary text-xs whitespace-nowrap'}
+                      >
+                        <span
+                          role={'button'}
+                          tabIndex={0}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setHistoryAmountRange(null);
+                          }}
+                          className={'flex items-center'}
+                        >
+                          <Icon name={'plus'} className={'size-3 rotate-45 text-grey-dark'} />
+                        </span>
+                        <span className={'text-grey-dark'}>Amount</span>
+                        <span className={'text-blue font-medium'}>
+                          {historyAmountRange.min.toLocaleString()} - {historyAmountRange.max.toLocaleString()}
+                        </span>
+                      </button>
+                    )}
+
+                    {historyPeriodRange && (
+                      <button
+                        type={'button'}
+                        onClick={() => {
+                          setHistoryActiveFilterCategory('Period');
+                          setHistoryFilterOpen(true);
+                        }}
+                        className={'shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-2 rounded-full border border-stroke-primary text-xs whitespace-nowrap'}
+                      >
+                        <span
+                          role={'button'}
+                          tabIndex={0}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setHistoryPeriodRange(null);
+                          }}
+                          className={'flex items-center'}
+                        >
+                          <Icon name={'plus'} className={'size-3 rotate-45 text-grey-dark'} />
+                        </span>
+                        <span className={'text-grey-dark'}>Period</span>
+                        <span className={'text-blue font-medium'}>
+                          {historyPeriodRange.from} - {historyPeriodRange.to}
+                        </span>
+                      </button>
+                    )}
+
+                    {(historyFilterSelections['Pool'] ?? []).length > 0 && (
+                      <button
+                        type={'button'}
+                        onClick={() => {
+                          setHistoryActiveFilterCategory('Pool');
+                          setHistoryFilterOpen(true);
+                        }}
+                        className={'shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-2 rounded-full border border-stroke-primary text-xs whitespace-nowrap'}
+                      >
+                        <span
+                          role={'button'}
+                          tabIndex={0}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleHistoryToggle('Pool', '__all__');
+                          }}
+                          className={'flex items-center'}
+                        >
+                          <Icon name={'plus'} className={'size-3 rotate-45 text-grey-dark'} />
+                        </span>
+                        <span className={'text-grey-dark'}>Pool</span>
+                        <span className={'text-blue font-medium'}>
+                          {historyFilterSelections['Pool'].length === 1
+                            ? historyFilterSelections['Pool'][0]
+                            : `${historyFilterSelections['Pool'].length} selected`}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className={'max-lg:hidden'}>
+                  <TransactionHistoryTable txs={paginatedHistory} isLoading={txLoading} />
+                </div>
+                <div className={'lg:hidden flex flex-col gap-3'}>
+                  <TransactionHistoryTable txs={mobileHistory} isLoading={txLoading} />
+                  {historyMobileVisibleCount < filteredHistoryTxs.length && (
+                    <Button
+                      visualType={'quinary'}
+                      className={'w-full justify-center'}
+                      onClick={() => setHistoryMobileVisibleCount(c => c + ROWS_PER_PAGE)}
+                    >
+                      Show more
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className={'max-lg:hidden'}>
+                <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
               </div>
             </div>
           )}

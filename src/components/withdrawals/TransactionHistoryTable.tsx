@@ -22,7 +22,7 @@ export interface WithdrawalTx {
   txHash: string;
 }
 
-const STATUS_LABELS: Record<TxStatus, string> = {
+export const STATUS_LABELS: Record<TxStatus, string> = {
   pending: 'Pending',
   in_progress: 'In progress',
   completed: 'Completed',
