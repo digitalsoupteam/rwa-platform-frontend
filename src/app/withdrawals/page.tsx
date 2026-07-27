@@ -19,6 +19,7 @@ import type {
   FilterCategory,
   WithdrawalTx,
   WithdrawModalPoolContext,
+  AmountRange,
 } from '@/components/withdrawals';
 import {
   GET_BALANCES_FOR_WITHDRAWALS,
@@ -94,6 +95,7 @@ const WithdrawalsPage: FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilterCategory, setActiveFilterCategory] = useState<FilterCategory>('Status');
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
+  const [amountRange, setAmountRange] = useState<AmountRange | null>(null);
   const [withdrawTarget, setWithdrawTarget] = useState<(WithdrawalPool & WithdrawModalPoolContext) | null>(null);
 
   // Query 1: user's token balances (one per pool the user has ever held RWA in)
@@ -196,9 +198,16 @@ const WithdrawalsPage: FC = () => {
     [derivedPools]
   );
 
+  // "Amount" filters on each pool's collected (progress) USDT value.
+  const amountBounds = useMemo<AmountRange>(() => {
+    if (derivedPools.length === 0) return { min: 0, max: 0 };
+    const collected = derivedPools.map(r => r.withdrawalPool.collected);
+    return { min: Math.min(...collected), max: Math.max(...collected) };
+  }, [derivedPools]);
+
   const activeFilterCount = useMemo(
-    () => Object.values(filterSelections).filter(v => v.length > 0).length,
-    [filterSelections]
+    () => Object.values(filterSelections).filter(v => v.length > 0).length + (amountRange ? 1 : 0),
+    [filterSelections, amountRange]
   );
 
   const handleToggle = (category: FilterCategory, value: string) => {
@@ -226,8 +235,14 @@ const WithdrawalsPage: FC = () => {
       rows = rows.filter(r => poolSel.includes(r.withdrawalPool.name));
     }
 
+    if (amountRange) {
+      rows = rows.filter(
+        r => r.withdrawalPool.collected >= amountRange.min && r.withdrawalPool.collected <= amountRange.max
+      );
+    }
+
     return rows;
-  }, [derivedPools, filterSelections]);
+  }, [derivedPools, filterSelections, amountRange]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPools.length / ROWS_PER_PAGE));
   const paginatedPools = filteredPools.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
@@ -323,6 +338,9 @@ const WithdrawalsPage: FC = () => {
                     selections={filterSelections}
                     onToggle={handleToggle}
                     categoryOptions={categoryOptions}
+                    amountBounds={amountBounds}
+                    amountRange={amountRange}
+                    onAmountRangeChange={setAmountRange}
                   />
                 </div>
 
