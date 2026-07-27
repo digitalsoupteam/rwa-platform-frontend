@@ -9,7 +9,7 @@ import { Button, Icon, Pagination, Tooltip } from '@/components/ui';
 import {
   DebtRepaymentRow,
   DebtRepaymentCardMobile,
-  PayModal,
+  DebtRepaymentDrawer,
   STATUS_LABELS,
 } from '@/components/debt-repayments';
 import type { DebtRepaymentPool, DebtRepaymentStatus } from '@/components/debt-repayments';
@@ -53,7 +53,7 @@ function deriveDebtRepaymentRow(
   pool: Pool,
   companyName: string,
   projectName: string
-): { row: DebtRepaymentPool; amountDueWei: bigint } {
+): { row: DebtRepaymentPool; amountDueWei: bigint; percentOfDebt: number } {
   const now = Date.now() / 1000;
   const incoming = pool.incomingTranches;
   const completed = pool.lastCompletedIncomingTranche ?? 0;
@@ -70,6 +70,10 @@ function deriveDebtRepaymentRow(
     ? BigInt(nextTranche.amount) - BigInt(nextTranche.returnedAmount || '0')
     : BigInt(0);
 
+  const totalDebtWei = incoming.reduce((sum, t) => sum + BigInt(t.amount), BigInt(0));
+  const percentOfDebt =
+    nextTranche && totalDebtWei > BigInt(0) ? (Number(BigInt(nextTranche.amount)) / Number(totalDebtWei)) * 100 : 0;
+
   const row: DebtRepaymentPool = {
     id: pool.id,
     poolAddress: pool.poolAddress ?? '',
@@ -84,7 +88,7 @@ function deriveDebtRepaymentRow(
     payable: !!nextTranche,
   };
 
-  return { row, amountDueWei };
+  return { row, amountDueWei, percentOfDebt };
 }
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
@@ -105,7 +109,9 @@ const DebtRepaymentsPage: FC = () => {
   const [activeFilterCategory, setActiveFilterCategory] = useState<FilterCategory>('Status');
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
   const [mobileVisibleCount, setMobileVisibleCount] = useState(ROWS_PER_PAGE);
-  const [payTarget, setPayTarget] = useState<(DebtRepaymentPool & { amountDueWei: bigint }) | null>(null);
+  const [payTarget, setPayTarget] = useState<
+    (DebtRepaymentPool & { amountDueWei: bigint; percentOfDebt: number }) | null
+  >(null);
 
   const [historyPage, setHistoryPage] = useState(1);
   const [historyMobileVisibleCount, setHistoryMobileVisibleCount] = useState(ROWS_PER_PAGE);
@@ -166,8 +172,8 @@ const DebtRepaymentsPage: FC = () => {
         const companyName =
           business?.ownerType === 'company' ? companyById.get(business.ownerId)?.name ?? '—' : '—';
         const projectName = business?.name ?? '—';
-        const { row, amountDueWei } = deriveDebtRepaymentRow(pool, companyName, projectName);
-        return { row, amountDueWei };
+        const { row, amountDueWei, percentOfDebt } = deriveDebtRepaymentRow(pool, companyName, projectName);
+        return { row, amountDueWei, percentOfDebt };
       })
       .sort((a, b) => {
         if (a.row.nextPaymentDate === null) return 1;
@@ -252,7 +258,7 @@ const DebtRepaymentsPage: FC = () => {
   const handlePay = (row: DebtRepaymentPool) => {
     const derived = derivedRows.find(r => r.row.id === row.id);
     if (!derived) return;
-    setPayTarget({ ...row, amountDueWei: derived.amountDueWei });
+    setPayTarget({ ...row, amountDueWei: derived.amountDueWei, percentOfDebt: derived.percentOfDebt });
   };
 
   const handlePaid = () => {
@@ -462,7 +468,7 @@ const DebtRepaymentsPage: FC = () => {
         </Wrapper>
       </section>
 
-      <PayModal pool={payTarget} onClose={() => setPayTarget(null)} onPaid={handlePaid} />
+      <DebtRepaymentDrawer pool={payTarget} onClose={() => setPayTarget(null)} onPaid={handlePaid} />
     </DashboardLayout>
   );
 };

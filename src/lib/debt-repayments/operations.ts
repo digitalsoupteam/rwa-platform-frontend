@@ -60,3 +60,15 @@ export const GET_DEBT_REPAYMENT_TRANSACTIONS = gql`
     }
   }
 `;
+
+// Recipients count for the detail sidebar — distinct RWA holders of a single
+// pool, fetched on demand (only while the sidebar for that pool is open).
+export const GET_POOL_RECIPIENTS = gql`
+  query GetPoolRecipients($input: GetBalancesInput!) {
+    getBalances(input: $input) {
+      id
+      owner
+      balance
+    }
+  }
+`;
