@@ -9,31 +9,52 @@ import { useQuery } from '@apollo/client/react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode } from 'swiper/modules';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Icon, Button, Pagination, Tooltip } from '@/components/ui';
-import { PortfolioDonutChart, PortfolioStatCard, PortfolioPoolRow, PortfolioPoolCardMobile, PortfolioFilterModal } from '@/components/portfolio';
-import type { PortfolioPool, DonutSegment, FilterCategory } from '@/components/portfolio';
+import { Icon, Button, Pagination, Tooltip, toast } from '@/components/ui';
+import {
+  PortfolioDonutChart,
+  PortfolioStatCard,
+  PortfolioPoolRow,
+  PortfolioPoolCardMobile,
+  PortfolioFilterModal,
+  PortfolioPayoutRow,
+  PortfolioPayoutCardMobile,
+  PortfolioPayoutDrawer,
+} from '@/components/portfolio';
+import type { PortfolioPool, DonutSegment, FilterCategory, PortfolioPayoutPool, PayoutTranche } from '@/components/portfolio';
+import { WithdrawModal } from '@/components/withdrawals';
 import {
   GET_BALANCES,
   GET_POOLS_FOR_PORTFOLIO,
   GET_POOL_TRANSACTIONS_FOR_PORTFOLIO,
   GET_BUSINESSES_FOR_PORTFOLIO,
+  GET_COMPANIES_FOR_PORTFOLIO,
 } from '@/lib/portfolio/operations';
-import type { TokenBalance, Pool, PoolTransaction } from '@/gql/graphql';
+import type { TokenBalance, Pool, PoolTransaction, IncomingTranche } from '@/gql/graphql';
 
 import 'swiper/css';
 import 'swiper/css/free-mode';
 
 type BusinessForPortfolio = {
   id: string;
+  name: string;
+  ownerId: string;
+  ownerType: string;
   tags?: string[] | null;
   businessType?: string | null;
   country?: string | null;
+  description?: string | null;
+};
+
+type CompanyForPortfolio = {
+  id: string;
+  name: string;
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 type TabKey = 'all' | 'payouts';
 type SortKey = 'pool' | 'rating' | 'amount' | 'share' | 'returned' | 'value' | 'profit' | 'status';
+type PayoutSortKey = 'rating' | 'nextPayment' | 'profit' | 'paymentAmount' | 'totalAvailable';
 
 const ROWS_PER_PAGE = 11;
 const MOBILE_PAGE_SIZE = 3;
@@ -53,6 +74,14 @@ const TABLE_COLS: { key: SortKey; label: string; width: string }[] = [
   { key: 'returned', label: 'Returned (USDT)', width: 'flex-1' },
   { key: 'value', label: 'Current value (USDT)', width: 'flex-1' },
   { key: 'profit', label: 'Profit', width: 'flex-1' },
+];
+
+const PAYOUT_TABLE_COLS: { key: PayoutSortKey; label: string }[] = [
+  { key: 'rating', label: 'AI Rating' },
+  { key: 'nextPayment', label: 'Next payment' },
+  { key: 'profit', label: 'Profit' },
+  { key: 'paymentAmount', label: 'Payment amount (USDT)' },
+  { key: 'totalAvailable', label: 'Total available (USDT)' },
 ];
 
 const TABS: { key: TabKey; label: string }[] = [
@@ -119,6 +148,17 @@ interface PoolDerivedData {
   poolType: 'Fixed' | 'Flexible';
   // country: string; // not available yet
   rewardPct: string;
+  poolAddress: string;
+  rwaAddress: string;
+  virtualHoldReserve?: string | null;
+  realHoldReserve?: string | null;
+  virtualRwaReserve?: string | null;
+  exitFeePercent?: string | null;
+  incomingTranches: IncomingTranche[];
+  lastCompletedIncomingTranche: number;
+  businessDescription?: string | null;
+  companyName: string;
+  projectName: string;
 }
 
 function derivePortfolioData(
@@ -126,6 +166,7 @@ function derivePortfolioData(
   pools: Pool[],
   txns: PoolTransaction[],
   businesses: BusinessForPortfolio[],
+  companies: CompanyForPortfolio[],
 ): {
   poolRows: PoolDerivedData[];
   industrySegments: DonutSegment[];
@@ -146,6 +187,11 @@ function derivePortfolioData(
   const businessById = new Map<string, BusinessForPortfolio>();
   for (const b of businesses) {
     businessById.set(b.id, b);
+  }
+
+  const companyById = new Map<string, CompanyForPortfolio>();
+  for (const c of companies) {
+    companyById.set(c.id, c);
   }
 
   const txnsByPool = new Map<string, PoolTransaction[]>();
@@ -231,6 +277,17 @@ function derivePortfolioData(
       poolType: pool.fixedSell ? 'Fixed' : 'Flexible',
       // country: business?.country ?? '', // not available yet
       rewardPct: fmtRewardPct(pool.rewardPercent),
+      poolAddress: pool.poolAddress ?? '',
+      rwaAddress: pool.rwaAddress,
+      virtualHoldReserve: pool.virtualHoldReserve,
+      realHoldReserve: pool.realHoldReserve,
+      virtualRwaReserve: pool.virtualRwaReserve,
+      exitFeePercent: pool.exitFeePercent,
+      incomingTranches: pool.incomingTranches ?? [],
+      lastCompletedIncomingTranche: pool.lastCompletedIncomingTranche ?? 0,
+      businessDescription: business?.description,
+      companyName: business?.ownerType === 'company' ? companyById.get(business.ownerId)?.name ?? '—' : '—',
+      projectName: business?.name ?? '—',
     });
 
     totalContributed += currentValue;
@@ -282,6 +339,97 @@ function derivePortfolioData(
   };
 }
 
+// Shared by both tabs — the same rating/type/pool/industry/ROI filters apply
+// regardless of which columns are on screen.
+function applyRowFilters(rows: PoolDerivedData[], filterSelections: Record<string, string[]>): PoolDerivedData[] {
+  let result = rows;
+
+  const statusSel = filterSelections['Status'] ?? [];
+  if (statusSel.length > 0) {
+    const statusMap: Record<string, string> = {
+      'Collecting': 'collecting',
+      'Pays out': 'paying_out',
+      'Completed': 'completed',
+      'Failed': 'failed',
+    };
+    result = result.filter(r => statusSel.some(s => statusMap[s] === r.status));
+  }
+
+  const ratingSel = filterSelections['AI-Rating'] ?? [];
+  if (ratingSel.length > 0) {
+    result = result.filter(r => ratingSel.some(s => {
+      const score = r.pool.aiRating;
+      if (s === '80 — 100') return score >= 80;
+      if (s === '40 — 79') return score >= 40 && score < 80;
+      return score < 40; // '0 — 39'
+    }));
+  }
+
+  const typeSel = filterSelections['Type'] ?? [];
+  if (typeSel.length > 0) {
+    result = result.filter(r => typeSel.includes(r.poolType));
+  }
+
+  const poolsSel = filterSelections['Pools'] ?? [];
+  if (poolsSel.length > 0) {
+    result = result.filter(r => poolsSel.includes(r.pool.name));
+  }
+
+  const industrySel = filterSelections['Industry'] ?? [];
+  if (industrySel.length > 0) {
+    result = result.filter(r => industrySel.includes(r.industry));
+  }
+
+  const roiSel = filterSelections['Planned ROI'] ?? [];
+  if (roiSel.length > 0) {
+    result = result.filter(r => roiSel.includes(r.rewardPct));
+  }
+
+  return result;
+}
+
+// Per-user share of a pool's tranche payments — same "contribution ÷ goal"
+// convention already used for poolSharePct in derivePortfolioData.
+function derivePayoutRow(row: PoolDerivedData): { pool: PortfolioPayoutPool; tranches: PayoutTranche[] } {
+  const now = Date.now() / 1000;
+  const incoming = row.incomingTranches;
+  const completed = row.lastCompletedIncomingTranche;
+  const total = incoming.length;
+  const nextTranche = completed < total ? incoming[completed] : undefined;
+  const sharePct = row.pool.goal > 0 ? row.totalInvested / row.pool.goal : 0;
+
+  const tranches: PayoutTranche[] = incoming.map((t, i) => ({
+    amount: holdToNum(t.amount) * sharePct,
+    date: t.expiredAt,
+    completed: i < completed,
+  }));
+
+  const pool: PortfolioPayoutPool = {
+    id: row.pool.id,
+    poolAddress: row.poolAddress,
+    rwaAddress: row.rwaAddress,
+    name: row.pool.name,
+    aiRating: row.pool.aiRating,
+    nextPaymentDate: nextTranche ? nextTranche.expiredAt : null,
+    nextPaymentIsOverdue: !!nextTranche && nextTranche.expiredAt < now,
+    completedTranches: completed,
+    totalTranches: total,
+    profitPct: row.rewardPct || '—',
+    paymentAmount: nextTranche ? holdToNum(nextTranche.amount) * sharePct : null,
+    totalAvailable: row.currentValue,
+    claimable: row.currentValue > 0,
+    description: row.businessDescription,
+    companyName: row.companyName,
+    projectName: row.projectName,
+    virtualHoldReserve: row.virtualHoldReserve,
+    realHoldReserve: row.realHoldReserve,
+    virtualRwaReserve: row.virtualRwaReserve,
+    exitFeePercent: row.exitFeePercent,
+  };
+
+  return { pool, tranches };
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 const SkeletonRow = () => (
@@ -297,6 +445,10 @@ const Portfolio: FC = () => {
   const [chartFilter, setChartFilter] = useState<'industry' | 'projects' | 'countries'>('industry');
   const [sortKey, setSortKey] = useState<SortKey | null>('status');
   const [sortAsc, setSortAsc] = useState(true);
+  const [payoutSortKey, setPayoutSortKey] = useState<PayoutSortKey | null>(null);
+  const [payoutSortAsc, setPayoutSortAsc] = useState(true);
+  const [claimTarget, setClaimTarget] = useState<PortfolioPayoutPool | null>(null);
+  const [payoutDetailId, setPayoutDetailId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [mobileVisibleCount, setMobileVisibleCount] = useState(MOBILE_PAGE_SIZE);
   // Desktop and mobile each mount their own trigger + <PortfolioFilterModal>
@@ -353,6 +505,20 @@ const Portfolio: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const businesses: BusinessForPortfolio[] = (businessesData as any)?.getBusinesses ?? [];
 
+  const companyIds = useMemo(
+    () => [...new Set(businesses.filter(b => b.ownerType === 'company').map(b => b.ownerId).filter(Boolean))],
+    [businesses]
+  );
+
+  // Query 5: company metadata for pools owned via a company (fires after businesses resolve)
+  const { data: companiesData } = useQuery(GET_COMPANIES_FOR_PORTFOLIO, {
+    variables: { input: { filter: { _id: { $in: companyIds } } } },
+    skip: companyIds.length === 0,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const companies: CompanyForPortfolio[] = (companiesData as any)?.getCompanies ?? [];
+
   console.log('[Portfolio] wallet:', wallet);
   console.log('[Portfolio] balancesData:', balancesData, '| loading:', balancesLoading);
   console.log('[Portfolio] poolAddresses:', poolAddresses);
@@ -363,8 +529,8 @@ const Portfolio: FC = () => {
 
   // Derive everything
   const derived = useMemo(
-    () => derivePortfolioData(balances, pools, txns, businesses),
-    [balances, pools, txns, businesses],
+    () => derivePortfolioData(balances, pools, txns, businesses, companies),
+    [balances, pools, txns, businesses, companies],
   );
 
   const categoryOptions = useMemo<Partial<Record<FilterCategory, string[]>>>(() => ({
@@ -398,57 +564,75 @@ const Portfolio: FC = () => {
 
   // Tab + modal filter
   const tabFiltered = useMemo(() => {
-    let rows = derived.poolRows;
-    if (activeTab === 'payouts') rows = rows.filter(r => r.status === 'paying_out');
-
-    const statusSel = filterSelections['Status'] ?? [];
-    if (statusSel.length > 0) {
-      const statusMap: Record<string, string> = {
-        'Collecting': 'collecting',
-        'Pays out': 'paying_out',
-        'Completed': 'completed',
-        'Failed': 'failed',
-      };
-      rows = rows.filter(r => statusSel.some(s => statusMap[s] === r.status));
-    }
-
-    const ratingSel = filterSelections['AI-Rating'] ?? [];
-    if (ratingSel.length > 0) {
-      rows = rows.filter(r => ratingSel.some(s => {
-        const score = r.pool.aiRating;
-        if (s === '80 — 100') return score >= 80;
-        if (s === '40 — 79') return score >= 40 && score < 80;
-        return score < 40; // '0 — 39'
-      }));
-    }
-
-    const typeSel = filterSelections['Type'] ?? [];
-    if (typeSel.length > 0) {
-      rows = rows.filter(r => typeSel.includes(r.poolType));
-    }
-
-    const poolsSel = filterSelections['Pools'] ?? [];
-    if (poolsSel.length > 0) {
-      rows = rows.filter(r => poolsSel.includes(r.pool.name));
-    }
-
-    const industrySel = filterSelections['Industry'] ?? [];
-    if (industrySel.length > 0) {
-      rows = rows.filter(r => industrySel.includes(r.industry));
-    }
-
-    // const countrySel = filterSelections['Country'] ?? []; // not available yet
-    // if (countrySel.length > 0) {
-    //   rows = rows.filter(r => countrySel.includes(r.country));
-    // }
-
-    const roiSel = filterSelections['Planned ROI'] ?? [];
-    if (roiSel.length > 0) {
-      rows = rows.filter(r => roiSel.includes(r.rewardPct));
-    }
-
-    return rows;
+    const rows = activeTab === 'payouts'
+      ? derived.poolRows.filter(r => r.status === 'paying_out')
+      : derived.poolRows;
+    return applyRowFilters(rows, filterSelections);
   }, [derived.poolRows, activeTab, filterSelections]);
+
+  // Payouts tab — same eligible pools as tabFiltered, mapped to schedule/claim data
+  const payoutRows = useMemo(() => {
+    const eligible = applyRowFilters(derived.poolRows.filter(r => r.status === 'paying_out'), filterSelections);
+    const real = eligible.map(derivePayoutRow);
+    if (real.length > 0) return real;
+    // TEMP MOCK DATA FOR REVIEW — REMOVE BEFORE COMMIT
+    const now = Date.now() / 1000;
+    const day = 86400;
+    const mk = (i: number, overrides: Partial<PortfolioPayoutPool> = {}): { pool: PortfolioPayoutPool; tranches: PayoutTranche[] } => ({
+      pool: {
+        id: `mock-${i}`,
+        poolAddress: '0x0000000000000000000000000000000000000000',
+        rwaAddress: '0x0000000000000000000000000000000000000000',
+        name: 'Smart Farm Expansion',
+        aiRating: 4.96,
+        nextPaymentDate: now + (i - 2) * day * 5,
+        nextPaymentIsOverdue: i === 0,
+        completedTranches: i + 6,
+        totalTranches: 10 + i,
+        profitPct: '4%',
+        paymentAmount: i === 4 ? null : 1500,
+        totalAvailable: 3678,
+        claimable: i === 1 || i === 2,
+        description: 'GreentechCapital LLC is a forward-thinking company dedicated to the development and implementation of innovative green technologies.',
+        companyName: 'GreentechCapital LLC',
+        projectName: 'Smart Farm Expansion',
+        virtualHoldReserve: '0',
+        realHoldReserve: '0',
+        virtualRwaReserve: '0',
+        exitFeePercent: '100',
+        ...overrides,
+      },
+      tranches: [
+        { amount: 5500, date: now + 5 * day, completed: false },
+        { amount: 5500, date: now + 10 * day, completed: false },
+        { amount: 5500, date: now + 15 * day, completed: false },
+        { amount: 5500, date: now - 5 * day, completed: true },
+      ],
+    });
+    return Array.from({ length: 10 }, (_, i) => mk(i, i === 4 ? { nextPaymentDate: null, paymentAmount: null } : {}));
+  }, [derived.poolRows, filterSelections]);
+
+  const payoutDetail = useMemo(
+    () => payoutRows.find(r => r.pool.id === payoutDetailId) ?? null,
+    [payoutRows, payoutDetailId]
+  );
+
+  const payoutSorted = useMemo(() => {
+    if (!payoutSortKey) return payoutRows;
+    const rows = [...payoutRows];
+    rows.sort((a, b) => {
+      let av = 0, bv = 0;
+      switch (payoutSortKey) {
+        case 'rating':        av = a.pool.aiRating; bv = b.pool.aiRating; break;
+        case 'nextPayment':   av = a.pool.nextPaymentDate ?? Infinity; bv = b.pool.nextPaymentDate ?? Infinity; break;
+        case 'profit':        av = parseFloat(a.pool.profitPct) || 0; bv = parseFloat(b.pool.profitPct) || 0; break;
+        case 'paymentAmount': av = a.pool.paymentAmount ?? 0; bv = b.pool.paymentAmount ?? 0; break;
+        case 'totalAvailable':av = a.pool.totalAvailable; bv = b.pool.totalAvailable; break;
+      }
+      return payoutSortAsc ? av - bv : bv - av;
+    });
+    return rows;
+  }, [payoutRows, payoutSortKey, payoutSortAsc]);
 
   // Sort
   const sorted = useMemo(() => {
@@ -476,9 +660,12 @@ const Portfolio: FC = () => {
     return rows;
   }, [tabFiltered, sortKey, sortAsc]);
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / ROWS_PER_PAGE));
+  const activeRowCount = activeTab === 'payouts' ? payoutSorted.length : sorted.length;
+  const totalPages = Math.max(1, Math.ceil(activeRowCount / ROWS_PER_PAGE));
   const paginated = sorted.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
   const mobilePaginated = sorted.slice(0, mobileVisibleCount);
+  const paginatedPayouts = payoutSorted.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  const mobilePayouts = payoutSorted.slice(0, mobileVisibleCount);
 
   const chartView = useMemo(() => {
     const filter = chartFilter as 'industry' | 'projects';
@@ -542,6 +729,34 @@ const Portfolio: FC = () => {
     setMobileVisibleCount(MOBILE_PAGE_SIZE);
   };
 
+  const handlePayoutSort = (key: PayoutSortKey) => {
+    if (payoutSortKey !== key) { setPayoutSortKey(key); setPayoutSortAsc(true); }
+    else if (payoutSortAsc) setPayoutSortAsc(false);
+    else setPayoutSortKey(null);
+    setPage(1);
+    setMobileVisibleCount(MOBILE_PAGE_SIZE);
+  };
+
+  const handleClaimed = () => {
+    toast('Refresh the page to see your updated balance.');
+  };
+
+  const claimModalPool = claimTarget ? {
+    id: claimTarget.id,
+    poolAddress: claimTarget.poolAddress,
+    rwaAddress: claimTarget.rwaAddress,
+    name: claimTarget.name,
+    companyName: claimTarget.companyName,
+    projectName: claimTarget.projectName,
+    collected: 0,
+    goal: 0,
+    status: 'ready_to_withdraw' as const,
+    virtualHoldReserve: claimTarget.virtualHoldReserve,
+    realHoldReserve: claimTarget.realHoldReserve,
+    virtualRwaReserve: claimTarget.virtualRwaReserve,
+    exitFeePercent: claimTarget.exitFeePercent,
+  } : null;
+
   return (
     <DashboardLayout>
       <section className="py-8 md:py-12">
@@ -586,44 +801,46 @@ const Portfolio: FC = () => {
             ))}
           </div>
 
-          {/* ── Main two-column layout ── */}
-          <div className="flex flex-col md:flex-row gap-2.5 mb-6">
-            {/* Left – Donut chart */}
-            <div className="w-full md:flex-[1_0_0] min-w-0">
-              <PortfolioDonutChart
-                key={chartFilter}
-                totalUsdt={chartView.totalUsdt}
-                subtitle={chartView.subtitle}
-                segments={chartView.segments}
-                activeFilter={chartFilter}
-                onFilterChange={setChartFilter}
-                poolStats={derived.poolStats}
-              />
-            </div>
+          {/* ── Main two-column layout (All pools tab only) ── */}
+          {activeTab === 'all' && (
+            <div className="flex flex-col md:flex-row gap-2.5 mb-6">
+              {/* Left – Donut chart */}
+              <div className="w-full md:flex-[1_0_0] min-w-0">
+                <PortfolioDonutChart
+                  key={chartFilter}
+                  totalUsdt={chartView.totalUsdt}
+                  subtitle={chartView.subtitle}
+                  segments={chartView.segments}
+                  activeFilter={chartFilter}
+                  onFilterChange={setChartFilter}
+                  poolStats={derived.poolStats}
+                />
+              </div>
 
-            {/* Right – Stats: swiper on mobile, 2-col grid on desktop */}
-            <div className="w-full md:flex-[1_0_0] min-w-0">
-              <Swiper
-                className="md:!hidden !overflow-visible"
-                modules={[FreeMode]}
-                freeMode
-                spaceBetween={10}
-                slidesPerView="auto"
-              >
-                {statCards.map((card, i) => (
-                  <SwiperSlide key={i} className="!w-[250px]">
-                    <PortfolioStatCard {...card} />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+              {/* Right – Stats: swiper on mobile, 2-col grid on desktop */}
+              <div className="w-full md:flex-[1_0_0] min-w-0">
+                <Swiper
+                  className="md:!hidden !overflow-visible"
+                  modules={[FreeMode]}
+                  freeMode
+                  spaceBetween={10}
+                  slidesPerView="auto"
+                >
+                  {statCards.map((card, i) => (
+                    <SwiperSlide key={i} className="!w-[250px]">
+                      <PortfolioStatCard {...card} />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
 
-              <div className="hidden md:grid md:grid-cols-2 md:gap-2.5">
-                {statCards.map((card, i) => (
-                  <PortfolioStatCard key={i} {...card} />
-                ))}
+                <div className="hidden md:grid md:grid-cols-2 md:gap-2.5">
+                  {statCards.map((card, i) => (
+                    <PortfolioStatCard key={i} {...card} />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* ── Table section (desktop) ── */}
           <div className="hidden md:flex flex-col gap-4">
@@ -656,95 +873,151 @@ const Portfolio: FC = () => {
               </div>
 
               <div className="overflow-hidden rounded-b-lg">
-              {/* Header */}
-              <div className="bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2">
-                {TABLE_COLS.map(col => (
-                  <button
-                    key={col.key}
-                    onClick={() => handleSort(col.key)}
-                    className={clsx(
-                      'flex items-center gap-1 text-sm font-medium text-grey-dark tr-d-all hover:text-black whitespace-nowrap',
-                      col.width,
-                      col.key === 'pool' ? 'shrink-0 justify-start' : 'justify-end'
-                    )}
-                  >
-                    {col.label}
-                    <span className="flex items-center shrink-0">
-                      <Icon
-                        name="arrowUp"
-                        className={clsx(
-                          'size-3.5',
-                          sortKey === col.key && sortAsc ? 'text-blue' : 'text-grey'
-                        )}
-                      />
-                      <Icon
-                        name="arrowDown"
-                        className={clsx(
-                          'size-3.5 -ml-1.5',
-                          sortKey === col.key && !sortAsc ? 'text-blue' : 'text-grey'
-                        )}
-                      />
-                    </span>
-                  </button>
-                ))}
-                <button
-                  onClick={() => handleSort('status')}
-                  className="flex items-center justify-end gap-1 w-[110px] shrink-0 text-sm font-medium text-grey-dark tr-d-all hover:text-black"
-                >
-                  Status
-                  <span className="flex items-center shrink-0">
-                    <Icon
-                      name="arrowUp"
-                      className={clsx(
-                        'size-3.5',
-                        sortKey === 'status' && sortAsc ? 'text-blue' : 'text-grey'
-                      )}
-                    />
-                    <Icon
-                      name="arrowDown"
-                      className={clsx(
-                        'size-3.5 -ml-1.5',
-                        sortKey === 'status' && !sortAsc ? 'text-blue' : 'text-grey'
-                      )}
-                    />
-                  </span>
-                </button>
-                <div className="w-[213px] shrink-0 text-sm font-medium text-grey-dark text-right">Collected</div>
-              </div>
+              {activeTab === 'payouts' ? (
+                <>
+                  {/* Header */}
+                  <div className="bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2">
+                    <div className="w-[200px] shrink-0 text-sm font-medium text-grey-dark">Pool</div>
+                    {PAYOUT_TABLE_COLS.map(col => (
+                      <button
+                        key={col.key}
+                        onClick={() => handlePayoutSort(col.key)}
+                        className="flex items-center justify-end gap-1 flex-1 text-sm font-medium text-grey-dark tr-d-all hover:text-black whitespace-nowrap"
+                      >
+                        {col.label}
+                        <span className="flex items-center shrink-0">
+                          <Icon
+                            name="arrowUp"
+                            className={clsx('size-3.5', payoutSortKey === col.key && payoutSortAsc ? 'text-blue' : 'text-grey')}
+                          />
+                          <Icon
+                            name="arrowDown"
+                            className={clsx('size-3.5 -ml-1.5', payoutSortKey === col.key && !payoutSortAsc ? 'text-blue' : 'text-grey')}
+                          />
+                        </span>
+                      </button>
+                    ))}
+                    <div className="w-[110px] shrink-0 text-sm font-medium text-grey-dark text-right">Action</div>
+                  </div>
 
-              {/* Rows */}
-              <div className="flex flex-col">
-                {isLoading ? (
-                  Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="-mt-px"><SkeletonRow /></div>
-                  ))
-                ) : paginated.length === 0 && derived.poolRows.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center gap-4 py-24 px-4 border-x border-b border-stroke-primary text-center">
-                    <Icon name="document" className="size-16" />
-                    <div className="flex flex-col items-center gap-2 max-w-[311px]">
-                      <p className="text-xl font-semibold text-grey-dark">Nothing here yet</p>
-                      <p className="text-sm font-medium leading-[1.2] text-grey-dark">
-                        You haven&rsquo;t bought any tokens yet. Head to the marketplace and choose a project you like
-                      </p>
-                    </div>
-                    <Link href="/marketplace">
-                      <Button visualType="quaternary" className="rounded-lg">
-                        Go to Marketplace
-                      </Button>
-                    </Link>
+                  {/* Rows */}
+                  <div className="flex flex-col">
+                    {isLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="-mt-px"><SkeletonRow /></div>
+                      ))
+                    ) : paginatedPayouts.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center gap-4 py-24 px-4 border-x border-b border-stroke-primary text-center">
+                        <Icon name="document" className="size-16" />
+                        <div className="flex flex-col items-center gap-2 max-w-[311px]">
+                          <p className="text-xl font-semibold text-grey-dark">Nothing here yet</p>
+                          <p className="text-sm font-medium leading-[1.2] text-grey-dark">
+                            No pools are currently paying out. Once one starts repaying, it&rsquo;ll show up here.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      paginatedPayouts.map(({ pool }) => (
+                        <div key={pool.id} className="-mt-px">
+                          <PortfolioPayoutRow pool={pool} onClaim={setClaimTarget} onOpenDetail={p => setPayoutDetailId(p.id)} />
+                        </div>
+                      ))
+                    )}
                   </div>
-                ) : paginated.length === 0 ? (
-                  <div className="py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary">
-                    No pools found.
+                </>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div className="bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2">
+                    {TABLE_COLS.map(col => (
+                      <button
+                        key={col.key}
+                        onClick={() => handleSort(col.key)}
+                        className={clsx(
+                          'flex items-center gap-1 text-sm font-medium text-grey-dark tr-d-all hover:text-black whitespace-nowrap',
+                          col.width,
+                          col.key === 'pool' ? 'shrink-0 justify-start' : 'justify-end'
+                        )}
+                      >
+                        {col.label}
+                        <span className="flex items-center shrink-0">
+                          <Icon
+                            name="arrowUp"
+                            className={clsx(
+                              'size-3.5',
+                              sortKey === col.key && sortAsc ? 'text-blue' : 'text-grey'
+                            )}
+                          />
+                          <Icon
+                            name="arrowDown"
+                            className={clsx(
+                              'size-3.5 -ml-1.5',
+                              sortKey === col.key && !sortAsc ? 'text-blue' : 'text-grey'
+                            )}
+                          />
+                        </span>
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => handleSort('status')}
+                      className="flex items-center justify-end gap-1 w-[110px] shrink-0 text-sm font-medium text-grey-dark tr-d-all hover:text-black"
+                    >
+                      Status
+                      <span className="flex items-center shrink-0">
+                        <Icon
+                          name="arrowUp"
+                          className={clsx(
+                            'size-3.5',
+                            sortKey === 'status' && sortAsc ? 'text-blue' : 'text-grey'
+                          )}
+                        />
+                        <Icon
+                          name="arrowDown"
+                          className={clsx(
+                            'size-3.5 -ml-1.5',
+                            sortKey === 'status' && !sortAsc ? 'text-blue' : 'text-grey'
+                          )}
+                        />
+                      </span>
+                    </button>
+                    <div className="w-[213px] shrink-0 text-sm font-medium text-grey-dark text-right">Collected</div>
                   </div>
-                ) : (
-                  paginated.map(({ pool }) => (
-                    <div key={pool.id} className="-mt-px">
-                      <PortfolioPoolRow pool={pool} />
-                    </div>
-                  ))
-                )}
-              </div>
+
+                  {/* Rows */}
+                  <div className="flex flex-col">
+                    {isLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="-mt-px"><SkeletonRow /></div>
+                      ))
+                    ) : paginated.length === 0 && derived.poolRows.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center gap-4 py-24 px-4 border-x border-b border-stroke-primary text-center">
+                        <Icon name="document" className="size-16" />
+                        <div className="flex flex-col items-center gap-2 max-w-[311px]">
+                          <p className="text-xl font-semibold text-grey-dark">Nothing here yet</p>
+                          <p className="text-sm font-medium leading-[1.2] text-grey-dark">
+                            You haven&rsquo;t bought any tokens yet. Head to the marketplace and choose a project you like
+                          </p>
+                        </div>
+                        <Link href="/marketplace">
+                          <Button visualType="quaternary" className="rounded-lg">
+                            Go to Marketplace
+                          </Button>
+                        </Link>
+                      </div>
+                    ) : paginated.length === 0 ? (
+                      <div className="py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary">
+                        No pools found.
+                      </div>
+                    ) : (
+                      paginated.map(({ pool }) => (
+                        <div key={pool.id} className="-mt-px">
+                          <PortfolioPoolRow pool={pool} />
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
               </div>{/* end overflow-hidden */}
             </div>
 
@@ -799,6 +1072,27 @@ const Portfolio: FC = () => {
                 Array.from({ length: 2 }).map((_, i) => (
                   <div key={i} className="h-[280px] rounded-xl animate-pulse bg-bg-tertiary/40" />
                 ))
+              ) : activeTab === 'payouts' ? (
+                mobilePayouts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-4 py-16 px-4 text-center">
+                    <Icon name="document" className="size-16" />
+                    <div className="flex flex-col items-center gap-2 max-w-[311px]">
+                      <p className="text-xl font-semibold text-grey-dark">Nothing here yet</p>
+                      <p className="text-sm font-medium leading-[1.2] text-grey-dark">
+                        No pools are currently paying out. Once one starts repaying, it&rsquo;ll show up here.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  mobilePayouts.map(({ pool }) => (
+                    <PortfolioPayoutCardMobile
+                      key={pool.id}
+                      pool={pool}
+                      onClaim={setClaimTarget}
+                      onOpenDetail={p => setPayoutDetailId(p.id)}
+                    />
+                  ))
+                )
               ) : mobilePaginated.length === 0 && derived.poolRows.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-4 py-16 px-4 text-center">
                   <Icon name="document" className="size-16" />
@@ -821,18 +1115,36 @@ const Portfolio: FC = () => {
               )}
             </div>
 
-            {mobilePaginated.length < sorted.length && (
-              <Button
-                visualType="quinary"
-                className="w-full justify-center"
-                onClick={() => setMobileVisibleCount(c => c + MOBILE_PAGE_SIZE)}
-              >
-                Show more
-              </Button>
-            )}
+            {activeTab === 'payouts'
+              ? mobilePayouts.length < payoutSorted.length && (
+                  <Button
+                    visualType="quinary"
+                    className="w-full justify-center"
+                    onClick={() => setMobileVisibleCount(c => c + MOBILE_PAGE_SIZE)}
+                  >
+                    Show more
+                  </Button>
+                )
+              : mobilePaginated.length < sorted.length && (
+                  <Button
+                    visualType="quinary"
+                    className="w-full justify-center"
+                    onClick={() => setMobileVisibleCount(c => c + MOBILE_PAGE_SIZE)}
+                  >
+                    Show more
+                  </Button>
+                )}
           </div>
         </Wrapper>
       </section>
+
+      <PortfolioPayoutDrawer
+        pool={payoutDetail?.pool ?? null}
+        tranches={payoutDetail?.tranches ?? []}
+        onClose={() => setPayoutDetailId(null)}
+        onClaim={p => { setClaimTarget(p); setPayoutDetailId(null); }}
+      />
+      <WithdrawModal pool={claimModalPool} onClose={() => setClaimTarget(null)} onWithdrawn={handleClaimed} />
     </DashboardLayout>
   );
 };

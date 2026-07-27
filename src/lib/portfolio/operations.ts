@@ -20,6 +20,7 @@ export const GET_POOLS_FOR_PORTFOLIO = gql`
       id
       name
       poolAddress
+      rwaAddress
       businessId
       tags
       riskScore
@@ -31,10 +32,17 @@ export const GET_POOLS_FOR_PORTFOLIO = gql`
       realHoldReserve
       virtualHoldReserve
       virtualRwaReserve
+      exitFeePercent
       isTargetReached
       isFullyReturned
       entryPeriodExpired
       completionPeriodExpired
+      incomingTranches {
+        amount
+        expiredAt
+        returnedAmount
+      }
+      lastCompletedIncomingTranche
       image
     }
   }
@@ -44,9 +52,22 @@ export const GET_BUSINESSES_FOR_PORTFOLIO = gql`
   query GetBusinessesForPortfolio($input: FilterInput!) {
     getBusinesses(input: $input) {
       id
+      name
+      ownerId
+      ownerType
       tags
       businessType
       country
+      description
+    }
+  }
+`;
+
+export const GET_COMPANIES_FOR_PORTFOLIO = gql`
+  query GetCompaniesForPortfolio($input: GetCompaniesInput) {
+    getCompanies(input: $input) {
+      id
+      name
     }
   }
 `;

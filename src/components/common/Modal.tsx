@@ -19,7 +19,7 @@ const Modal: FC<ModalProps> = ({ children, isOpened, closeModal }) => {
   return (
     <section
       className={clsx(
-        'z-1 fixed top-0 right-0 bottom-0 left-0 flex items-center justify-center bg-[#494A53]/60 px-4',
+        'z-30 fixed top-0 right-0 bottom-0 left-0 flex items-center justify-center bg-[#494A53]/60 px-4',
         isOpened ? 'block' : 'hidden'
       )}
       onClick={evt => evt.currentTarget === evt.target && closeModal()}
