@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@apollo/client/react';
@@ -96,6 +96,7 @@ const WithdrawalsPage: FC = () => {
   const [activeFilterCategory, setActiveFilterCategory] = useState<FilterCategory>('Status');
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
   const [amountRange, setAmountRange] = useState<AmountRange | null>(null);
+  const [mobileVisibleCount, setMobileVisibleCount] = useState(ROWS_PER_PAGE);
   const [withdrawTarget, setWithdrawTarget] = useState<(WithdrawalPool & WithdrawModalPoolContext) | null>(null);
 
   // Query 1: user's token balances (one per pool the user has ever held RWA in)
@@ -246,6 +247,11 @@ const WithdrawalsPage: FC = () => {
 
   const totalPages = Math.max(1, Math.ceil(filteredPools.length / ROWS_PER_PAGE));
   const paginatedPools = filteredPools.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  const mobilePools = filteredPools.slice(0, mobileVisibleCount);
+
+  useEffect(() => {
+    setMobileVisibleCount(ROWS_PER_PAGE);
+  }, [filterSelections, amountRange]);
 
   const historyTxs: WithdrawalTx[] = useMemo(() => {
     const poolByAddress = new Map(pools.map(p => [(p.poolAddress ?? '').toLowerCase(), p]));
@@ -283,9 +289,9 @@ const WithdrawalsPage: FC = () => {
             </div>
           )}
 
-          <p className={'flex items-center gap-1.5 text-4xl font-bold text-[#1D1D1F] mb-8'}>
+          <p className={'flex items-center gap-1.5 text-3xl lg:text-4xl font-bold text-[#1D1D1F] mb-8'}>
             USDT
-            <Icon className={'size-8'} name={'usdt'} />
+            <Icon className={'size-6 lg:size-8'} name={'usdt'} />
             {totalWithdrawableUsdt.toLocaleString('en-US', { maximumFractionDigits: 2 })}
           </p>
 
@@ -320,12 +326,15 @@ const WithdrawalsPage: FC = () => {
 
           {activeTab === 'pools' ? (
             <div className={'flex flex-col gap-4'}>
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <div className={'max-lg:hidden'}>
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              </div>
 
               <div className={'flex flex-col'}>
                 <div
                   className={
-                    'bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10'
+                    'bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10 ' +
+                    'max-lg:bg-transparent max-lg:border-0 max-lg:rounded-none max-lg:px-0 max-lg:py-0'
                   }
                 >
                   <Button visualType={'quinary'} onClick={() => setFilterOpen(prev => !prev)}>
@@ -355,7 +364,8 @@ const WithdrawalsPage: FC = () => {
                   />
                 </div>
 
-                <div className={'overflow-hidden rounded-b-lg'}>
+                {/* Desktop table */}
+                <div className={'max-lg:hidden overflow-hidden rounded-b-lg'}>
                   <div
                     className={
                       'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'
@@ -411,9 +421,50 @@ const WithdrawalsPage: FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Mobile cards */}
+                <div className={'lg:hidden flex flex-col gap-3'}>
+                  {isLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
+                  ) : !wallet ? (
+                    <div className={'py-12 text-center text-sm text-label-tertiary'}>
+                      Connect your wallet to see your pools.
+                    </div>
+                  ) : mobilePools.length === 0 ? (
+                    <div className={'py-12 text-center text-sm text-label-tertiary'}>No pools found.</div>
+                  ) : (
+                    <>
+                      {mobilePools.map(({ withdrawalPool }, i) => {
+                        const prev = mobilePools[i - 1]?.withdrawalPool;
+                        const showCompany = !prev || prev.companyName !== withdrawalPool.companyName;
+                        const showProject = showCompany || prev.projectName !== withdrawalPool.projectName;
+                        return (
+                          <WithdrawalsPoolRow
+                            key={withdrawalPool.id}
+                            pool={withdrawalPool}
+                            showCompany={showCompany}
+                            showProject={showProject}
+                            onWithdraw={() => setWithdrawTarget(withdrawalPool)}
+                          />
+                        );
+                      })}
+                      {mobileVisibleCount < filteredPools.length && (
+                        <Button
+                          visualType={'quinary'}
+                          className={'w-full justify-center'}
+                          onClick={() => setMobileVisibleCount(c => c + ROWS_PER_PAGE)}
+                        >
+                          Show more
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
 
-              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              <div className={'max-lg:hidden'}>
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+              </div>
             </div>
           ) : (
             <div className={'flex flex-col gap-4'}>

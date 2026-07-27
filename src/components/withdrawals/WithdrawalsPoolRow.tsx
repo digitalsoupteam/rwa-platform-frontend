@@ -37,7 +37,7 @@ const STATUS_BAR_COLORS: Record<WithdrawalStatus, { track: string; fill: string 
   ready_to_withdraw: { track: '#9DBDF9', fill: '#1D58E9' },
   already_withdrawn: { track: '#9DBDF9', fill: '#1D58E9' },
   failed: { track: '#FBD1D1', fill: '#F97066' },
-  withdrawal_declined: { track: '#9B9BA5', fill: '#4A5363' },
+  withdrawal_declined: { track: '#9DBDF9', fill: '#1D58E9' },
 };
 
 interface WithdrawalsPoolRowProps {
@@ -52,39 +52,75 @@ const WithdrawalsPoolRow: FC<WithdrawalsPoolRowProps> = ({ pool, showCompany, sh
   const { track, fill } = STATUS_BAR_COLORS[pool.status];
 
   return (
-    <div className={'bg-bg-primary border border-stroke-primary min-h-[62px] flex items-center px-3 gap-2'}>
-      <span className={'text-sm text-black w-[200px] shrink-0'}>{showCompany ? pool.companyName : ''}</span>
-      <span className={'text-sm text-black w-[200px] shrink-0'}>{showProject ? pool.projectName : ''}</span>
-      <span className={'text-sm text-black flex-1 truncate'}>{pool.name}</span>
+    <>
+      {/* Desktop row */}
+      <div className={'max-lg:hidden bg-bg-primary border border-stroke-primary min-h-[62px] flex items-center px-3 gap-2'}>
+        <span className={'text-sm text-black w-[200px] shrink-0'}>{showCompany ? pool.companyName : ''}</span>
+        <span className={'text-sm text-black w-[200px] shrink-0'}>{showProject ? pool.projectName : ''}</span>
+        <span className={'text-sm text-black flex-1 truncate'}>{pool.name}</span>
 
-      <div className={'h-[38px] rounded-lg overflow-hidden relative w-[180px] shrink-0'} style={{ background: track }}>
-        <div className={'absolute top-0 left-0 h-full rounded-lg'} style={{ width: `${fillPct}%`, background: fill }} />
-        <span className={'absolute inset-0 flex items-center justify-center text-sm font-medium text-white whitespace-nowrap'}>
-          {pool.collected.toLocaleString()} / {pool.goal.toLocaleString()}
-        </span>
-      </div>
-
-      <div className={'flex items-center gap-1.5 w-[170px] shrink-0'}>
-        <span className={clsx('text-sm whitespace-nowrap', STATUS_TEXT_COLOR[pool.status])}>
-          {STATUS_LABELS[pool.status]}
-        </span>
-        <Icon name={'info'} className={'size-3.5 text-grey shrink-0'} />
-      </div>
-
-      <div className={'w-[110px] shrink-0 flex justify-end'}>
-        {pool.status === 'ready_to_withdraw' && (
-          <Button visualType={'quinary'} className={'!py-2 !px-3 text-xs'} onClick={() => onWithdraw(pool)}>
-            Withdraw
-          </Button>
-        )}
-        {pool.status === 'already_withdrawn' && (
-          <span className={'flex items-center gap-1 text-xs text-label-tertiary'}>
-            <Icon name={'check'} className={'size-3.5'} />
-            Withdrawn
+        <div className={'h-[38px] rounded-lg overflow-hidden relative w-[180px] shrink-0'} style={{ background: track }}>
+          <div className={'absolute top-0 left-0 h-full rounded-lg'} style={{ width: `${fillPct}%`, background: fill }} />
+          <span className={'absolute inset-0 flex items-center justify-center text-sm font-medium text-white whitespace-nowrap'}>
+            {pool.collected.toLocaleString()} / {pool.goal.toLocaleString()}
           </span>
-        )}
+        </div>
+
+        <div className={'flex items-center gap-1.5 w-[170px] shrink-0'}>
+          <span className={clsx('text-sm whitespace-nowrap', STATUS_TEXT_COLOR[pool.status])}>
+            {STATUS_LABELS[pool.status]}
+          </span>
+          <Icon name={'info'} className={'size-3.5 text-grey shrink-0'} />
+        </div>
+
+        <div className={'w-[110px] shrink-0 flex justify-end'}>
+          {pool.status === 'ready_to_withdraw' && (
+            <Button visualType={'quinary'} className={'!py-2 !px-3 text-xs'} onClick={() => onWithdraw(pool)}>
+              Withdraw
+            </Button>
+          )}
+          {pool.status === 'already_withdrawn' && (
+            <span className={'flex items-center gap-1 text-xs text-label-tertiary'}>
+              <Icon name={'check'} className={'size-3.5'} />
+              Withdrawn
+            </span>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Mobile card */}
+      <div className={'lg:hidden flex flex-col'}>
+        {showCompany && <p className={'text-base font-semibold text-black px-1 pt-3'}>{pool.companyName}</p>}
+        {showProject && <p className={'text-xs text-label-tertiary uppercase px-1 pb-2'}>{pool.projectName}</p>}
+
+        <div className={'bg-bg-tertiary rounded-2xl p-4 flex flex-col gap-3'}>
+          <span className={'text-base font-bold text-black flex items-center gap-1.5'}>
+            {pool.status === 'already_withdrawn' && <Icon name={'check'} className={'size-3.5 shrink-0'} />}
+            {pool.name}
+          </span>
+
+          <div className={'h-1.5 rounded-full overflow-hidden relative w-full'} style={{ background: track }}>
+            <div className={'absolute top-0 left-0 h-full rounded-full'} style={{ width: `${fillPct}%`, background: fill }} />
+          </div>
+
+          <div className={'flex items-center justify-between'}>
+            <span className={clsx('text-sm', pool.status === 'failed' ? 'text-red-bright' : 'text-grey-dark')}>
+              {pool.collected.toLocaleString()} / {pool.goal.toLocaleString()}
+            </span>
+            <span className={clsx('flex items-center gap-1 text-sm whitespace-nowrap', STATUS_TEXT_COLOR[pool.status])}>
+              {STATUS_LABELS[pool.status]}
+              <Icon name={'info'} className={'size-3.5 text-grey shrink-0'} />
+            </span>
+          </div>
+
+          {pool.status === 'ready_to_withdraw' && (
+            <Button visualType={'quaternary'} className={'w-full justify-center'} onClick={() => onWithdraw(pool)}>
+              Withdraw
+            </Button>
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 
