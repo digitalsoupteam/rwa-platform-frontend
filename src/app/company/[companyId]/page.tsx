@@ -9,7 +9,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/operations';
 import { CREATE_BUSINESS, GET_BUSINESSES } from '@/lib/business/operations';
 import { GET_POOLS } from '@/lib/pool/operations';
-import { Modal } from '@/components/common';
+import { Modal, ShareMenu } from '@/components/common';
 import { CategoryCheckboxes, TeamSection } from '@/components/dashboard';
 import { ProjectCard } from '@/components/project';
 import { BusinessOwnerType } from '@/gql/graphql';
@@ -249,14 +249,7 @@ const CompanyPage: FC = () => {
                       Update
                     </Button>
                   )}
-                  <Button
-                    className={
-                      'max-md:w-full before:size-3.5 before:mask-[url(/icons/share.svg)] mask-contain before:bg-current'
-                    }
-                    visualType={'quinary'}
-                  >
-                    Share
-                  </Button>
+                  <ShareMenu className={'max-md:w-full'} />
                 </div>
               </div>
             </>

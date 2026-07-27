@@ -37,6 +37,8 @@ import InProgressSVG from '../../../public/icons/in-progress.svg';
 import CompletedSVG from '../../../public/icons/completed.svg';
 import FailedSVG from '../../../public/icons/failed.svg';
 import DocumentSVG from '../../../public/icons/document.svg';
+import ExternalLinkSVG from '../../../public/icons/external-link.svg';
+import CopySVG from '../../../public/icons/copy.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -76,6 +78,8 @@ const ICONS = {
   wallet: WalletSVG,
   arrowUp: ArrowUpSVG,
   arrowDown: ArrowDownSVG,
+  externalLink: ExternalLinkSVG,
+  copy: CopySVG,
 } as const;
 
 export type IconType = keyof typeof ICONS;
