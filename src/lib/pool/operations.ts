@@ -21,6 +21,8 @@ export const GET_POOL_BY_ID = gql`
       paused
       tags
       image
+      imageUrl
+      fileId
       chainId
       createdAt
       realHoldReserve
@@ -58,6 +60,8 @@ export const GET_POOL_DETAIL = gql`
       paused
       tags
       image
+      imageUrl
+      fileId
       chainId
       createdAt
       realHoldReserve
@@ -91,6 +95,8 @@ export const GET_POOLS = gql`
       chainId
       createdAt
       image
+      imageUrl
+      fileId
       realHoldReserve
       virtualHoldReserve
       virtualRwaReserve
@@ -162,6 +168,8 @@ export const EDIT_POOL = gql`
       description
       tags
       image
+      imageUrl
+      fileId
     }
   }
 `;
@@ -182,6 +190,16 @@ export const GET_OHLC_PRICE_DATA = gql`
       high
       low
       close
+    }
+  }
+`;
+
+export const GET_VOLUME_DATA = gql`
+  query GetVolumeData($input: GetVolumeDataInput!) {
+    getVolumeData(input: $input) {
+      timestamp
+      mintVolume
+      burnVolume
     }
   }
 `;

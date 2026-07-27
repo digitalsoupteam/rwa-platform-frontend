@@ -55,7 +55,7 @@ const Header: FC = () => {
               <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
                 Debt repayments
               </Link>
-              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
+              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/withdrawals/'}>
                 Withdrawals
               </Link>
               <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/dao/'}>
@@ -159,7 +159,7 @@ const Header: FC = () => {
             <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
               Debt repayments
             </Link>
-            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
+            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/withdrawals/'}>
               Withdrawals
             </Link>
             <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/dao/'}>

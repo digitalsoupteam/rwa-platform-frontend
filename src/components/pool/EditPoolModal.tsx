@@ -3,10 +3,8 @@
 import React, { FC, ChangeEventHandler, DragEvent, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import clsx from 'clsx';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { EDIT_POOL } from '@/lib/pool/operations';
-import { GET_GALLERIES, CREATE_GALLERY } from '@/lib/gallery/operations';
-import { GalleryParentTypes } from '@/gql/graphql';
 import { Button, Input, TextArea, toast } from '@/components/ui';
 import { Modal } from '@/components/common';
 import { CategoryCheckboxes } from '@/components/dashboard';
@@ -14,26 +12,24 @@ import { CategoryCheckboxes } from '@/components/dashboard';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPool = any;
 
-const FILES_BASE = process.env.NEXT_PUBLIC_FILES_BASE_URL ?? 'https://192.168.100.20/files/';
-const GQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? 'http://localhost:443/gateway/graphql';
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT ?? 'http://localhost:443';
 
-async function uploadImageMultipart(galleryId: string, file: File): Promise<string> {
+async function uploadPoolImage(poolId: string, file: File): Promise<string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const formData = new FormData();
-  formData.append('operations', JSON.stringify({
-    query: `mutation CreateImage($input: CreateImageInput!) { createImage(input: $input) { id link } }`,
-    variables: { input: { galleryId, name: file.name, description: '', file: null } },
-  }));
-  formData.append('map', JSON.stringify({ '0': ['variables.input.file'] }));
-  formData.append('0', file);
-  const res = await fetch(GQL_ENDPOINT, {
+  formData.append('file', file);
+  formData.append('poolId', poolId);
+  const res = await fetch(`${API_ENDPOINT}/api/pool/uploadImage`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || 'Failed to upload image');
+  }
   const json = await res.json();
-  if (json.errors?.length) throw new Error(json.errors[0].message);
-  return json.data.createImage.link as string;
+  return json.imageUrl as string;
 }
 
 const STEPS = [
@@ -76,30 +72,13 @@ const EditPoolModal: FC<EditPoolModalProps> = ({ pool, isOpen, onClose }) => {
     }
   }, [isOpen, pool]);
 
-  const { data: galleriesData, refetch: refetchGalleries } = useQuery(GET_GALLERIES, {
-    variables: { input: { filter: { parentId: pool?.id } } },
-    skip: !isOpen || !pool?.id,
-  });
-
-  const [createGallery] = useMutation(CREATE_GALLERY);
   const [editPool, { loading }] = useMutation(EDIT_POOL);
-
-  const ensureGallery = async (): Promise<string> => {
-    const galleries = galleriesData?.getGalleries ?? [];
-    if (galleries.length > 0) return galleries[0].id;
-    const result = await createGallery({
-      variables: { input: { name: pool.name ?? 'Pool Gallery', parentId: pool.id, type: GalleryParentTypes.Pool } },
-    });
-    await refetchGalleries();
-    return result.data!.createGallery.id;
-  };
 
   const uploadFile = async (file: File) => {
     setUploading(true);
     try {
-      const galleryId = await ensureGallery();
-      const link = await uploadImageMultipart(galleryId, file);
-      setImageLink(link);
+      const url = await uploadPoolImage(pool.id, file);
+      setImageLink(url);
     } catch {
       toast('Failed to upload image', 'error');
     } finally {
@@ -167,9 +146,7 @@ const EditPoolModal: FC<EditPoolModalProps> = ({ pool, isOpen, onClose }) => {
     setDescriptionValue(e.target.value);
   };
 
-  const imageSrc = imageLink
-    ? (imageLink.startsWith('http') ? imageLink : FILES_BASE + imageLink.split('/').pop())
-    : null;
+  const imageSrc = imageLink;
 
   const isLast = step === STEPS.length - 1;
 

@@ -32,6 +32,10 @@ import TickSquaredSVG from '../../../public/icons/tick-squared.svg';
 import WalletSVG from '../../../public/icons/wallet.svg';
 import ArrowUpSVG from '../../../public/icons/arrow-up.svg';
 import ArrowDownSVG from '../../../public/icons/arrow-down.svg';
+import TimeSVG from '../../../public/icons/time.svg';
+import InProgressSVG from '../../../public/icons/in-progress.svg';
+import CompletedSVG from '../../../public/icons/completed.svg';
+import FailedSVG from '../../../public/icons/failed.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -46,6 +50,11 @@ const ICONS = {
   info: InfoSVG,
   usdt: USDTSVG,
   triangle: TriangleSVG,
+  check: CheckSVG,
+  time: TimeSVG,
+  inProgress: InProgressSVG,
+  completed: CompletedSVG,
+  failed: FailedSVG
   check: CheckSVG,
   chart: ChartSVG,
   chartSquared: ChartSquaredSVG,
