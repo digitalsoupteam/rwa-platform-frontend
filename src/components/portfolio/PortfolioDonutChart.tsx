@@ -3,6 +3,7 @@
 import React, { FC, useRef, useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@/components/ui/Icon';
+import Tooltip from '@/components/ui/Tooltip';
 
 export interface DonutSegment {
   label: string;
@@ -94,7 +95,9 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
             <span className="text-base text-grey-dark uppercase">Total Contributed</span>
-            <Icon name="info" className="size-[18px] text-grey" />
+            <Tooltip content="See how much you’ve invested, broken down by industries, projects, and countries">
+              <Icon name="info" className="size-[18px] text-grey" />
+            </Tooltip>
           </div>
           <span className="text-sm text-grey-dark">
             {poolStats

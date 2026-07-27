@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
 import Icon from '@/components/ui/Icon';
+import Tooltip from '@/components/ui/Tooltip';
 
 export type PoolStatus = 'collecting' | 'paying_out' | 'completed' | 'failed';
 
@@ -22,6 +23,14 @@ const STATUS_LABELS: Record<PoolStatus, string> = {
   paying_out: 'Pays out',
   completed: 'Completed',
   failed: 'Failed',
+};
+
+// Mirrors the withdrawals page's status tooltip copy — same lifecycle, portfolio-side labels.
+const STATUS_TOOLTIPS: Record<PoolStatus, string> = {
+  collecting: 'Withdrawal will be available once the fundraising goal is reached',
+  paying_out: 'We have collected the entire amount, you can withdraw the money',
+  completed: 'Go to the Debt Repayments section to view the repayment schedule',
+  failed: 'This is a fairly lengthy example of the error text in the tooltip and a couple more letters',
 };
 
 // [track color, fill color] — matches the Figma status bar tokens
@@ -52,7 +61,9 @@ const PortfolioPoolRow: FC<PortfolioPoolRowProps> = ({ pool }) => {
 
       <div className="flex items-center gap-1.5 w-[110px] shrink-0 justify-end">
         <span className="text-sm text-black whitespace-nowrap">{STATUS_LABELS[pool.status]}</span>
-        <Icon name="info" className="size-3.5 text-grey shrink-0" />
+        <Tooltip content={STATUS_TOOLTIPS[pool.status]}>
+          <Icon name="info" className="size-3.5 text-grey shrink-0" />
+        </Tooltip>
       </div>
 
       <div className="h-[30px] rounded-lg overflow-hidden relative w-[213px] shrink-0" style={{ background: track }}>

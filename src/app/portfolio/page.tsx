@@ -7,7 +7,7 @@ import { formatUnits } from 'viem';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@apollo/client/react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Icon, Button, Pagination } from '@/components/ui';
+import { Icon, Button, Pagination, Tooltip } from '@/components/ui';
 import { PortfolioDonutChart, PortfolioStatCard, PortfolioPoolRow, PortfolioFilterModal } from '@/components/portfolio';
 import type { PortfolioPool, DonutSegment, FilterCategory } from '@/components/portfolio';
 import {
@@ -53,6 +53,10 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'all', label: 'All pools' },
   { key: 'payouts', label: 'Payouts' },
 ];
+
+const TAB_TOOLTIPS: Partial<Record<TabKey, string>> = {
+  all: 'Overview of all your projects and pools. Track pools progress, and see how much you’ve contributed and earned with each project.',
+};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -509,7 +513,11 @@ const Portfolio: FC = () => {
               >
                 <span className="flex items-center gap-1">
                   {tab.label}
-                  <Icon name="info" className="size-4 text-grey" />
+                  {TAB_TOOLTIPS[tab.key] && (
+                    <Tooltip content={TAB_TOOLTIPS[tab.key]!}>
+                      <Icon name="info" className="size-4 text-grey" />
+                    </Tooltip>
+                  )}
                 </span>
                 <span
                   className={clsx(
@@ -543,12 +551,14 @@ const Portfolio: FC = () => {
                   value={fmtStat(derived.realizedPNL)}
                   sublabel="REALIZED"
                   label="PNL, USDT"
+                  tooltip="The current profit or loss from positions you hold."
                   icon={<Icon name="tickSquared" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value={fmtStat(derived.unrealizedPNL)}
                   sublabel="UNREALIZED"
                   label="PNL, USDT"
+                  tooltip="The current profit or loss from positions you hold."
                   icon={<Icon name="chartSquared" className="size-5 text-black" />}
                 />
               </div>
@@ -556,11 +566,13 @@ const Portfolio: FC = () => {
                 <PortfolioStatCard
                   value={`${fmtStat(derived.avgROI, 1)}%`}
                   label="AVERAGE ROI"
+                  tooltip="Projected return based on target pool profitability, assuming full repayment."
                   icon={<Icon name="percent" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value="—"
                   label="AIRDROP POINTS"
+                  tooltip="Get points for selling, staking PLTs and sharing a referral link. Get one governance token (GOV) for each point."
                   icon={<Icon name="gift" className="size-5 text-black" />}
                 />
               </div>
@@ -568,11 +580,13 @@ const Portfolio: FC = () => {
                 <PortfolioStatCard
                   value={fmtStat(derived.tradingEarnings)}
                   label="TRADING EARNINGS, USDT"
+                  tooltip="Your earnings from fees when other users buy or sell tokens in the pools you’ve invested in."
                   icon={<Icon name="flash" className="size-5 text-black" />}
                 />
                 <PortfolioStatCard
                   value={fmtStat(derived.claimableAmount)}
                   label="CLAIMABLE AMOUNT, USDT"
+                  tooltip="The total amount of repayments from all projects that you can claim and withdraw."
                   icon={<Icon name="wallet" className="size-5 text-black" />}
                 />
               </div>
