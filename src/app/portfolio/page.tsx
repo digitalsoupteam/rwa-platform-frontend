@@ -586,14 +586,9 @@ const Portfolio: FC = () => {
             <div className="flex flex-col">
               {/* Filter row — outside overflow-hidden so dropdown can escape */}
               <div className="bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10">
-                <button
+                <Button
+                  visualType="quinary"
                   onClick={() => setFilterOpen(prev => !prev)}
-                  className={clsx(
-                    'flex items-center gap-2 rounded-lg pl-3 pr-4 py-3 text-sm font-medium tr-d-all hover:bg-bg-tertiary',
-                    filterOpen
-                      ? 'border-2 border-blue text-label-tertiary'
-                      : 'border border-stroke-primary text-grey-dark',
-                  )}
                 >
                   <Icon name="plus" className="size-3.5" />
                   Filter
@@ -602,7 +597,7 @@ const Portfolio: FC = () => {
                       {activeFilterCount}
                     </span>
                   )}
-                </button>
+                </Button>
                 <PortfolioFilterModal
                   open={filterOpen}
                   onClose={() => setFilterOpen(false)}
@@ -622,7 +617,7 @@ const Portfolio: FC = () => {
                     key={col.key}
                     onClick={() => handleSort(col.key)}
                     className={clsx(
-                      'flex items-center gap-1 text-sm font-medium text-grey-dark tr-d-all hover:text-black',
+                      'flex items-center gap-1 text-sm font-medium text-grey-dark tr-d-all hover:text-black whitespace-nowrap',
                       col.width,
                       col.key === 'pool' ? 'shrink-0 justify-start' : 'justify-end'
                     )}
