@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import clsx from 'clsx';
-import { Button, Icon } from '@/components/ui';
+import { Button, Icon, Tooltip } from '@/components/ui';
 
 export type WithdrawalStatus = 'collecting' | 'ready_to_withdraw' | 'already_withdrawn' | 'failed' | 'withdrawal_declined';
 
@@ -30,6 +30,15 @@ const STATUS_TEXT_COLOR: Record<WithdrawalStatus, string> = {
   already_withdrawn: 'text-black',
   failed: 'text-red-bright',
   withdrawal_declined: 'text-red-bright',
+};
+
+const STATUS_TOOLTIPS: Record<WithdrawalStatus, string> = {
+  collecting: 'Withdrawal will be available once the fundraising goal is reached',
+  ready_to_withdraw: 'We have collected the entire amount, you can withdraw the money',
+  already_withdrawn: 'Go to the Debt Repayments section to view the repayment schedule',
+  failed: 'This is a fairly lengthy example of the error text in the tooltip and a couple more letters',
+  withdrawal_declined:
+    'Investors declined withdrawing funds from this pool. Go to pool page to see details. Write to hello@slices.finance for support',
 };
 
 const STATUS_BAR_COLORS: Record<WithdrawalStatus, { track: string; fill: string }> = {
@@ -70,7 +79,7 @@ const WithdrawalsPoolRow: FC<WithdrawalsPoolRowProps> = ({ pool, showCompany, sh
           <span className={clsx('text-sm whitespace-nowrap', STATUS_TEXT_COLOR[pool.status])}>
             {STATUS_LABELS[pool.status]}
           </span>
-          <Icon name={'info'} className={'size-3.5 text-grey shrink-0'} />
+          <Tooltip content={STATUS_TOOLTIPS[pool.status]} />
         </div>
 
         <div className={'w-[110px] shrink-0 flex justify-end'}>
@@ -109,7 +118,7 @@ const WithdrawalsPoolRow: FC<WithdrawalsPoolRowProps> = ({ pool, showCompany, sh
             </span>
             <span className={clsx('flex items-center gap-1 text-sm whitespace-nowrap', STATUS_TEXT_COLOR[pool.status])}>
               {STATUS_LABELS[pool.status]}
-              <Icon name={'info'} className={'size-3.5 text-grey shrink-0'} />
+              <Tooltip content={STATUS_TOOLTIPS[pool.status]} />
             </span>
           </div>
 

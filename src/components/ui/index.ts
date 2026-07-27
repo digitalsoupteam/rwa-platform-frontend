@@ -12,8 +12,9 @@ import { Toast, toast } from './Toast';
 import Pagination from './Pagination';
 import Checkbox from './Checkbox';
 import Radio from './Radio';
+import Tooltip from './Tooltip';
 
 import type { IconType } from './Icon';
 
-export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination, Checkbox, Radio };
+export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination, Checkbox, Radio, Tooltip };
 export type { IconType };

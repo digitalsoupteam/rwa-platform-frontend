@@ -528,8 +528,8 @@ const WithdrawalsPage: FC = () => {
                   </div>
                 </div>
 
-                {/* Desktop table */}
-                <div className={'max-lg:hidden overflow-hidden rounded-b-lg'}>
+                {/* Desktop table — no overflow-hidden: it would clip the status tooltip on hover */}
+                <div className={'max-lg:hidden rounded-b-lg'}>
                   <div
                     className={
                       'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'

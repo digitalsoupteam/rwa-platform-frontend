@@ -72,7 +72,8 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
   return (
     <>
       {/* Desktop table */}
-      <div className={'max-lg:hidden overflow-hidden rounded-b-lg'}>
+      {/* No overflow-hidden: it would clip the status tooltip on hover */}
+      <div className={'max-lg:hidden rounded-b-lg'}>
         <div className={'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
           <span className={'text-sm font-medium text-grey-dark flex-1'}>Pool</span>
           <span className={'text-sm font-medium text-grey-dark flex-1 text-right'}>Transaction date</span>
