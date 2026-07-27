@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, useMemo, useState, useCallback } from 'react';
+import React, { FC, useMemo, useState, useCallback, useEffect } from 'react';
 import clsx from 'clsx';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits, BaseError } from 'viem';
@@ -199,28 +199,38 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
   const usdtBalanceBig = usdtBalance as bigint | undefined;
   const rwaBalanceBig = rwaBalance as bigint | undefined;
 
-  const sliderValue = useMemo(() => {
-    if (mode === 'buy') {
-      if (!usdtBalanceBig || usdtBalanceBig === ZERO || inputWei === ZERO) return 0;
-      return Math.min(100, Math.max(0, Number((inputWei * BigInt(100)) / usdtBalanceBig)));
-    } else {
-      if (!rwaBalanceBig || rwaBalanceBig === ZERO || inputWei === ZERO) return 0;
-      return Math.min(100, Math.max(0, Number((inputWei * BigInt(100)) / rwaBalanceBig)));
-    }
+  // Percent shown/dragged on the slider. Kept as its own state (rather than purely
+  // derived from inputWei) so the thumb tracks the pointer 1:1 while dragging, the
+  // way Binance's spot/convert sliders do, instead of lagging behind bigint rounding.
+  const [sliderPct, setSliderPct] = useState(0);
+
+  const computedPct = useMemo(() => {
+    const balance = mode === 'buy' ? usdtBalanceBig : rwaBalanceBig;
+    if (!balance || balance === ZERO || inputWei === ZERO) return 0;
+    return Math.min(100, Math.max(0, Number((inputWei * BigInt(100)) / balance)));
   }, [mode, inputWei, usdtBalanceBig, rwaBalanceBig]);
+
+  // Keeps the slider in sync when the amount is changed some other way
+  // (typed manually, tab switch reset, wallet/balance updates, etc).
+  useEffect(() => {
+    setSliderPct(computedPct);
+  }, [computedPct]);
 
   const handleSlider = useCallback(
     (pct: number) => {
+      const clamped = Math.min(100, Math.max(0, Math.round(pct)));
+      setSliderPct(clamped);
+
       if (mode === 'buy') {
         if (!usdtBalanceBig) return;
 
-        const wei = pct === 100 ? usdtBalanceBig : (usdtBalanceBig * BigInt(pct)) / BigInt(100);
+        const wei = clamped === 100 ? usdtBalanceBig : (usdtBalanceBig * BigInt(clamped)) / BigInt(100);
 
         setInputValue(wei === ZERO ? '' : formatUsdtAmount(wei).replace(/\s/g, ''));
       } else {
         if (!rwaBalanceBig) return;
 
-        const amt = pct === 100 ? rwaBalanceBig : (rwaBalanceBig * BigInt(pct)) / BigInt(100);
+        const amt = clamped === 100 ? rwaBalanceBig : (rwaBalanceBig * BigInt(clamped)) / BigInt(100);
 
         setInputValue(amt === ZERO ? '' : amt.toString());
       }
@@ -348,7 +358,8 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
     }
   };
 
-  const displayBalance = formatRwaAmount(rwaBalanceBig);
+  const displayBalance = mode === 'buy' ? formatUsdtAmount(usdtBalanceBig) : formatRwaAmount(rwaBalanceBig);
+  const displayBalanceSymbol = mode === 'buy' ? 'USDT' : tokenSymbol;
   const isPoolDeployed = !!poolAddress;
   const canSubmit = isPoolDeployed && inputWei > ZERO && !isSubmitting;
 
@@ -358,7 +369,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
       <div className='flex items-center justify-between'>
         <span className='text-base font-bold text-[#1D1D1F]'>Your balance</span>
         <span className='text-sm font-semibold text-blue bg-[#D9E4FF] rounded-full px-3 py-1.5'>
-          {displayBalance} {tokenSymbol}
+          {displayBalance} {displayBalanceSymbol}
         </span>
       </div>
 
@@ -367,6 +378,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         <Button
           visualType={mode === 'buy' ? 'quaternary' : 'quinary'}
           onClick={() => {
+            if (mode === 'buy') return;
             setMode('buy');
             setInputValue('');
           }}
@@ -376,6 +388,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         <Button
           visualType={mode === 'sell' ? 'quaternary' : 'quinary'}
           onClick={() => {
+            if (mode === 'sell') return;
             setMode('sell');
             setInputValue('');
           }}
@@ -416,15 +429,15 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
 
       {/* Slider */}
       <div className='relative'>
-        <div className='relative flex justify-between mb-1'>
+        <div className='relative flex justify-between mb-1 pointer-events-none'>
           {SLIDER_MARKS.map(m => {
-            const isActive = sliderValue >= m;
+            const isActive = sliderPct >= m;
             return (
               <button
                 key={m}
                 type='button'
-                onClick={() => handleSlider(m + 1)}
-                className='z-1 relative flex flex-col items-center gap-1.5 cursor-pointer group'
+                onClick={() => handleSlider(m)}
+                className='z-0 relative flex flex-col items-center gap-1.5 cursor-pointer group pointer-events-auto'
               >
                 <span
                   className={clsx(
@@ -444,23 +457,27 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
           min={0}
           max={100}
           step={1}
-          value={sliderValue}
+          value={sliderPct}
           onChange={e => handleSlider(Number(e.target.value))}
-          className='absolute inset-x-0 top-[6px] -translate-y-1/2 w-full h-1 appearance-none bg-transparent cursor-pointer
+          className='absolute inset-x-0 top-[6px] -translate-y-1/2 z-10 w-full h-1 appearance-none bg-transparent cursor-pointer
             [&::-webkit-slider-thumb]:appearance-none
             [&::-webkit-slider-thumb]:w-3.5
             [&::-webkit-slider-thumb]:h-3.5
             [&::-webkit-slider-thumb]:rounded-full
-            [&::-webkit-slider-thumb]:bg-transparent
+            [&::-webkit-slider-thumb]:bg-black
+            [&::-webkit-slider-thumb]:border-2
+            [&::-webkit-slider-thumb]:border-white
+            [&::-webkit-slider-thumb]:shadow
             [&::-webkit-slider-thumb]:cursor-pointer
             [&::-moz-range-thumb]:w-3.5
             [&::-moz-range-thumb]:h-3.5
             [&::-moz-range-thumb]:rounded-full
-            [&::-moz-range-thumb]:bg-transparent
-            [&::-moz-range-thumb]:border-0
+            [&::-moz-range-thumb]:bg-black
+            [&::-moz-range-thumb]:border-2
+            [&::-moz-range-thumb]:border-white
             [&::-moz-range-thumb]:cursor-pointer'
           style={{
-            background: `linear-gradient(to right, black ${sliderValue}%, #e5e5e5 ${sliderValue}%)`,
+            background: `linear-gradient(to right, black ${sliderPct}%, #e5e5e5 ${sliderPct}%)`,
           }}
         />
       </div>
