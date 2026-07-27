@@ -28,7 +28,7 @@ const Tooltip: FC<TooltipProps> = ({ content, children, className }) => {
   return (
     <div
       ref={ref}
-      className={clsx('relative z-1 inline-flex items-center', className)}
+      className={clsx('relative z-20 inline-flex items-center', className)}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
