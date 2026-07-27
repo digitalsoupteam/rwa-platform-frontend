@@ -6,5 +6,7 @@ import WideGallery from './WideGallery';
 import Modal from './Modal';
 import ConfirmModal from './ConfirmModal';
 import Calendar from './Calendar';
+import DetailedCalendar from './DetailedCalendar';
 
-export { FAQ, CallbackForm, Gallery, TokenizeAnyBusiness, WideGallery, Modal, ConfirmModal, Calendar };
+export { FAQ, CallbackForm, Gallery, TokenizeAnyBusiness, WideGallery, Modal, ConfirmModal, Calendar, DetailedCalendar };
+export type { DateRange } from './DetailedCalendar';
