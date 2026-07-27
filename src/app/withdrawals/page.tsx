@@ -352,7 +352,6 @@ const WithdrawalsPage: FC = () => {
                   </Button>
                   <WithdrawalFilterModal
                     open={filterOpen}
-                    onClose={() => setFilterOpen(false)}
                     activeCategory={activeFilterCategory}
                     onCategoryChange={setActiveFilterCategory}
                     selections={filterSelections}

@@ -15,7 +15,6 @@ export interface AmountRange {
 
 interface Props {
   open: boolean;
-  onClose: () => void;
   activeCategory: FilterCategory;
   onCategoryChange: (cat: FilterCategory) => void;
   selections: Record<string, string[]>;
@@ -152,7 +151,6 @@ const Checkbox: FC<{ checked: boolean; onChange: () => void }> = ({ checked, onC
 
 const WithdrawalFilterModal: FC<Props> = ({
   open,
-  onClose,
   activeCategory,
   onCategoryChange,
   selections,
@@ -163,15 +161,22 @@ const WithdrawalFilterModal: FC<Props> = ({
   onAmountRangeChange,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [innerOpen, setInnerOpen] = useState(true);
 
+  // Outside clicks close only the options/amount panel — the category list
+  // (this whole widget) stays open until the Filter button is clicked again.
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+      if (ref.current && !ref.current.contains(e.target as Node)) setInnerOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open, onClose]);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) setInnerOpen(true);
+  }, [open]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -180,6 +185,15 @@ const WithdrawalFilterModal: FC<Props> = ({
   }, [activeCategory, open]);
 
   if (!open) return null;
+
+  const handleCategoryClick = (cat: FilterCategory) => {
+    if (cat === activeCategory) {
+      setInnerOpen(v => !v);
+    } else {
+      onCategoryChange(cat);
+      setInnerOpen(true);
+    }
+  };
 
   const isAmount = activeCategory === 'Amount';
   const isPool = activeCategory === 'Pool';
@@ -248,7 +262,7 @@ const WithdrawalFilterModal: FC<Props> = ({
               <div key={cat} className={'relative'}>
                 <button
                   type={'button'}
-                  onClick={() => onCategoryChange(cat)}
+                  onClick={() => handleCategoryClick(cat)}
                   className={clsx(
                     'flex items-center gap-2 px-2 py-2 rounded text-left w-full tr-d-all',
                     isActive ? 'bg-bg-tertiary' : 'hover:bg-bg-tertiary/50'
@@ -257,7 +271,7 @@ const WithdrawalFilterModal: FC<Props> = ({
                   <Icon name={'plus'} className={'size-[18px] shrink-0 text-blue'} />
                   <span className={clsx('text-sm text-blue', hasSelection && 'font-medium')}>{cat}</span>
                 </button>
-                {isActive && (
+                {isActive && innerOpen && (
                   <div className={'absolute z-50 max-lg:top-full max-lg:left-0 max-lg:pt-1 lg:top-0 lg:left-full lg:pl-1'}>
                     {panel}
                   </div>
