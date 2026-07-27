@@ -27,6 +27,11 @@ const STATUS_DOT_COLOR: Record<TxStatus, string> = {
   completed: 'bg-[#1ABF97]',
 };
 
+const STATUS_TEXT_COLOR: Record<TxStatus, string> = {
+  pending: 'text-[#F5A623]',
+  completed: 'text-[#1ABF97]',
+};
+
 function formatDate(ts: number): string {
   const d = new Date(ts * 1000);
   const dd = String(d.getDate()).padStart(2, '0');
@@ -61,49 +66,97 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
   };
 
   return (
-    <div className={'overflow-hidden rounded-b-lg'}>
-      <div className={'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
-        <span className={'text-sm font-medium text-grey-dark flex-1'}>Pool</span>
-        <span className={'text-sm font-medium text-grey-dark w-[120px] shrink-0'}>Transaction date</span>
-        <span className={'text-sm font-medium text-grey-dark w-[140px] shrink-0 text-right'}>Amount (RWA)</span>
-        <span className={'text-sm font-medium text-grey-dark w-[110px] shrink-0'}>Status</span>
-        <span className={'text-sm font-medium text-grey-dark w-[140px] shrink-0 text-right'}>TXID</span>
+    <>
+      {/* Desktop table */}
+      <div className={'max-lg:hidden overflow-hidden rounded-b-lg'}>
+        <div className={'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
+          <span className={'text-sm font-medium text-grey-dark flex-1'}>Pool</span>
+          <span className={'text-sm font-medium text-grey-dark w-[120px] shrink-0'}>Transaction date</span>
+          <span className={'text-sm font-medium text-grey-dark w-[140px] shrink-0 text-right'}>Amount (RWA)</span>
+          <span className={'text-sm font-medium text-grey-dark w-[110px] shrink-0'}>Status</span>
+          <span className={'text-sm font-medium text-grey-dark w-[140px] shrink-0 text-right'}>TXID</span>
+        </div>
+
+        <div className={'flex flex-col'}>
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className={'-mt-px'}>
+                <SkeletonRow />
+              </div>
+            ))
+          ) : txs.length === 0 ? (
+            <div className={'py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary'}>
+              No withdrawal transactions yet.
+            </div>
+          ) : (
+            txs.map(tx => (
+              <div key={tx.id} className={'-mt-px bg-bg-primary border border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
+                <span className={'text-sm text-black flex-1 truncate'}>{tx.poolName}</span>
+                <span className={'text-sm text-blue w-[120px] shrink-0'}>{formatDate(tx.date)}</span>
+                <span className={'text-sm text-black w-[140px] shrink-0 text-right'}>{tx.amountRwa.toLocaleString()}</span>
+                <span className={'w-[110px] shrink-0 flex items-center gap-1.5 text-sm text-black'}>
+                  <span className={`size-1.5 rounded-full ${STATUS_DOT_COLOR[tx.status]}`} />
+                  {STATUS_LABELS[tx.status]}
+                </span>
+                <button
+                  type={'button'}
+                  onClick={() => handleCopy(tx.txHash)}
+                  className={'w-[140px] shrink-0 flex items-center justify-end gap-1.5 text-sm text-black cursor-pointer'}
+                >
+                  {truncateHash(tx.txHash)}
+                  <CopyIcon />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
-      <div className={'flex flex-col'}>
+      {/* Mobile cards */}
+      <div className={'lg:hidden flex flex-col gap-3'}>
         {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className={'-mt-px'}>
-              <SkeletonRow />
-            </div>
-          ))
+          Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
         ) : txs.length === 0 ? (
-          <div className={'py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary'}>
-            No withdrawal transactions yet.
-          </div>
+          <div className={'py-12 text-center text-sm text-label-tertiary'}>No withdrawal transactions yet.</div>
         ) : (
           txs.map(tx => (
-            <div key={tx.id} className={'-mt-px bg-bg-primary border border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
-              <span className={'text-sm text-black flex-1 truncate'}>{tx.poolName}</span>
-              <span className={'text-sm text-blue w-[120px] shrink-0'}>{formatDate(tx.date)}</span>
-              <span className={'text-sm text-black w-[140px] shrink-0 text-right'}>{tx.amountRwa.toLocaleString()}</span>
-              <span className={'w-[110px] shrink-0 flex items-center gap-1.5 text-sm text-black'}>
+            <div key={tx.id} className={'bg-bg-tertiary rounded-2xl p-4 flex flex-col gap-3'}>
+              <span
+                className={
+                  'w-fit flex items-center gap-1.5 bg-bg-primary border border-stroke-primary rounded-full px-3 py-1.5 text-xs font-medium ' +
+                  STATUS_TEXT_COLOR[tx.status]
+                }
+              >
                 <span className={`size-1.5 rounded-full ${STATUS_DOT_COLOR[tx.status]}`} />
                 {STATUS_LABELS[tx.status]}
               </span>
+
+              <div>
+                <p className={'text-lg font-bold text-black'}>{tx.amountRwa.toLocaleString()} RWA</p>
+                <p className={'text-sm text-grey-dark'}>{tx.poolName}</p>
+              </div>
+
+              <div className={'border border-stroke-primary rounded-lg px-3 py-2.5'}>
+                <p className={'text-xs text-grey-dark mb-0.5'}>Transaction date</p>
+                <p className={'text-sm font-semibold text-black'}>{formatDate(tx.date)}</p>
+              </div>
+
               <button
                 type={'button'}
                 onClick={() => handleCopy(tx.txHash)}
-                className={'w-[140px] shrink-0 flex items-center justify-end gap-1.5 text-sm text-black cursor-pointer'}
+                className={'border border-stroke-primary rounded-lg px-3 py-2.5 text-left cursor-pointer'}
               >
-                {truncateHash(tx.txHash)}
-                <CopyIcon />
+                <p className={'text-xs text-grey-dark mb-0.5'}>TXID</p>
+                <span className={'flex items-center gap-1.5 text-sm font-semibold text-black'}>
+                  <CopyIcon />
+                  {truncateHash(tx.txHash)}
+                </span>
               </button>
             </div>
           ))
         )}
       </div>
-    </div>
+    </>
   );
 };
 

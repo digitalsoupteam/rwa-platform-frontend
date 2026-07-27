@@ -39,6 +39,16 @@ const ZERO = BigInt(0);
 const HOLD_DECIMALS = 18;
 const HOLD_DIVISOR = BigInt(10) ** BigInt(HOLD_DECIMALS);
 
+// TODO(remove): temporary mock data for reviewing the Transaction history tab
+// without a connected wallet — see historyTxs below.
+const MOCK_HISTORY_TXS: WithdrawalTx[] = [
+  { id: 'mock-1', poolName: 'Smart Farm Expansion', date: 1744732800, amountRwa: 5500, status: 'pending', txHash: '0x690B9c2f4a1e7d8b3c5f6a9d0e1b2c3d4e5f6a7b' },
+  { id: 'mock-2', poolName: 'Smart Farm Expansion', date: 1744646400, amountRwa: 5500, status: 'completed', txHash: '0x71a2C990e4b5d6c7f8a9b0c1d2e3f4a5b6c7d8e9' },
+  { id: 'mock-3', poolName: 'Sustainable Irrigation Fund', date: 1744560000, amountRwa: 12000, status: 'completed', txHash: '0x82b3D001f5c6e7d8a9b0c1d2e3f4a5b6c7d8e9f0' },
+  { id: 'mock-4', poolName: 'Gallery Launch', date: 1744473600, amountRwa: 8250, status: 'pending', txHash: '0x93c4E112a6d7f8e9b0c1d2e3f4a5b6c7d8e9f0a1' },
+  { id: 'mock-5', poolName: 'Smart Farm Expansion', date: 1744387200, amountRwa: 5500, status: 'completed', txHash: '0xa4d5F223b7e8f9a0c1d2e3f4a5b6c7d8e9f0a1b2' },
+];
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function safeFloat(v: string | null | undefined): number {
@@ -255,7 +265,7 @@ const WithdrawalsPage: FC = () => {
 
   const historyTxs: WithdrawalTx[] = useMemo(() => {
     const poolByAddress = new Map(pools.map(p => [(p.poolAddress ?? '').toLowerCase(), p]));
-    return rawTxs
+    const real = rawTxs
       .map(tx => ({
         id: tx.id,
         poolName: poolByAddress.get(tx.poolAddress.toLowerCase())?.name ?? '—',
@@ -265,11 +275,18 @@ const WithdrawalsPage: FC = () => {
         txHash: tx.transactionHash,
       }))
       .sort((a, b) => b.date - a.date);
+
+    // TODO(remove): temporary mock rows for design review — only shown when
+    // there's no real transaction data, e.g. no wallet connected.
+    if (real.length > 0) return real;
+    return MOCK_HISTORY_TXS;
   }, [rawTxs, pools]);
 
   const historyTotalPages = Math.max(1, Math.ceil(historyTxs.length / ROWS_PER_PAGE));
   const [historyPage, setHistoryPage] = useState(1);
   const paginatedHistory = historyTxs.slice((historyPage - 1) * ROWS_PER_PAGE, historyPage * ROWS_PER_PAGE);
+  const [historyMobileVisibleCount, setHistoryMobileVisibleCount] = useState(ROWS_PER_PAGE);
+  const mobileHistory = historyTxs.slice(0, historyMobileVisibleCount);
 
   const handleWithdrawn = () => {
     toast('Refresh the page to see your updated balance.');
@@ -555,9 +572,24 @@ const WithdrawalsPage: FC = () => {
             </div>
           ) : (
             <div className={'flex flex-col gap-4'}>
-              <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
-              <TransactionHistoryTable txs={paginatedHistory} isLoading={txLoading} />
-              <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
+              <div className={'max-lg:hidden flex flex-col gap-4'}>
+                <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
+                <TransactionHistoryTable txs={paginatedHistory} isLoading={txLoading} />
+                <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
+              </div>
+
+              <div className={'lg:hidden flex flex-col gap-3'}>
+                <TransactionHistoryTable txs={mobileHistory} isLoading={txLoading} />
+                {historyMobileVisibleCount < historyTxs.length && (
+                  <Button
+                    visualType={'quinary'}
+                    className={'w-full justify-center'}
+                    onClick={() => setHistoryMobileVisibleCount(c => c + ROWS_PER_PAGE)}
+                  >
+                    Show more
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </Wrapper>
