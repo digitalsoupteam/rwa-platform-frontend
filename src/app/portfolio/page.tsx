@@ -52,7 +52,6 @@ const TABLE_COLS: { key: SortKey; label: string; width: string }[] = [
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'all', label: 'All pools' },
   { key: 'payouts', label: 'Payouts' },
-  { key: 'favourites', label: 'Favourites' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -383,7 +382,6 @@ const Portfolio: FC = () => {
   const tabFiltered = useMemo(() => {
     let rows = derived.poolRows;
     if (activeTab === 'payouts') rows = rows.filter(r => r.status === 'paying_out');
-    else if (activeTab === 'favourites') rows = [];
 
     const statusSel = filterSelections['Status'] ?? [];
     if (statusSel.length > 0) {
