@@ -442,6 +442,7 @@ const WithdrawalsPage: FC = () => {
                   </Button>
                   <WithdrawalFilterModal
                     open={filterOpen}
+                    onClose={() => setFilterOpen(false)}
                     categories={['Status', 'Amount', 'Pool']}
                     activeCategory={activeFilterCategory}
                     onCategoryChange={setActiveFilterCategory}
@@ -672,6 +673,7 @@ const WithdrawalsPage: FC = () => {
                   </Button>
                   <WithdrawalFilterModal
                     open={historyFilterOpen}
+                    onClose={() => setHistoryFilterOpen(false)}
                     categories={['Status', 'Amount', 'Period', 'Pool']}
                     activeCategory={historyActiveFilterCategory}
                     onCategoryChange={setHistoryActiveFilterCategory}

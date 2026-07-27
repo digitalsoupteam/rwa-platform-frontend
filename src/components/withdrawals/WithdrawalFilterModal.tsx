@@ -19,6 +19,7 @@ export interface PeriodRange {
 
 interface Props {
   open: boolean;
+  onClose: () => void;
   categories: FilterCategory[];
   activeCategory: FilterCategory;
   onCategoryChange: (cat: FilterCategory) => void;
@@ -242,6 +243,7 @@ const Checkbox: FC<{ checked: boolean; onChange: () => void }> = ({ checked, onC
 
 const WithdrawalFilterModal: FC<Props> = ({
   open,
+  onClose,
   categories,
   activeCategory,
   onCategoryChange,
@@ -257,16 +259,19 @@ const WithdrawalFilterModal: FC<Props> = ({
   const ref = useRef<HTMLDivElement>(null);
   const [innerOpen, setInnerOpen] = useState(false);
 
-  // Outside clicks close only the options/amount panel — the category list
-  // (this whole widget) stays open until the Filter button is clicked again.
+  // An outside click closes just the options/amount panel first, leaving the
+  // category list open; only once that panel is already closed does the next
+  // outside click close the whole widget.
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setInnerOpen(false);
+      if (!ref.current || ref.current.contains(e.target as Node)) return;
+      if (innerOpen) setInnerOpen(false);
+      else onClose();
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
+  }, [open, innerOpen, onClose]);
 
   useEffect(() => {
     if (!open) setInnerOpen(false);
