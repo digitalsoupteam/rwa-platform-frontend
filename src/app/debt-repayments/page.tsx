@@ -14,7 +14,7 @@ import {
 } from '@/components/debt-repayments';
 import type { DebtRepaymentPool, DebtRepaymentStatus } from '@/components/debt-repayments';
 import { WithdrawalFilterModal, TransactionHistoryTable } from '@/components/withdrawals';
-import type { FilterCategory, WithdrawalTx } from '@/components/withdrawals';
+import type { FilterCategory, PeriodRange, WithdrawalTx } from '@/components/withdrawals';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { GET_COMPANIES } from '@/lib/company/operations';
 import {
@@ -108,6 +108,7 @@ const DebtRepaymentsPage: FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilterCategory, setActiveFilterCategory] = useState<FilterCategory>('Status');
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
+  const [periodRange, setPeriodRange] = useState<PeriodRange | null>(null);
   const [mobileVisibleCount, setMobileVisibleCount] = useState(ROWS_PER_PAGE);
   const [payTarget, setPayTarget] = useState<
     (DebtRepaymentPool & { amountDueWei: bigint; percentOfDebt: number }) | null
@@ -196,8 +197,8 @@ const DebtRepaymentsPage: FC = () => {
   );
 
   const activeFilterCount = useMemo(
-    () => Object.values(filterSelections).filter(v => v.length > 0).length,
-    [filterSelections]
+    () => Object.values(filterSelections).filter(v => v.length > 0).length + (periodRange ? 1 : 0),
+    [filterSelections, periodRange]
   );
 
   const handleToggle = (category: FilterCategory, value: string) => {
@@ -225,8 +226,14 @@ const DebtRepaymentsPage: FC = () => {
       rows = rows.filter(r => poolSel.includes(r.row.name));
     }
 
+    if (periodRange) {
+      const fromTs = new Date(periodRange.from).getTime() / 1000;
+      const toTs = new Date(periodRange.to).getTime() / 1000 + 86400; // inclusive of the whole "to" day
+      rows = rows.filter(r => r.row.nextPaymentDate !== null && r.row.nextPaymentDate >= fromTs && r.row.nextPaymentDate < toTs);
+    }
+
     return rows;
-  }, [derivedRows, filterSelections]);
+  }, [derivedRows, filterSelections, periodRange]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / ROWS_PER_PAGE));
   const paginatedRows = filteredRows.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
@@ -235,7 +242,7 @@ const DebtRepaymentsPage: FC = () => {
   useEffect(() => {
     setMobileVisibleCount(ROWS_PER_PAGE);
     setPage(1);
-  }, [filterSelections]);
+  }, [filterSelections, periodRange]);
 
   const historyTxs: WithdrawalTx[] = useMemo(() => {
     const poolByAddress = new Map(pools.map(p => [(p.poolAddress ?? '').toLowerCase(), p]));
@@ -350,12 +357,14 @@ const DebtRepaymentsPage: FC = () => {
                   <WithdrawalFilterModal
                     open={filterOpen}
                     onClose={() => setFilterOpen(false)}
-                    categories={['Status', 'Pool']}
+                    categories={['Status', 'Period', 'Pool']}
                     activeCategory={activeFilterCategory}
                     onCategoryChange={setActiveFilterCategory}
                     selections={filterSelections}
                     onToggle={handleToggle}
                     categoryOptions={categoryOptions}
+                    periodRange={periodRange}
+                    onPeriodRangeChange={setPeriodRange}
                   />
                 </div>
 

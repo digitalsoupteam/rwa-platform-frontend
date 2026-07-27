@@ -3,7 +3,7 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@/components/ui';
-import { Calendar } from '@/components/common';
+import { DetailedCalendar } from '@/components/common';
 
 export type FilterCategory = 'Status' | 'Amount' | 'Period' | 'Pool';
 
@@ -134,90 +134,6 @@ const AmountRangePanel: FC<{
   );
 };
 
-function formatPeriodDate(iso: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(d.getFullYear()).slice(2);
-  return `${dd}.${mm}.${yyyy}`;
-}
-
-const PeriodRangePanel: FC<{
-  value: PeriodRange | null;
-  onChange: (range: PeriodRange | null) => void;
-}> = ({ value, onChange }) => {
-  const [draft, setDraft] = useState<PeriodRange>(value ?? { from: '', to: '' });
-  const [openField, setOpenField] = useState<'from' | 'to' | null>(null);
-
-  useEffect(() => {
-    setDraft(value ?? { from: '', to: '' });
-  }, [value]);
-
-  return (
-    <div className={'flex flex-col gap-4 px-4 py-4 w-[280px]'}>
-      <div className={'flex items-center gap-3'}>
-        <div className={'flex flex-col gap-1 flex-1 relative'}>
-          <label className={'text-xs font-medium text-grey-dark'}>From</label>
-          <button
-            type={'button'}
-            onClick={() => setOpenField(f => (f === 'from' ? null : 'from'))}
-            className={'w-full px-3 py-2 rounded-lg border border-stroke-primary bg-white text-sm text-left outline-none focus:border-grey-dark'}
-          >
-            <span className={draft.from ? 'text-black' : 'text-label-tertiary'}>
-              {draft.from ? formatPeriodDate(draft.from) : 'dd.mm.yy'}
-            </span>
-          </button>
-          {openField === 'from' && (
-            <Calendar
-              value={draft.from}
-              onChange={v => setDraft(d => ({ ...d, from: v }))}
-              onClose={() => setOpenField(null)}
-            />
-          )}
-        </div>
-        <span className={'text-grey-dark mt-5'}>—</span>
-        <div className={'flex flex-col gap-1 flex-1 relative'}>
-          <label className={'text-xs font-medium text-grey-dark'}>Up to</label>
-          <button
-            type={'button'}
-            onClick={() => setOpenField(f => (f === 'to' ? null : 'to'))}
-            className={'w-full px-3 py-2 rounded-lg border border-stroke-primary bg-white text-sm text-left outline-none focus:border-grey-dark'}
-          >
-            <span className={draft.to ? 'text-black' : 'text-label-tertiary'}>
-              {draft.to ? formatPeriodDate(draft.to) : 'dd.mm.yy'}
-            </span>
-          </button>
-          {openField === 'to' && (
-            <Calendar value={draft.to} onChange={v => setDraft(d => ({ ...d, to: v }))} onClose={() => setOpenField(null)} minDate={draft.from} />
-          )}
-        </div>
-      </div>
-
-      <div className={'flex items-center justify-end gap-2'}>
-        <button
-          type={'button'}
-          onClick={() => {
-            setDraft({ from: '', to: '' });
-            onChange(null);
-          }}
-          className={'px-4 py-2.5 rounded-lg border border-stroke-primary text-sm font-medium text-grey-dark cursor-pointer'}
-        >
-          Clear
-        </button>
-        <button
-          type={'button'}
-          onClick={() => draft.from && draft.to && onChange(draft)}
-          disabled={!draft.from || !draft.to}
-          className={'px-4 py-2.5 rounded-lg bg-blue text-sm font-medium text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'}
-        >
-          Apply
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const SearchIcon: FC<{ className?: string }> = ({ className }) => (
   <svg className={className} width={'14'} height={'14'} viewBox={'0 0 14 14'} fill={'none'} xmlns={'http://www.w3.org/2000/svg'}>
     <circle cx={'6.5'} cy={'6.5'} r={'5'} stroke={'#959EB5'} />
@@ -308,7 +224,11 @@ const WithdrawalFilterModal: FC<Props> = ({
     </div>
   ) : isPeriod ? (
     <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)]'}>
-      <PeriodRangePanel value={periodRange ?? null} onChange={onPeriodRangeChange ?? (() => {})} />
+      <DetailedCalendar
+        value={periodRange ?? null}
+        onApply={range => onPeriodRangeChange?.(range)}
+        onClear={() => onPeriodRangeChange?.(null)}
+      />
     </div>
   ) : (
     options.length > 0 && (
