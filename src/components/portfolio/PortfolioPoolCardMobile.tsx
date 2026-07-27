@@ -1,4 +1,5 @@
 import React, { FC } from 'react';
+import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
 import Tooltip from '@/components/ui/Tooltip';
 import type { PortfolioPool } from './PortfolioPoolRow';
@@ -26,7 +27,9 @@ const PortfolioPoolCardMobile: FC<PortfolioPoolCardMobileProps> = ({ pool }) => 
           <p className="text-xl font-semibold leading-none text-black whitespace-nowrap">
             {pool.amount.toLocaleString()} USDT
           </p>
-          <p className="text-base leading-[1.2] text-black w-full truncate">{pool.name}</p>
+          <Link href={`/pool/${pool.id}`} className="text-base leading-[1.2] text-black w-full truncate hover:underline">
+            {pool.name}
+          </Link>
         </div>
 
         <div className="flex flex-col items-start px-3 w-full">

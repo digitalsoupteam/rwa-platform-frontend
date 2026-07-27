@@ -1,4 +1,5 @@
 import React, { FC } from 'react';
+import Link from 'next/link';
 import Icon from '@/components/ui/Icon';
 import Tooltip from '@/components/ui/Tooltip';
 
@@ -51,7 +52,12 @@ const PortfolioPoolRow: FC<PortfolioPoolRowProps> = ({ pool }) => {
 
   return (
     <div className="bg-bg-primary border border-stroke-primary h-[52px] flex items-center px-3 gap-2">
-      <span className="text-sm text-black w-[200px] shrink-0 truncate">{pool.name}</span>
+      <Link
+        href={`/pool/${pool.id}`}
+        className="text-sm text-black w-[200px] shrink-0 truncate hover:underline"
+      >
+        {pool.name}
+      </Link>
       <span className="text-sm text-black flex-1 text-right">{pool.aiRating.toFixed(2)}</span>
       <span className="text-sm text-black flex-1 text-right">{pool.amount.toLocaleString()}</span>
       <span className="text-sm text-black flex-1 text-right">{pool.poolShare}</span>

@@ -1,4 +1,5 @@
 import React, { FC } from 'react';
+import Link from 'next/link';
 import clsx from 'clsx';
 import { Button, Icon, Tooltip } from '@/components/ui';
 
@@ -66,7 +67,9 @@ const WithdrawalsPoolRow: FC<WithdrawalsPoolRowProps> = ({ pool, showCompany, sh
       <div className={'max-lg:hidden bg-bg-primary border border-stroke-primary min-h-[62px] flex items-center px-3 gap-2'}>
         <span className={'text-sm text-black w-[200px] shrink-0'}>{showCompany ? pool.companyName : ''}</span>
         <span className={'text-sm text-black w-[200px] shrink-0'}>{showProject ? pool.projectName : ''}</span>
-        <span className={'text-sm text-black flex-1 truncate'}>{pool.name}</span>
+        <Link href={`/pool/${pool.id}`} className={'text-sm text-black flex-1 truncate hover:underline'}>
+          {pool.name}
+        </Link>
 
         <div className={'h-[38px] rounded-lg overflow-hidden relative w-[180px] shrink-0'} style={{ background: track }}>
           <div className={'absolute top-0 left-0 h-full rounded-lg'} style={{ width: `${fillPct}%`, background: fill }} />
@@ -103,10 +106,10 @@ const WithdrawalsPoolRow: FC<WithdrawalsPoolRowProps> = ({ pool, showCompany, sh
         {showProject && <p className={'text-xs text-label-tertiary uppercase px-1 pb-2'}>{pool.projectName}</p>}
 
         <div className={'bg-bg-tertiary rounded-2xl p-4 flex flex-col gap-3'}>
-          <span className={'text-base font-bold text-black flex items-center gap-1.5'}>
+          <Link href={`/pool/${pool.id}`} className={'text-base font-bold text-black flex items-center gap-1.5 hover:underline'}>
             {pool.status === 'already_withdrawn' && <Icon name={'check'} className={'size-3.5 shrink-0'} />}
             {pool.name}
-          </span>
+          </Link>
 
           <div className={'h-1.5 rounded-full overflow-hidden relative w-full'} style={{ background: track }}>
             <div className={'absolute top-0 left-0 h-full rounded-full'} style={{ width: `${fillPct}%`, background: fill }} />

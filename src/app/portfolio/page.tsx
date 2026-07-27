@@ -299,8 +299,15 @@ const Portfolio: FC = () => {
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
   const [mobileVisibleCount, setMobileVisibleCount] = useState(MOBILE_PAGE_SIZE);
+  // Desktop and mobile each mount their own trigger + <PortfolioFilterModal>
+  // (CSS hidden/md:flex only toggles visibility, it doesn't unmount the other
+  // one) — so open/active-category state must stay separate per instance, or
+  // the hidden instance's outside-click listener closes the visible one via
+  // the shared setter. Selections stay shared; only the two are independent.
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilterCategory, setActiveFilterCategory] = useState<FilterCategory>('AI-Rating');
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [mobileActiveFilterCategory, setMobileActiveFilterCategory] = useState<FilterCategory>('AI-Rating');
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
 
   // owner/userAddress are stored checksummed on the backend (straight from
@@ -597,7 +604,7 @@ const Portfolio: FC = () => {
             {/* Right – Stats: swiper on mobile, 2-col grid on desktop */}
             <div className="w-full md:flex-[1_0_0] min-w-0">
               <Swiper
-                className="md:hidden !overflow-visible"
+                className="md:!hidden !overflow-visible"
                 modules={[FreeMode]}
                 freeMode
                 spaceBetween={10}
@@ -765,7 +772,7 @@ const Portfolio: FC = () => {
                   </span>
                 </button>
                 <div className="relative">
-                  <Button visualType="quinary" onClick={() => setFilterOpen(prev => !prev)}>
+                  <Button visualType="quinary" onClick={() => setMobileFilterOpen(prev => !prev)}>
                     <Icon name="plus" className="size-3.5" />
                     Filter
                     {activeFilterCount > 0 && (
@@ -775,10 +782,10 @@ const Portfolio: FC = () => {
                     )}
                   </Button>
                   <PortfolioFilterModal
-                    open={filterOpen}
-                    onClose={() => setFilterOpen(false)}
-                    activeCategory={activeFilterCategory}
-                    onCategoryChange={setActiveFilterCategory}
+                    open={mobileFilterOpen}
+                    onClose={() => setMobileFilterOpen(false)}
+                    activeCategory={mobileActiveFilterCategory}
+                    onCategoryChange={setMobileActiveFilterCategory}
                     selections={filterSelections}
                     onToggle={handleToggle}
                     categoryOptions={categoryOptions}
