@@ -297,7 +297,6 @@ const ProjectPage: FC = () => {
         <Wrapper>
           <Breadcrumbs
             items={[
-              { name: 'My companies', url: '/dashboard/' },
               { name: company?.name ?? '...', url: `/company/${companyId}` },
             ]}
             currentItem={updatedBusiness?.editBusiness.name ?? project?.name ?? '...'}

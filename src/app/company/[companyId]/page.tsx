@@ -135,7 +135,7 @@ const CompanyPage: FC = () => {
 
         toast('Company deleted.');
         setIsEditModalOpened(false);
-        router.push('/dashboard/');
+        router.push('/my-companies/');
       } catch (err) {
         setDeletingCompanyStatus('approve');
         toast('Failed to delete company. Please try again.', 'error');
@@ -225,7 +225,7 @@ const CompanyPage: FC = () => {
           {companyData && (
             <>
               <Breadcrumbs
-                items={[{ name: 'My companies', url: '/dashboard/' }]}
+                items={[]}
                 currentItem={updatedCompany?.updateCompany.name || companyData.getCompany.name}
               />
               <div className={'flex flex-col gap-6 border-b-1 border-stroke-primary pb-6 lg:grid lg:grid-cols-2'}>

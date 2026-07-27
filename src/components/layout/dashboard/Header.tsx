@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import React, { FC, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 import { Wrapper } from '@/components/layout';
 
@@ -17,6 +18,16 @@ const Header: FC = () => {
   const [isAddPoolModalOpen, setIsAddPoolModalOpen] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement | null>(null);
   const { logout } = useAuth();
+  const pathname = usePathname();
+
+  const navLinkClassName = (href: string) => {
+    const isActive = pathname === href || `${pathname}/` === href;
+
+    return clsx(
+      'p-4 rounded-xl',
+      isActive ? 'bg-blue text-white font-semibold border-1 border-transparent' : 'text-grey-dark border-1 border-stroke-primary'
+    );
+  };
 
   const menuOutSideClick: MouseEventHandler<HTMLDivElement> = evt => {
     if (evt.currentTarget === evt.target) setIsMenuOpened(false);
@@ -46,31 +57,24 @@ const Header: FC = () => {
             </Link>
 
             <div className={'max-lg:hidden flex items-center justify-center gap-2'}>
-              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
+              <Link className={navLinkClassName('/marketplace/')} href={'/marketplace/'}>
                 Marketplace
               </Link>
-              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/testnet/'}>
+              <Link className={navLinkClassName('/testnet/')} href={'/testnet/'}>
                 Testnet
               </Link>
-              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/debt-repayments/'}>
+              <Link className={navLinkClassName('/debt-repayments/')} href={'/debt-repayments/'}>
                 Debt repayments
               </Link>
-              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/withdrawals/'}>
+              <Link className={navLinkClassName('/withdrawals/')} href={'/withdrawals/'}>
                 Withdrawals
               </Link>
-              <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/dao/'}>
-                Governance
+              <Link className={navLinkClassName('/portfolio/')} href={'/portfolio/'}>
+                Portfolio
               </Link>
             </div>
 
             <div className={'flex gap-2.5'}>
-              <button
-                className={
-                  'cursor-pointer flex justify-center items-center bg-bg-tertiary text-black size-11.5 rounded-xl'
-                }
-              >
-                <Icon className={'size-5'} name={'bell'} />
-              </button>
               <div className={'relative'} ref={profileContainerRef}>
                 <button
                   className={clsx(
@@ -88,14 +92,14 @@ const Header: FC = () => {
                   )}
                 >
                   <div className={'flex flex-col gap-0.5 text-sm font-regular'}>
-                    <Link className={'px-3 py-1.5'} href={'/dashboard/'}>
+                    <Link className={'px-3 py-1.5'} href={'/my-companies/'}>
                       My companies
                     </Link>
                     <Link className={'px-3 py-1.5'} href={'/rwa-platform-frontend/public'}>
                       Tranches
                     </Link>
-                    <Link className={'px-3 py-1.5'} href={'/rwa-platform-frontend/public'}>
-                      My account
+                    <Link className={'px-3 py-1.5'} href={'/dao/'}>
+                      Governance
                     </Link>
                     <button
                       className={
@@ -150,34 +154,34 @@ const Header: FC = () => {
             </Button>
           </div>
           <div className={'grow flex flex-col gap-2'}>
-            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/marketplace/'}>
+            <Link className={navLinkClassName('/marketplace/')} href={'/marketplace/'}>
               Marketplace
             </Link>
-            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/testnet/'}>
+            <Link className={navLinkClassName('/testnet/')} href={'/testnet/'}>
               Testnet
             </Link>
-            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/debt-repayments/'}>
+            <Link className={navLinkClassName('/debt-repayments/')} href={'/debt-repayments/'}>
               Debt repayments
             </Link>
-            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/withdrawals/'}>
+            <Link className={navLinkClassName('/withdrawals/')} href={'/withdrawals/'}>
               Withdrawals
             </Link>
-            <Link className={'text-grey-dark p-4 border-stroke-primary border-1 rounded-xl'} href={'/dao/'}>
-              Governance
+            <Link className={navLinkClassName('/portfolio/')} href={'/portfolio/'}>
+              Portfolio
             </Link>
           </div>
           <div className={'flex flex-col'}>
-            <Link className={'py-2.5 text-base'} href={'/dashboard'}>
+            <Link className={'py-2.5 text-base'} href={'/my-companies'}>
               My companies
             </Link>
-            <Link className={'py-2.5 text-base'} href={'/dashboard'}>
+            <Link className={'py-2.5 text-base'} href={'/my-companies'}>
               Tranches
             </Link>
-            <Link className={'py-2.5 text-base'} href={'/dashboard'}>
+            <Link className={'py-2.5 text-base'} href={'/my-companies'}>
               Contact support
             </Link>
-            <Link className={'py-2.5 text-base'} href={'/dashboard'}>
-              My account
+            <Link className={'py-2.5 text-base'} href={'/dao'}>
+              Governance
             </Link>
             <button
               className={

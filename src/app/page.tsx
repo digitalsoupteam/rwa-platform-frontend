@@ -365,7 +365,7 @@ const Home: FC = () => {
                 </button>
               )}
               {address && (
-                <Link className={'cursor-pointer mt-6'} href={'/dashboard/'}>
+                <Link className={'cursor-pointer mt-6'} href={'/my-companies/'}>
                   <span className={'sr-only'}>Issue a token</span>
                   <span
                     className={

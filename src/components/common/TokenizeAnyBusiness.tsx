@@ -55,7 +55,7 @@ const CTA: FC = () => {
         </Button>
       )}
       {address && (
-        <Button className={'w-fit mt-10.5'} visualType={'tertiary'} href={'/dashboard/'}>
+        <Button className={'w-fit mt-10.5'} visualType={'tertiary'} href={'/my-companies/'}>
           Sign up
         </Button>
       )}

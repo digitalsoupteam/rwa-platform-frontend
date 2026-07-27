@@ -72,7 +72,6 @@ const CreatePostContent: FC = () => {
             {company?.name && project?.name && (
               <Breadcrumbs
                 items={[
-                  { name: 'My companies', url: '/dashboard/' },
                   { name: company.name, url: `/company/${companyId}` },
                   { name: project.name, url: `/project/${projectId}` },
                 ]}

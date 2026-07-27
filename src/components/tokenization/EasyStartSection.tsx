@@ -26,7 +26,7 @@ export const EasyStartSection: FC = () => {
               className={'mt-auto md:w-fit'}
               visualType={'tertiary'}
               onClick={address ? undefined : openConnectModal}
-              href={address ? '/dashboard/' : undefined}
+              href={address ? '/my-companies/' : undefined}
             >
               Create first pool
             </Button>

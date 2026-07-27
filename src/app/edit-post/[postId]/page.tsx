@@ -57,7 +57,7 @@ const EditPostPage: FC = () => {
     try {
       await deletePost({ variables: { id: postId } });
       toast('Post deleted.');
-      router.push('/dashboard');
+      router.push('/my-companies');
     } catch {
       toast('Failed to delete post.', 'error');
     }
@@ -75,7 +75,6 @@ const EditPostPage: FC = () => {
             {company?.name && project?.name && (
               <Breadcrumbs
                 items={[
-                  { name: 'My companies', url: '/dashboard/' },
                   { name: company.name, url: `/company/${companyId}` },
                   { name: project.name, url: `/project/${projectId}` },
                 ]}

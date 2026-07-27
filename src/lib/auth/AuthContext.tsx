@@ -78,7 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       toast('Signed in successfully!');
-      router.push('/dashboard/');
+      router.push('/portfolio/');
     } catch (error) {
       toast('Sign in failed. Please try again.', 'error');
       throw error;

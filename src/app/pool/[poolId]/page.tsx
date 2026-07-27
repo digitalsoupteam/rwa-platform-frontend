@@ -255,7 +255,6 @@ const PoolPage: FC = () => {
         <Wrapper>
           <Breadcrumbs
             items={[
-              { name: 'My companies', url: '/dashboard/' },
               { name: company?.name ?? '...', url: `/company/${companyId}` },
               { name: business?.name ?? '...', url: `/project/${projectId}` },
             ]}

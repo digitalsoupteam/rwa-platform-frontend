@@ -30,7 +30,7 @@ export const GetStartedSection: FC = () => {
               className={'w-fit'}
               visualType={'tertiary'}
               onClick={address ? undefined : openConnectModal}
-              href={address ? '/dashboard/' : undefined}
+              href={address ? '/my-companies/' : undefined}
             >
               {address ? 'Go to Dashboard' : 'Connect wallet'}
             </Button>

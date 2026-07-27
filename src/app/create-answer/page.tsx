@@ -70,7 +70,6 @@ const CreateAnswerPage: FC = () => {
             {company?.name && project?.name && (
               <Breadcrumbs
                 items={[
-                  { name: 'My companies', url: '/dashboard/' },
                   { name: company.name, url: `/my-companies/${companyId}` },
                   { name: project.name, url: `/my-companies/${companyId}/projects/${projectId}` },
                 ]}

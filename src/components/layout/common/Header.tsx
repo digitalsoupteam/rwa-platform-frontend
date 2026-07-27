@@ -104,8 +104,8 @@ const Header: FC = () => {
               </Button>
             )}
             {address && (
-              <Button visualType={'primary'} href={'/dashboard/'}>
-                Dashboard
+              <Button visualType={'primary'} href={'/portfolio/'}>
+                Portfolio
               </Button>
             )}
           </div>
