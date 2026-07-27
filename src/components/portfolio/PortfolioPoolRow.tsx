@@ -18,7 +18,7 @@ export interface PortfolioPool {
   goal: number;
 }
 
-const STATUS_LABELS: Record<PoolStatus, string> = {
+export const STATUS_LABELS: Record<PoolStatus, string> = {
   collecting: 'Collecting',
   paying_out: 'Pays out',
   completed: 'Completed',
@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<PoolStatus, string> = {
 };
 
 // Mirrors the withdrawals page's status tooltip copy — same lifecycle, portfolio-side labels.
-const STATUS_TOOLTIPS: Record<PoolStatus, string> = {
+export const STATUS_TOOLTIPS: Record<PoolStatus, string> = {
   collecting: 'Withdrawal will be available once the fundraising goal is reached',
   paying_out: 'We have collected the entire amount, you can withdraw the money',
   completed: 'Go to the Debt Repayments section to view the repayment schedule',
@@ -34,7 +34,7 @@ const STATUS_TOOLTIPS: Record<PoolStatus, string> = {
 };
 
 // [track color, fill color] — matches the Figma status bar tokens
-const STATUS_BAR_COLORS: Record<PoolStatus, { track: string; fill: string }> = {
+export const STATUS_BAR_COLORS: Record<PoolStatus, { track: string; fill: string }> = {
   collecting: { track: '#9DBDF9', fill: '#1D58E9' },
   paying_out: { track: '#1ABF97', fill: '#1ABF97' },
   completed: { track: '#4A5363', fill: '#4A5363' },

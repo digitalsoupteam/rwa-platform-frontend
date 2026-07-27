@@ -15,9 +15,9 @@ interface PortfolioStatCardProps {
 
 const PortfolioStatCard: FC<PortfolioStatCardProps> = ({ value, label, sublabel, tooltip, icon, onAction, actionLabel }) => {
   return (
-    <div className='flex flex-col gap-4 justify-between bg-bg-tertiary rounded-xl flex-1 min-w-0 h-[168px] p-4'>
+    <div className='flex flex-col gap-4 justify-between bg-bg-tertiary rounded-xl w-[250px] shrink-0 md:w-auto md:flex-1 md:min-w-0 h-[134px] md:h-[168px] p-4'>
       <div className={'flex gap-1 justify-between'}>
-        <span className='text-[28px] font-semibold leading-none text-black'>{value}</span>
+        <span className='text-xl md:text-[28px] font-semibold leading-none text-black'>{value}</span>
 
         {onAction && actionLabel && (
           <Button visualType='quaternary' onClick={onAction}>
@@ -28,9 +28,9 @@ const PortfolioStatCard: FC<PortfolioStatCardProps> = ({ value, label, sublabel,
 
       <div className={'flex justify-between gap-1'}>
         <div className='flex flex-col items-start max-w-[166px]'>
-          {sublabel && <span className='text-base text-grey-dark uppercase leading-[1.3]'>{sublabel}</span>}
+          {sublabel && <span className='text-sm md:text-base text-grey-dark uppercase leading-[1.3]'>{sublabel}</span>}
           <div className='flex items-end gap-1'>
-            <span className='text-base text-grey-dark uppercase leading-[1.3]'>{label}</span>
+            <span className='text-sm md:text-base text-grey-dark uppercase leading-[1.3]'>{label}</span>
             <Tooltip content={tooltip}>
               <Icon name='info' className='size-[18px] text-grey shrink-0' />
             </Tooltip>

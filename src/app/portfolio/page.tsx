@@ -1,14 +1,16 @@
 'use client';
 
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, ReactNode, useMemo, useState } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { formatUnits } from 'viem';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@apollo/client/react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode } from 'swiper/modules';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Icon, Button, Pagination, Tooltip } from '@/components/ui';
-import { PortfolioDonutChart, PortfolioStatCard, PortfolioPoolRow, PortfolioFilterModal } from '@/components/portfolio';
+import { PortfolioDonutChart, PortfolioStatCard, PortfolioPoolRow, PortfolioPoolCardMobile, PortfolioFilterModal } from '@/components/portfolio';
 import type { PortfolioPool, DonutSegment, FilterCategory } from '@/components/portfolio';
 import {
   GET_BALANCES,
@@ -17,6 +19,9 @@ import {
   GET_BUSINESSES_FOR_PORTFOLIO,
 } from '@/lib/portfolio/operations';
 import type { TokenBalance, Pool, PoolTransaction } from '@/gql/graphql';
+
+import 'swiper/css';
+import 'swiper/css/free-mode';
 
 type BusinessForPortfolio = {
   id: string;
@@ -31,6 +36,7 @@ type TabKey = 'all' | 'payouts';
 type SortKey = 'pool' | 'rating' | 'amount' | 'share' | 'returned' | 'value' | 'profit' | 'status';
 
 const ROWS_PER_PAGE = 11;
+const MOBILE_PAGE_SIZE = 3;
 
 const STATUS_SORT_PRIORITY: Record<PortfolioPool['status'], number> = {
   collecting: 0,
@@ -292,6 +298,7 @@ const Portfolio: FC = () => {
   const [sortKey, setSortKey] = useState<SortKey | null>('status');
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
+  const [mobileVisibleCount, setMobileVisibleCount] = useState(MOBILE_PAGE_SIZE);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilterCategory, setActiveFilterCategory] = useState<FilterCategory>('AI-Rating');
   const [filterSelections, setFilterSelections] = useState<Record<string, string[]>>({});
@@ -464,6 +471,7 @@ const Portfolio: FC = () => {
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / ROWS_PER_PAGE));
   const paginated = sorted.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  const mobilePaginated = sorted.slice(0, mobileVisibleCount);
 
   const chartView = useMemo(() => {
     const filter = chartFilter as 'industry' | 'projects';
@@ -478,11 +486,53 @@ const Portfolio: FC = () => {
     };
   }, [chartFilter, derived]);
 
+  const statCards: { value: string; sublabel?: string; label: string; tooltip: string; icon: ReactNode }[] = [
+    {
+      value: fmtStat(derived.realizedPNL),
+      sublabel: 'REALIZED',
+      label: 'PNL, USDT',
+      tooltip: 'The current profit or loss from positions you hold.',
+      icon: <Icon name="tickSquared" className="size-5 text-black" />,
+    },
+    {
+      value: fmtStat(derived.unrealizedPNL),
+      sublabel: 'UNREALIZED',
+      label: 'PNL, USDT',
+      tooltip: 'The current profit or loss from positions you hold.',
+      icon: <Icon name="chartSquared" className="size-5 text-black" />,
+    },
+    {
+      value: `${fmtStat(derived.avgROI, 1)}%`,
+      label: 'AVERAGE ROI',
+      tooltip: 'Projected return based on target pool profitability, assuming full repayment.',
+      icon: <Icon name="percent" className="size-5 text-black" />,
+    },
+    {
+      value: '—',
+      label: 'AIRDROP POINTS',
+      tooltip: 'Get points for selling, staking PLTs and sharing a referral link. Get one governance token (GOV) for each point.',
+      icon: <Icon name="gift" className="size-5 text-black" />,
+    },
+    {
+      value: fmtStat(derived.tradingEarnings),
+      label: 'TRADING EARNINGS, USDT',
+      tooltip: 'Your earnings from fees when other users buy or sell tokens in the pools you’ve invested in.',
+      icon: <Icon name="flash" className="size-5 text-black" />,
+    },
+    {
+      value: fmtStat(derived.claimableAmount),
+      label: 'CLAIMABLE AMOUNT, USDT',
+      tooltip: 'The total amount of repayments from all projects that you can claim and withdraw.',
+      icon: <Icon name="wallet" className="size-5 text-black" />,
+    },
+  ];
+
   const handleSort = (key: SortKey) => {
     if (sortKey !== key) { setSortKey(key); setSortAsc(true); }
     else if (sortAsc) setSortAsc(false);
     else setSortKey(null);
     setPage(1);
+    setMobileVisibleCount(MOBILE_PAGE_SIZE);
   };
 
   return (
@@ -491,8 +541,8 @@ const Portfolio: FC = () => {
         <Wrapper>
           {/* ── Page title ── */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-[36px] font-semibold leading-[1.2] text-black">Portfolio</h1>
-            <Link href="/marketplace">
+            <h1 className="text-2xl md:text-[36px] font-semibold leading-[1.2] text-black">Portfolio</h1>
+            <Link href="/marketplace" className="hidden md:block">
               <Button visualType="quaternary" className="flex items-center gap-2 h-[46px] rounded-xl">
                 <Icon name="plus" className="size-3.5" />
                 New investment
@@ -505,7 +555,7 @@ const Portfolio: FC = () => {
             {TABS.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => { setActiveTab(tab.key); setPage(1); }}
+                onClick={() => { setActiveTab(tab.key); setPage(1); setMobileVisibleCount(MOBILE_PAGE_SIZE); }}
                 className={clsx(
                   'flex flex-col gap-3 pb-0 text-base font-medium tr-d-all',
                   activeTab === tab.key ? 'text-black' : 'text-label-tertiary'
@@ -530,9 +580,9 @@ const Portfolio: FC = () => {
           </div>
 
           {/* ── Main two-column layout ── */}
-          <div className="flex gap-2.5 mb-6">
+          <div className="flex flex-col md:flex-row gap-2.5 mb-6">
             {/* Left – Donut chart */}
-            <div className="flex flex-[1_0_0] min-w-0">
+            <div className="w-full md:flex-[1_0_0] min-w-0">
               <PortfolioDonutChart
                 key={chartFilter}
                 totalUsdt={chartView.totalUsdt}
@@ -544,57 +594,32 @@ const Portfolio: FC = () => {
               />
             </div>
 
-            {/* Right – Stats grid */}
-            <div className="flex flex-[1_0_0] flex-col gap-2.5 min-w-0">
-              <div className="flex gap-2.5">
-                <PortfolioStatCard
-                  value={fmtStat(derived.realizedPNL)}
-                  sublabel="REALIZED"
-                  label="PNL, USDT"
-                  tooltip="The current profit or loss from positions you hold."
-                  icon={<Icon name="tickSquared" className="size-5 text-black" />}
-                />
-                <PortfolioStatCard
-                  value={fmtStat(derived.unrealizedPNL)}
-                  sublabel="UNREALIZED"
-                  label="PNL, USDT"
-                  tooltip="The current profit or loss from positions you hold."
-                  icon={<Icon name="chartSquared" className="size-5 text-black" />}
-                />
-              </div>
-              <div className="flex gap-2.5">
-                <PortfolioStatCard
-                  value={`${fmtStat(derived.avgROI, 1)}%`}
-                  label="AVERAGE ROI"
-                  tooltip="Projected return based on target pool profitability, assuming full repayment."
-                  icon={<Icon name="percent" className="size-5 text-black" />}
-                />
-                <PortfolioStatCard
-                  value="—"
-                  label="AIRDROP POINTS"
-                  tooltip="Get points for selling, staking PLTs and sharing a referral link. Get one governance token (GOV) for each point."
-                  icon={<Icon name="gift" className="size-5 text-black" />}
-                />
-              </div>
-              <div className="flex gap-2.5">
-                <PortfolioStatCard
-                  value={fmtStat(derived.tradingEarnings)}
-                  label="TRADING EARNINGS, USDT"
-                  tooltip="Your earnings from fees when other users buy or sell tokens in the pools you’ve invested in."
-                  icon={<Icon name="flash" className="size-5 text-black" />}
-                />
-                <PortfolioStatCard
-                  value={fmtStat(derived.claimableAmount)}
-                  label="CLAIMABLE AMOUNT, USDT"
-                  tooltip="The total amount of repayments from all projects that you can claim and withdraw."
-                  icon={<Icon name="wallet" className="size-5 text-black" />}
-                />
+            {/* Right – Stats: swiper on mobile, 2-col grid on desktop */}
+            <div className="w-full md:flex-[1_0_0] min-w-0">
+              <Swiper
+                className="md:hidden !overflow-visible"
+                modules={[FreeMode]}
+                freeMode
+                spaceBetween={10}
+                slidesPerView="auto"
+              >
+                {statCards.map((card, i) => (
+                  <SwiperSlide key={i} className="!w-[250px]">
+                    <PortfolioStatCard {...card} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+
+              <div className="hidden md:grid md:grid-cols-2 md:gap-2.5">
+                {statCards.map((card, i) => (
+                  <PortfolioStatCard key={i} {...card} />
+                ))}
               </div>
             </div>
           </div>
 
-          {/* ── Table section ── */}
-          <div className="flex flex-col gap-4">
+          {/* ── Table section (desktop) ── */}
+          <div className="hidden md:flex flex-col gap-4">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
             <div className="flex flex-col">
@@ -717,6 +742,87 @@ const Portfolio: FC = () => {
             </div>
 
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+
+          {/* ── Pools section (mobile) ── */}
+          <div className="flex md:hidden flex-col gap-6">
+            <div className="flex flex-col gap-4">
+              <p className="text-2xl font-semibold leading-none text-black">Invested pools</p>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => handleSort(sortKey ?? 'status')}
+                  className="flex items-center justify-center gap-2 p-3 rounded-lg border border-stroke-primary tr-d-all hover:bg-bg-tertiary"
+                >
+                  <span className="flex items-center shrink-0">
+                    <Icon
+                      name="arrowUp"
+                      className={clsx('size-3.5', sortAsc ? 'text-blue' : 'text-grey')}
+                    />
+                    <Icon
+                      name="arrowDown"
+                      className={clsx('size-3.5 -ml-1.5', !sortAsc ? 'text-blue' : 'text-grey')}
+                    />
+                  </span>
+                </button>
+                <div className="relative">
+                  <Button visualType="quinary" onClick={() => setFilterOpen(prev => !prev)}>
+                    <Icon name="plus" className="size-3.5" />
+                    Filter
+                    {activeFilterCount > 0 && (
+                      <span className="bg-blue text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center leading-none">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+                  <PortfolioFilterModal
+                    open={filterOpen}
+                    onClose={() => setFilterOpen(false)}
+                    activeCategory={activeFilterCategory}
+                    onCategoryChange={setActiveFilterCategory}
+                    selections={filterSelections}
+                    onToggle={handleToggle}
+                    categoryOptions={categoryOptions}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {isLoading ? (
+                Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="h-[280px] rounded-xl animate-pulse bg-bg-tertiary/40" />
+                ))
+              ) : mobilePaginated.length === 0 && derived.poolRows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-4 py-16 px-4 text-center">
+                  <Icon name="document" className="size-16" />
+                  <div className="flex flex-col items-center gap-2 max-w-[311px]">
+                    <p className="text-xl font-semibold text-grey-dark">Nothing here yet</p>
+                    <p className="text-sm font-medium leading-[1.2] text-grey-dark">
+                      You haven&rsquo;t bought any tokens yet. Head to the marketplace and choose a project you like
+                    </p>
+                  </div>
+                  <Link href="/marketplace">
+                    <Button visualType="quaternary" className="rounded-lg">
+                      Go to Marketplace
+                    </Button>
+                  </Link>
+                </div>
+              ) : mobilePaginated.length === 0 ? (
+                <div className="py-12 text-center text-sm text-label-tertiary">No pools found.</div>
+              ) : (
+                mobilePaginated.map(({ pool }) => <PortfolioPoolCardMobile key={pool.id} pool={pool} />)
+              )}
+            </div>
+
+            {mobilePaginated.length < sorted.length && (
+              <Button
+                visualType="quinary"
+                className="w-full justify-center"
+                onClick={() => setMobileVisibleCount(c => c + MOBILE_PAGE_SIZE)}
+              >
+                Show more
+              </Button>
+            )}
           </div>
         </Wrapper>
       </section>

@@ -91,7 +91,7 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
   return (
     <div className="flex flex-col h-full w-full">
       {/* Header */}
-      <div className="flex items-center justify-between w-full">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 md:gap-0 w-full">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
             <span className="text-base text-grey-dark uppercase">Total Contributed</span>
@@ -105,13 +105,13 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
               : '5 active · 28 completed · 3 failed'}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           {FILTERS.map(f => (
             <button
               key={f.key}
               onClick={() => onFilterChange(f.key)}
               className={clsx(
-                'px-4 py-3 rounded-[10px] text-sm font-medium tr-d-all',
+                'flex-1 md:flex-none px-4 py-3 rounded-[10px] text-sm font-medium tr-d-all',
                 activeFilter === f.key
                   ? 'bg-blue text-white'
                   : 'border border-stroke-primary text-grey-dark hover:bg-bg-tertiary'
@@ -124,8 +124,11 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
       </div>
 
       {/* Segmented ring */}
-      <div className="grow-1 relative flex items-center justify-center mx-auto" style={{ width: SIZE, height: SIZE }}>
-        <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+      <div
+        className="grow-1 relative flex items-center justify-center mx-auto w-full"
+        style={{ maxWidth: SIZE, aspectRatio: '1' }}
+      >
+        <svg width="100%" height="100%" viewBox={`0 0 ${SIZE} ${SIZE}`}>
           <g transform={`translate(${SIZE / 2}, ${SIZE / 2}) rotate(-90)`}>
             {segmentsTotal > 0 ? (
               segments.map((seg, i) => {
@@ -165,26 +168,26 @@ const PortfolioDonutChart: FC<PortfolioDonutChartProps> = ({
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none">
           {selected ? (
             <>
-              <span className="text-base font-medium text-label-tertiary">{selectedPercent}%</span>
+              <span className="text-sm md:text-base font-medium text-label-tertiary">{selectedPercent}%</span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[36px] font-semibold leading-[1.2] text-black">
+                <span className="text-[28px] md:text-[36px] font-semibold leading-[1.2] text-black">
                   {selected.value.toLocaleString()}
                 </span>
-                <Icon name="usdt" className="size-8" />
-                <span className="text-[36px] font-semibold leading-[1.2] text-black">USDT</span>
+                <Icon name="usdt" className="size-7 md:size-8" />
+                <span className="text-[28px] md:text-[36px] font-semibold leading-[1.2] text-black">USDT</span>
               </div>
-              <span className="text-base font-medium text-label-tertiary">
+              <span className="text-sm md:text-base font-medium text-label-tertiary text-center">
                 {selected.label} · {selected.poolCount} {selected.poolCount === 1 ? 'pool' : 'pools'}
               </span>
             </>
           ) : (
             <>
               <div className="flex items-center gap-1.5">
-                <span className="text-[36px] font-semibold leading-[1.2] text-black">{totalUsdt}</span>
-                <Icon name="usdt" className="size-8" />
-                <span className="text-[36px] font-semibold leading-[1.2] text-black">USDT</span>
+                <span className="text-[28px] md:text-[36px] font-semibold leading-[1.2] text-black">{totalUsdt}</span>
+                <Icon name="usdt" className="size-7 md:size-8" />
+                <span className="text-[28px] md:text-[36px] font-semibold leading-[1.2] text-black">USDT</span>
               </div>
-              <span className="text-base font-medium text-label-tertiary">{subtitle}</span>
+              <span className="text-sm md:text-base font-medium text-label-tertiary">{subtitle}</span>
             </>
           )}
         </div>
