@@ -30,9 +30,9 @@ export const GetStartedSection: FC = () => {
               className={'w-fit'}
               visualType={'tertiary'}
               onClick={address ? undefined : openConnectModal}
-              href={address ? '/my-companies/' : undefined}
+              href={address ? '/faucet/' : undefined}
             >
-              {address ? 'Go to Dashboard' : 'Connect wallet'}
+              {address ? 'Claim' : 'Connect wallet'}
             </Button>
           </Card>
           <Card className={'flex flex-col justify-between gap-3 !bg-grey-light lg:col-span-5'} size={'lg'}>
