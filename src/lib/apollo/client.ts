@@ -3,6 +3,24 @@ import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
 import { Observable } from 'rxjs';
 
+declare module '@apollo/client' {
+  namespace ApolloClient {
+    namespace DeclareDefaultOptions {
+      interface WatchQuery {
+        errorPolicy?: 'all';
+        fetchPolicy?: 'network-only';
+      }
+      interface Query {
+        errorPolicy?: 'all';
+        fetchPolicy?: 'network-only';
+      }
+      interface Mutate {
+        errorPolicy?: 'all';
+      }
+    }
+  }
+}
+
 const GRAPHQL_ENDPOINT =
   process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:443/gateway/graphql';
 

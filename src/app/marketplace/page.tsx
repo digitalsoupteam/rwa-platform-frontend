@@ -62,7 +62,7 @@ function poolToProject(pool: AnyPool): MarketplaceProject {
     id:            pool.id,
     name:          pool.name,
     tokenTicker:   formatTicker(pool.name),
-    logoUrl:       pool.image ?? undefined,
+    logoUrl:       pool.imageUrl ?? undefined,
     price,
     priceNum,
     monthlyProfit: getMonthlyProfit(pool.rewardPercent),

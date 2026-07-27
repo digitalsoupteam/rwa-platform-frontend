@@ -6,7 +6,11 @@ export interface DocumentItem {
   id: string;
   folderId: string;
   name: string;
-  link: string;
+  url: string;
+  fileId: string;
+  path: string;
+  mimeType: string;
+  size: number;
   ownerId: string;
   ownerType: string;
   creator: string;
@@ -56,7 +60,7 @@ interface UpdateDocumentData {
   updateDocument: DocumentItem;
 }
 interface UpdateDocumentVars {
-  input: { id: string; updateData: { name?: string; link?: string } };
+  input: { id: string; updateData: { name?: string; url?: string } };
 }
 
 export const GET_FOLDERS: TypedDocumentNode<GetFoldersData, GetFoldersVars> = gql`
@@ -89,7 +93,11 @@ export const GET_DOCUMENTS: TypedDocumentNode<GetDocumentsData, GetDocumentsVars
       id
       folderId
       name
-      link
+      url
+      fileId
+      path
+      mimeType
+      size
       ownerId
       ownerType
       creator
@@ -113,7 +121,11 @@ export const UPDATE_DOCUMENT: TypedDocumentNode<UpdateDocumentData, UpdateDocume
       id
       folderId
       name
-      link
+      url
+      fileId
+      path
+      mimeType
+      size
       ownerId
       ownerType
       creator
@@ -125,32 +137,30 @@ export const UPDATE_DOCUMENT: TypedDocumentNode<UpdateDocumentData, UpdateDocume
   }
 `;
 
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT ?? 'http://localhost:443';
+
 export const uploadDocumentMultipart = async (
   folderId: string,
   name: string,
   file: File
 ): Promise<DocumentItem> => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:443/gateway/graphql';
 
   const formData = new FormData();
-  formData.append(
-    'operations',
-    JSON.stringify({
-      query: `mutation CreateDocument($input: CreateDocumentInput!) { createDocument(input: $input) { id folderId name link ownerId ownerType creator parentId grandParentId createdAt updatedAt } }`,
-      variables: { input: { folderId, name, file: null } },
-    })
-  );
-  formData.append('map', JSON.stringify({ '0': ['variables.input.file'] }));
-  formData.append('0', file);
+  formData.append('file', file);
+  formData.append('folderId', folderId);
+  formData.append('name', name);
 
-  const response = await fetch(endpoint, {
+  const response = await fetch(`${API_ENDPOINT}/api/documents/createDocument`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
 
-  const json = await response.json();
-  if (json.errors?.length) throw new Error(json.errors[0].message);
-  return json.data.createDocument as DocumentItem;
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Failed to upload document');
+  }
+
+  return response.json() as Promise<DocumentItem>;
 };

@@ -12,7 +12,7 @@ import { GET_POOL_BY_ID, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
-import { BuyTokenWidget, EditPoolModal, PriceChart } from '@/components/pool';
+import { BuyTokenWidget, EditPoolModal, PriceChart, PoolTransactions } from '@/components/pool';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -159,8 +159,7 @@ const EmptyChart: FC = () => (
   </div>
 );
 
-const TIME_FILTERS = ['1H', '1D', '1W', '1M', '6M', '1Y'] as const;
-type TimeFilter = (typeof TIME_FILTERS)[number];
+const CANDLE_INTERVALS = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '12h', '1d', '1w'] as const;
 
 // ── Pool page ──────────────────────────────────────────────────────────────────
 
@@ -169,7 +168,7 @@ const PoolPage: FC = () => {
   const poolId = params.poolId as string;
   const { user } = useAuth();
 
-  const [activeFilter, setActiveFilter] = useState<TimeFilter>('1H');
+  const [candleInterval, setCandleInterval] = useState<string>('5m');
   const [scheduleOpen, setScheduleOpen] = useState(true);
   const [priceChartOpen, setPriceChartOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -180,7 +179,6 @@ const PoolPage: FC = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pool: AnyPool = (poolData as any)?.getPool ?? null;
-console.log(pool)
   const projectId: string | undefined = pool?.businessId;
 
   const { data: businessData } = useQuery(GET_BUSINESS_WITH_RISK, {
@@ -211,9 +209,13 @@ console.log(pool)
       : pool.ownerId === user.userId
   );
 
-  const now = React.useMemo(() => Math.floor(Date.now() / 1000), []);
+  const [now, setNow] = React.useState(() => Math.floor(Date.now() / 1000));
+  React.useEffect(() => {
+    const id = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 15000);
+    return () => clearInterval(id);
+  }, []);
   const { data: priceHistoryData } = useQuery(GET_RAW_PRICE_DATA, {
-    variables: { input: { poolAddress: pool?.poolAddress ?? '', startTime: now - 86400, endTime: now } },
+    variables: { input: { poolAddress: pool?.poolAddress ?? '', startTime: now - 86400, endTime: now, sort: { timestamp: 'asc' }, limit: 1000 } },
     skip: !pool?.poolAddress,
     fetchPolicy: 'cache-and-network',
     pollInterval: 15000,
@@ -376,15 +378,15 @@ console.log(pool)
                     · 24h
                   </p>
                 </div>
-                <div className='flex items-center gap-0.5 bg-bg-tertiary rounded-full p-0.5'>
-                  {TIME_FILTERS.map(f => (
+                <div className='flex items-center gap-0.5 bg-bg-tertiary rounded-full p-0.5 flex-wrap'>
+                  {CANDLE_INTERVALS.map(f => (
                     <button
                       key={f}
                       type='button'
-                      onClick={() => setActiveFilter(f)}
+                      onClick={() => setCandleInterval(f)}
                       className={clsx(
-                        'px-3 py-1.5 w-13 h-10 rounded-full text-sm font-medium cursor-pointer tr-d-all',
-                        activeFilter === f ? 'bg-[#D9E4FF] text-black' : 'text-grey-dark hover:text-blue-dark'
+                        'px-3 py-1.5 rounded-full text-sm font-medium cursor-pointer tr-d-all',
+                        candleInterval === f ? 'bg-[#D9E4FF] text-black' : 'text-grey-dark hover:text-blue-dark'
                       )}
                     >
                       {f}
@@ -398,7 +400,7 @@ console.log(pool)
                 {pool?.poolAddress ? (
                   <PriceChart
                     poolAddress={pool.poolAddress}
-                    filter={activeFilter}
+                    interval={candleInterval}
                     fallback={
                       <div className='flex flex-col min-h-116'>
                         <EmptyChart />
@@ -411,6 +413,13 @@ console.log(pool)
                   </div>
                 )}
               </div>
+
+              {/* Transactions — under chart, left of Pool progress */}
+              {pool?.poolAddress && (
+                <div className={clsx('mt-4', !priceChartOpen && 'hidden lg:block')}>
+                  <PoolTransactions poolAddress={pool.poolAddress} />
+                </div>
+              )}
             </div>
 
             {/* ── Pool progress panel ───────────────────────────────────────── */}

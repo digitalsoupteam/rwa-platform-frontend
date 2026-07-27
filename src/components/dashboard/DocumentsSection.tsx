@@ -76,9 +76,9 @@ const DocumentPopover: FC<DocumentPopoverProps> = ({ className, editDoc, contain
   useEffect(() => {
     if (editDoc) {
       setName(editDoc.name);
-      if (editDoc.link?.startsWith('http')) {
+      if (editDoc.url?.startsWith('http')) {
         setTab('embed');
-        setEmbedUrl(editDoc.link);
+        setEmbedUrl(editDoc.url);
       } else {
         setTab('upload');
       }
@@ -265,7 +265,7 @@ const getFilename = (link: string) => {
 const DocumentCard: FC<DocumentCardProps> = ({ doc, onEdit, onDelete, canEdit }) => (
   <div className={'w-full flex flex-col gap-2 p-4 border-stroke-primary border-1 rounded-xl'}>
     <Link
-      href={process.env.NEXT_PUBLIC_FILE_ENDPOINT + doc.link}
+      href={doc.url}
       target={'_blank'}
       rel={'noopener noreferrer'}
       className={'w-full aspect-[0.855] rounded-xl overflow-hidden bg-grey-light block'}
@@ -281,7 +281,7 @@ const DocumentCard: FC<DocumentCardProps> = ({ doc, onEdit, onDelete, canEdit })
     <div className={'flex gap-2 justify-between items-center'}>
       <div className={'min-w-0'}>
         <div className={'text-lg font-semibold leading-tight truncate'}>{doc.name}</div>
-        {doc.link && <div className={'text-base text-label-tertiary truncate mt-1'}>{getFilename(doc.link)}</div>}
+        {doc.url && <div className={'text-base text-label-tertiary truncate mt-1'}>{getFilename(doc.url)}</div>}
       </div>
       {canEdit && (
         <div className={'flex items-center gap-2 shrink-0'}>
@@ -388,7 +388,7 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId, can
               id: editingDoc.id,
               updateData: {
                 name: data.name,
-                ...(data.embedUrl !== undefined ? { link: data.embedUrl } : {}),
+                ...(data.embedUrl !== undefined ? { url: data.embedUrl } : {}),
               },
             },
           },
@@ -412,7 +412,7 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId, can
         const created = await uploadDocumentMultipart(folderId, data.name, placeholderFile);
         await updateDocument({
           variables: {
-            input: { id: created.id, updateData: { link: data.embedUrl } },
+            input: { id: created.id, updateData: { url: data.embedUrl } },
           },
         });
       }
