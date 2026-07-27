@@ -3,6 +3,7 @@
 import React, { FC, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
+import { BaseError, formatUnits, maxUint256 } from 'viem';
 import { useQuery } from '@apollo/client/react';
 import { Icon, Button, toast } from '@/components/ui';
 import { ERC20_APPROVE_ABI, POOL_ABI, HOLD_TOKEN_ADDRESS } from '@/lib/contracts';
@@ -10,17 +11,16 @@ import { GET_POOL_RECIPIENTS } from '@/lib/debt-repayments/operations';
 import { STATUS_LABELS, type DebtRepaymentPool } from './DebtRepaymentRow';
 
 const ZERO = BigInt(0);
-const MAX_UINT256 = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
 const HOLD_DECIMALS = 18;
-const HOLD_DIVISOR = BigInt(10) ** BigInt(HOLD_DECIMALS);
 
+// USDT/HOLD amounts use 18 decimals — same formatting convention as BuyTokenWidget.
 function formatUsdtAmount(wei: bigint | undefined): string {
   if (!wei || wei === ZERO) return '0';
-  const whole = wei / HOLD_DIVISOR;
-  const frac = wei % HOLD_DIVISOR;
-  if (frac === ZERO) return whole.toLocaleString('en-US');
-  const fracStr = frac.toString().padStart(HOLD_DECIMALS, '0').replace(/0+$/, '').slice(0, 4);
-  return `${whole.toLocaleString('en-US')}.${fracStr}`;
+  const [whole, frac] = formatUnits(wei, HOLD_DECIMALS).split('.');
+  const wholeStr = BigInt(whole).toLocaleString('en-US');
+  if (!frac) return wholeStr;
+  const fracStr = frac.slice(0, 4);
+  return fracStr ? `${wholeStr}.${fracStr}` : wholeStr;
 }
 
 function formatDate(ts: number): string {
@@ -100,9 +100,24 @@ const DebtRepaymentDrawer: FC<DebtRepaymentDrawerProps> = ({ pool, onClose, onPa
           address: HOLD_TOKEN_ADDRESS,
           abi: ERC20_APPROVE_ABI,
           functionName: 'approve',
-          args: [poolAddress, MAX_UINT256],
+          args: [poolAddress, maxUint256],
         });
         await publicClient.waitForTransactionReceipt({ hash: approveTx });
+      }
+
+      try {
+        await publicClient.simulateContract({
+          address: poolAddress,
+          abi: POOL_ABI,
+          functionName: 'returnIncomingTranche',
+          args: [amountDueWei],
+          account: address,
+        });
+      } catch (simErr) {
+        console.error('returnIncomingTranche simulation reverted', simErr);
+        const reason = simErr instanceof BaseError ? simErr.shortMessage : 'Transaction would fail';
+        toast(reason, 'error');
+        return;
       }
 
       toast('Sending repayment transaction…');
