@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { useAccount } from 'wagmi';
 import { useQuery } from '@apollo/client/react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Icon, Pagination, toast } from '@/components/ui';
+import { Button, Icon, Pagination, toast } from '@/components/ui';
 import {
   WithdrawalsPoolRow,
   WithdrawModal,
@@ -274,7 +274,11 @@ const WithdrawalsPage: FC = () => {
       <section className={'py-8 md:py-12'}>
         <Wrapper>
           {wallet && (
-            <div className={'flex items-center gap-2 bg-bg-tertiary rounded-full px-3 py-2 w-fit mb-4 text-sm text-grey-dark'}>
+            <div
+              className={
+                'flex items-center gap-2 bg-bg-tertiary rounded-full px-3 py-2 w-fit mb-4 text-sm text-grey-dark'
+              }
+            >
               {wallet.slice(0, 6)}...{wallet.slice(-6)}
             </div>
           )}
@@ -304,7 +308,12 @@ const WithdrawalsPage: FC = () => {
                   {tab.label}
                   <Icon name={'info'} className={'size-4 text-grey'} />
                 </span>
-                <span className={clsx('h-0.5 rounded-full w-full transition-all', activeTab === tab.key ? 'bg-blue' : 'bg-transparent')} />
+                <span
+                  className={clsx(
+                    'h-0.5 rounded-full w-full transition-all',
+                    activeTab === tab.key ? 'bg-blue' : 'bg-transparent'
+                  )}
+                />
               </button>
             ))}
           </div>
@@ -314,22 +323,24 @@ const WithdrawalsPage: FC = () => {
               <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 
               <div className={'flex flex-col'}>
-                <div className={'bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10'}>
-                  <button
-                    onClick={() => setFilterOpen(prev => !prev)}
-                    className={clsx(
-                      'flex items-center gap-2 rounded-lg pl-3 pr-4 py-3 text-sm font-medium tr-d-all hover:bg-bg-tertiary',
-                      filterOpen ? 'border-2 border-blue text-label-tertiary' : 'border border-stroke-primary text-grey-dark'
-                    )}
-                  >
+                <div
+                  className={
+                    'bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10'
+                  }
+                >
+                  <Button visualType={'quinary'} onClick={() => setFilterOpen(prev => !prev)}>
                     <Icon name={'plus'} className={'size-3.5'} />
                     Filter
                     {activeFilterCount > 0 && (
-                      <span className={'bg-blue text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center leading-none'}>
+                      <span
+                        className={
+                          'bg-blue text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center leading-none'
+                        }
+                      >
                         {activeFilterCount}
                       </span>
                     )}
-                  </button>
+                  </Button>
                   <WithdrawalFilterModal
                     open={filterOpen}
                     onClose={() => setFilterOpen(false)}
@@ -345,7 +356,11 @@ const WithdrawalsPage: FC = () => {
                 </div>
 
                 <div className={'overflow-hidden rounded-b-lg'}>
-                  <div className={'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
+                  <div
+                    className={
+                      'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'
+                    }
+                  >
                     <span className={'text-sm font-medium text-grey-dark w-[200px] shrink-0'}>Company</span>
                     <span className={'text-sm font-medium text-grey-dark w-[200px] shrink-0'}>Project</span>
                     <span className={'text-sm font-medium text-grey-dark flex-1'}>Pool</span>
@@ -362,11 +377,19 @@ const WithdrawalsPage: FC = () => {
                         </div>
                       ))
                     ) : !wallet ? (
-                      <div className={'py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary'}>
+                      <div
+                        className={
+                          'py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary'
+                        }
+                      >
                         Connect your wallet to see your pools.
                       </div>
                     ) : paginatedPools.length === 0 ? (
-                      <div className={'py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary'}>
+                      <div
+                        className={
+                          'py-12 text-center text-sm text-label-tertiary border-x border-b border-stroke-primary'
+                        }
+                      >
                         No pools found.
                       </div>
                     ) : (

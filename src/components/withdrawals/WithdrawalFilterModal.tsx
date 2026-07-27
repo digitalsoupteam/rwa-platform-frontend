@@ -215,7 +215,7 @@ const WithdrawalFilterModal: FC<Props> = ({
                 <span className={'text-sm text-black'}>All</span>
               </div>
               <p className={'text-xs font-medium text-grey-dark mb-1'}>Options</p>
-              <div className={'max-h-60 overflow-y-auto'}>
+              <div className={'max-h-60 overflow-y-auto overflow-x-hidden'}>
                 {options.map(opt => (
                   <div
                     key={opt}
