@@ -289,9 +289,21 @@ const Marketplace: FC = () => {
                   ))}
                 </div>
               ) : allProjects.length === 0 ? (
-                <p className={'text-grey-dark text-base py-12 text-center'}>
-                  {error ? `Error: ${error.message}` : 'No pools available yet.'}
-                </p>
+                error ? (
+                  <p className={'text-grey-dark text-base py-12 text-center'}>{`Error: ${error.message}`}</p>
+                ) : (
+                  <div className={'flex flex-col gap-6 items-center text-center py-16'}>
+                    <div className={'flex flex-col gap-3 items-center'}>
+                      <p className={'text-2xl font-semibold text-black'}>Whoops! Nothing found</p>
+                      <p className={'text-base leading-[1.4] text-grey-dark'}>
+                        Try removing some filters or clear all of them
+                      </p>
+                    </div>
+                    <Button visualType={'secondary'} onClick={clearAllFilters}>
+                      Remove filters
+                    </Button>
+                  </div>
+                )
               ) : (
                 <>
                   <div className={'grid gap-3 sm:grid-cols-2 xl:grid-cols-3 mb-5'}>
