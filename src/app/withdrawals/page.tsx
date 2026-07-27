@@ -362,6 +362,94 @@ const WithdrawalsPage: FC = () => {
                     amountRange={amountRange}
                     onAmountRangeChange={setAmountRange}
                   />
+
+                  {/* Active-filter pills — mobile only; desktop shows the count badge on the Filter button instead */}
+                  <div className={'lg:hidden flex items-center gap-2 overflow-x-auto ml-2'}>
+                    {(filterSelections['Status'] ?? []).length > 0 && (
+                      <button
+                        type={'button'}
+                        onClick={() => {
+                          setActiveFilterCategory('Status');
+                          setFilterOpen(true);
+                        }}
+                        className={'shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-2 rounded-full border border-stroke-primary text-xs whitespace-nowrap'}
+                      >
+                        <span
+                          role={'button'}
+                          tabIndex={0}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleToggle('Status', '__all__');
+                          }}
+                          className={'flex items-center'}
+                        >
+                          <Icon name={'plus'} className={'size-3 rotate-45 text-grey-dark'} />
+                        </span>
+                        <span className={'text-grey-dark'}>Status</span>
+                        <span className={'text-blue font-medium'}>
+                          {filterSelections['Status'].length === 1
+                            ? filterSelections['Status'][0]
+                            : `${filterSelections['Status'].length} selected`}
+                        </span>
+                      </button>
+                    )}
+
+                    {amountRange && (
+                      <button
+                        type={'button'}
+                        onClick={() => {
+                          setActiveFilterCategory('Amount');
+                          setFilterOpen(true);
+                        }}
+                        className={'shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-2 rounded-full border border-stroke-primary text-xs whitespace-nowrap'}
+                      >
+                        <span
+                          role={'button'}
+                          tabIndex={0}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setAmountRange(null);
+                          }}
+                          className={'flex items-center'}
+                        >
+                          <Icon name={'plus'} className={'size-3 rotate-45 text-grey-dark'} />
+                        </span>
+                        <span className={'text-grey-dark'}>Amount</span>
+                        <span className={'text-blue font-medium'}>
+                          {amountRange.min.toLocaleString()} - {amountRange.max.toLocaleString()}
+                        </span>
+                      </button>
+                    )}
+
+                    {(filterSelections['Pool'] ?? []).length > 0 && (
+                      <button
+                        type={'button'}
+                        onClick={() => {
+                          setActiveFilterCategory('Pool');
+                          setFilterOpen(true);
+                        }}
+                        className={'shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-2 rounded-full border border-stroke-primary text-xs whitespace-nowrap'}
+                      >
+                        <span
+                          role={'button'}
+                          tabIndex={0}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleToggle('Pool', '__all__');
+                          }}
+                          className={'flex items-center'}
+                        >
+                          <Icon name={'plus'} className={'size-3 rotate-45 text-grey-dark'} />
+                        </span>
+                        <span className={'text-grey-dark'}>Pool</span>
+                        <span className={'text-blue font-medium'}>
+                          {filterSelections['Pool'].length === 1
+                            ? filterSelections['Pool'][0]
+                            : `${filterSelections['Pool'].length} selected`}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Desktop table */}

@@ -127,6 +127,13 @@ const AmountRangePanel: FC<{
   );
 };
 
+const SearchIcon: FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} width={'14'} height={'14'} viewBox={'0 0 14 14'} fill={'none'} xmlns={'http://www.w3.org/2000/svg'}>
+    <circle cx={'6.5'} cy={'6.5'} r={'5'} stroke={'#959EB5'} />
+    <path d={'M10.5 10.5L13 13'} stroke={'#959EB5'} strokeLinecap={'round'} />
+  </svg>
+);
+
 const Checkbox: FC<{ checked: boolean; onChange: () => void }> = ({ checked, onChange }) => (
   <button
     type={'button'}
@@ -166,15 +173,23 @@ const WithdrawalFilterModal: FC<Props> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [open, onClose]);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    setSearchQuery('');
+  }, [activeCategory, open]);
+
   if (!open) return null;
 
   const isAmount = activeCategory === 'Amount';
+  const isPool = activeCategory === 'Pool';
   const options = isAmount ? [] : (categoryOptions[activeCategory] ?? []);
+  const visibleOptions = isPool ? options.filter(o => o.toLowerCase().includes(searchQuery.toLowerCase())) : options;
   const selected = selections[activeCategory] ?? [];
   const allChecked = selected.length === 0;
 
   return (
-    <div ref={ref} className={'absolute top-full left-0 z-50 flex gap-1 pt-1'}>
+    <div ref={ref} className={'absolute top-full left-0 z-50 flex flex-col lg:flex-row gap-1 pt-1'}>
       <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] py-2 w-[160px]'}>
         <div className={'flex flex-col px-1'}>
           {FILTER_CATEGORIES.map(cat => {
@@ -204,8 +219,20 @@ const WithdrawalFilterModal: FC<Props> = ({
         </div>
       ) : (
         options.length > 0 && (
-          <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] py-4 w-[220px]'}>
+          <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] py-4 w-[280px] lg:w-[220px]'}>
             <div className={'flex flex-col px-4'}>
+              {isPool && (
+                <div className={'flex items-center gap-2 mb-3 px-2.5 py-2 rounded-lg border border-stroke-primary'}>
+                  <SearchIcon className={'size-3.5 shrink-0'} />
+                  <input
+                    type={'text'}
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder={'Search'}
+                    className={'w-full text-sm text-black placeholder:text-label-tertiary outline-none bg-transparent'}
+                  />
+                </div>
+              )}
               <p className={'text-xs font-medium text-grey-dark mb-1'}>Selected</p>
               <div
                 className={'flex items-center gap-2 py-1.5 pb-4 border-b border-stroke-primary mb-3 cursor-pointer'}
@@ -216,7 +243,7 @@ const WithdrawalFilterModal: FC<Props> = ({
               </div>
               <p className={'text-xs font-medium text-grey-dark mb-1'}>Options</p>
               <div className={'max-h-60 overflow-y-auto overflow-x-hidden'}>
-                {options.map(opt => (
+                {visibleOptions.map(opt => (
                   <div
                     key={opt}
                     className={'flex items-center gap-2 py-1.5 cursor-pointer rounded hover:bg-bg-tertiary/50 -mx-1 px-1'}
@@ -226,6 +253,9 @@ const WithdrawalFilterModal: FC<Props> = ({
                     <span className={'text-sm text-black truncate'}>{opt}</span>
                   </div>
                 ))}
+                {isPool && visibleOptions.length === 0 && (
+                  <p className={'text-sm text-label-tertiary py-1.5'}>No pools match &quot;{searchQuery}&quot;</p>
+                )}
               </div>
             </div>
           </div>
