@@ -161,7 +161,7 @@ const WithdrawalFilterModal: FC<Props> = ({
   onAmountRangeChange,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [innerOpen, setInnerOpen] = useState(true);
+  const [innerOpen, setInnerOpen] = useState(false);
 
   // Outside clicks close only the options/amount panel — the category list
   // (this whole widget) stays open until the Filter button is clicked again.
@@ -175,7 +175,7 @@ const WithdrawalFilterModal: FC<Props> = ({
   }, [open]);
 
   useEffect(() => {
-    if (open) setInnerOpen(true);
+    if (!open) setInnerOpen(false);
   }, [open]);
 
   const [searchQuery, setSearchQuery] = useState('');
