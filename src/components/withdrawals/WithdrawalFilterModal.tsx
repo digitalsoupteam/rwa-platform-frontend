@@ -146,7 +146,7 @@ const Checkbox: FC<{ checked: boolean; onChange: () => void }> = ({ checked, onC
       checked ? 'bg-blue border-blue' : 'bg-bg-tertiary border-stroke-primary'
     )}
   >
-    {checked && <Icon name={'tick'} className={'size-3 text-white'} />}
+    {checked && <Icon name={'check'} className={'size-3 text-white'} />}
   </button>
 );
 
@@ -188,79 +188,85 @@ const WithdrawalFilterModal: FC<Props> = ({
   const selected = selections[activeCategory] ?? [];
   const allChecked = selected.length === 0;
 
+  const panel = isAmount ? (
+    <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)]'}>
+      <AmountRangePanel bounds={amountBounds} value={amountRange} onChange={onAmountRangeChange} />
+    </div>
+  ) : (
+    options.length > 0 && (
+      <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] py-4 w-[280px] lg:w-[220px]'}>
+        <div className={'flex flex-col px-4'}>
+          {isPool && (
+            <div className={'flex items-center gap-2 mb-3 px-2.5 py-2 rounded-lg border border-stroke-primary'}>
+              <SearchIcon className={'size-3.5 shrink-0'} />
+              <input
+                type={'text'}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={'Search'}
+                className={'w-full text-sm text-black placeholder:text-label-tertiary outline-none bg-transparent'}
+              />
+            </div>
+          )}
+          <p className={'text-xs font-medium text-grey-dark mb-1'}>Selected</p>
+          <div
+            className={'flex items-center gap-2 py-1.5 pb-4 border-b border-stroke-primary mb-3 cursor-pointer'}
+            onClick={() => onToggle(activeCategory, '__all__')}
+          >
+            <Checkbox checked={allChecked} onChange={() => onToggle(activeCategory, '__all__')} />
+            <span className={'text-sm text-black'}>All</span>
+          </div>
+          <p className={'text-xs font-medium text-grey-dark mb-1'}>Options</p>
+          <div className={'max-h-60 overflow-y-auto overflow-x-hidden'}>
+            {visibleOptions.map(opt => (
+              <div
+                key={opt}
+                className={'flex items-center gap-2 py-1.5 cursor-pointer rounded hover:bg-bg-tertiary/50 -mx-1 px-1'}
+                onClick={() => onToggle(activeCategory, opt)}
+              >
+                <Checkbox checked={selected.includes(opt)} onChange={() => onToggle(activeCategory, opt)} />
+                <span className={'text-sm text-black truncate'}>{opt}</span>
+              </div>
+            ))}
+            {isPool && visibleOptions.length === 0 && (
+              <p className={'text-sm text-label-tertiary py-1.5'}>No pools match &quot;{searchQuery}&quot;</p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  );
+
   return (
-    <div ref={ref} className={'absolute top-full left-0 z-50 flex flex-col lg:flex-row gap-1 pt-1'}>
+    <div ref={ref} className={'absolute top-full left-0 z-50 pt-1'}>
       <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] py-2 w-[160px]'}>
         <div className={'flex flex-col px-1'}>
           {FILTER_CATEGORIES.map(cat => {
             const hasSelection = cat === 'Amount' ? amountRange != null : (selections[cat] ?? []).length > 0;
             const isActive = cat === activeCategory;
             return (
-              <button
-                key={cat}
-                type={'button'}
-                onClick={() => onCategoryChange(cat)}
-                className={clsx(
-                  'flex items-center gap-2 px-2 py-2 rounded text-left w-full tr-d-all',
-                  isActive ? 'bg-bg-tertiary' : 'hover:bg-bg-tertiary/50'
+              <div key={cat} className={'relative'}>
+                <button
+                  type={'button'}
+                  onClick={() => onCategoryChange(cat)}
+                  className={clsx(
+                    'flex items-center gap-2 px-2 py-2 rounded text-left w-full tr-d-all',
+                    isActive ? 'bg-bg-tertiary' : 'hover:bg-bg-tertiary/50'
+                  )}
+                >
+                  <Icon name={'plus'} className={'size-[18px] shrink-0 text-blue'} />
+                  <span className={clsx('text-sm text-blue', hasSelection && 'font-medium')}>{cat}</span>
+                </button>
+                {isActive && (
+                  <div className={'absolute z-50 max-lg:top-full max-lg:left-0 max-lg:pt-1 lg:top-0 lg:left-full lg:pl-1'}>
+                    {panel}
+                  </div>
                 )}
-              >
-                <Icon name={'plus'} className={'size-[18px] shrink-0 text-blue'} />
-                <span className={clsx('text-sm text-blue', hasSelection && 'font-medium')}>{cat}</span>
-              </button>
+              </div>
             );
           })}
         </div>
       </div>
-
-      {isAmount ? (
-        <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)]'}>
-          <AmountRangePanel bounds={amountBounds} value={amountRange} onChange={onAmountRangeChange} />
-        </div>
-      ) : (
-        options.length > 0 && (
-          <div className={'bg-bg-primary border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] py-4 w-[280px] lg:w-[220px]'}>
-            <div className={'flex flex-col px-4'}>
-              {isPool && (
-                <div className={'flex items-center gap-2 mb-3 px-2.5 py-2 rounded-lg border border-stroke-primary'}>
-                  <SearchIcon className={'size-3.5 shrink-0'} />
-                  <input
-                    type={'text'}
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder={'Search'}
-                    className={'w-full text-sm text-black placeholder:text-label-tertiary outline-none bg-transparent'}
-                  />
-                </div>
-              )}
-              <p className={'text-xs font-medium text-grey-dark mb-1'}>Selected</p>
-              <div
-                className={'flex items-center gap-2 py-1.5 pb-4 border-b border-stroke-primary mb-3 cursor-pointer'}
-                onClick={() => onToggle(activeCategory, '__all__')}
-              >
-                <Checkbox checked={allChecked} onChange={() => onToggle(activeCategory, '__all__')} />
-                <span className={'text-sm text-black'}>All</span>
-              </div>
-              <p className={'text-xs font-medium text-grey-dark mb-1'}>Options</p>
-              <div className={'max-h-60 overflow-y-auto overflow-x-hidden'}>
-                {visibleOptions.map(opt => (
-                  <div
-                    key={opt}
-                    className={'flex items-center gap-2 py-1.5 cursor-pointer rounded hover:bg-bg-tertiary/50 -mx-1 px-1'}
-                    onClick={() => onToggle(activeCategory, opt)}
-                  >
-                    <Checkbox checked={selected.includes(opt)} onChange={() => onToggle(activeCategory, opt)} />
-                    <span className={'text-sm text-black truncate'}>{opt}</span>
-                  </div>
-                ))}
-                {isPool && visibleOptions.length === 0 && (
-                  <p className={'text-sm text-label-tertiary py-1.5'}>No pools match &quot;{searchQuery}&quot;</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )
-      )}
     </div>
   );
 };
