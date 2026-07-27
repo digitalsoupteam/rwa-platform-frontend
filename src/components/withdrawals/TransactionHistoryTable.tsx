@@ -1,9 +1,14 @@
 'use client';
 
 import React, { FC } from 'react';
-import { toast } from '@/components/ui';
+import { Icon, toast } from '@/components/ui';
+import type { IconType } from '@/components/ui';
 
-export type TxStatus = 'pending' | 'completed';
+// 'in_progress' and 'failed' have no data source today (the indexed
+// Transaction record is only ever written once confirmed on-chain) — they're
+// defined for when that lifecycle is tracked, same as the pool-list statuses
+// that aren't reachable yet either.
+export type TxStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 
 export interface WithdrawalTx {
   id: string;
@@ -19,17 +24,16 @@ export interface WithdrawalTx {
 
 const STATUS_LABELS: Record<TxStatus, string> = {
   pending: 'Pending',
+  in_progress: 'In progress',
   completed: 'Completed',
+  failed: 'Failed',
 };
 
-const STATUS_DOT_COLOR: Record<TxStatus, string> = {
-  pending: 'bg-[#F5A623]',
-  completed: 'bg-[#1ABF97]',
-};
-
-const STATUS_TEXT_COLOR: Record<TxStatus, string> = {
-  pending: 'text-[#F5A623]',
-  completed: 'text-[#1ABF97]',
+const STATUS_ICON: Record<TxStatus, IconType> = {
+  pending: 'time',
+  in_progress: 'inProgress',
+  completed: 'completed',
+  failed: 'failed',
 };
 
 function formatDate(ts: number): string {
@@ -95,7 +99,7 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
                 <span className={'text-sm text-blue w-[120px] shrink-0'}>{formatDate(tx.date)}</span>
                 <span className={'text-sm text-black w-[140px] shrink-0 text-right'}>{tx.amountRwa.toLocaleString()}</span>
                 <span className={'w-[110px] shrink-0 flex items-center gap-1.5 text-sm text-black'}>
-                  <span className={`size-1.5 rounded-full ${STATUS_DOT_COLOR[tx.status]}`} />
+                  <Icon name={STATUS_ICON[tx.status]} className={'size-4 shrink-0'} />
                   {STATUS_LABELS[tx.status]}
                 </span>
                 <button
@@ -121,13 +125,8 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
         ) : (
           txs.map(tx => (
             <div key={tx.id} className={'bg-bg-tertiary rounded-2xl p-4 flex flex-col gap-3'}>
-              <span
-                className={
-                  'w-fit flex items-center gap-1.5 bg-bg-primary border border-stroke-primary rounded-full px-3 py-1.5 text-xs font-medium ' +
-                  STATUS_TEXT_COLOR[tx.status]
-                }
-              >
-                <span className={`size-1.5 rounded-full ${STATUS_DOT_COLOR[tx.status]}`} />
+              <span className={'w-fit flex items-center gap-1.5 bg-bg-primary rounded-full px-3 py-1.5 text-xs font-medium text-black'}>
+                <Icon name={STATUS_ICON[tx.status]} className={'size-4 shrink-0'} />
                 {STATUS_LABELS[tx.status]}
               </span>
 

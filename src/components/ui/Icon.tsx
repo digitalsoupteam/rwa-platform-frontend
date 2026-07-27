@@ -13,6 +13,10 @@ import InfoSVG from '../../../public/icons/info.svg';
 import USDTSVG from '../../../public/icons/usdt.svg';
 import TriangleSVG from '../../../public/icons/triangle.svg';
 import CheckSVG from '../../../public/icons/check.svg';
+import TimeSVG from '../../../public/icons/time.svg';
+import InProgressSVG from '../../../public/icons/in-progress.svg';
+import CompletedSVG from '../../../public/icons/completed.svg';
+import FailedSVG from '../../../public/icons/failed.svg';
 
 const ICONS = {
   plus: PlusSVG,
@@ -27,7 +31,11 @@ const ICONS = {
   info: InfoSVG,
   usdt: USDTSVG,
   triangle: TriangleSVG,
-  check: CheckSVG
+  check: CheckSVG,
+  time: TimeSVG,
+  inProgress: InProgressSVG,
+  completed: CompletedSVG,
+  failed: FailedSVG
 } as const;
 
 export type IconType = keyof typeof ICONS;
