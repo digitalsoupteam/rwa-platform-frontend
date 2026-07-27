@@ -75,10 +75,10 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
       <div className={'max-lg:hidden overflow-hidden rounded-b-lg'}>
         <div className={'bg-bg-primary border-x border-b border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
           <span className={'text-sm font-medium text-grey-dark flex-1'}>Pool</span>
-          <span className={'text-sm font-medium text-grey-dark w-[120px] shrink-0'}>Transaction date</span>
-          <span className={'text-sm font-medium text-grey-dark w-[140px] shrink-0 text-right'}>Amount (RWA)</span>
-          <span className={'text-sm font-medium text-grey-dark w-[110px] shrink-0'}>Status</span>
-          <span className={'text-sm font-medium text-grey-dark w-[140px] shrink-0 text-right'}>TXID</span>
+          <span className={'text-sm font-medium text-grey-dark flex-1 text-right'}>Transaction date</span>
+          <span className={'text-sm font-medium text-grey-dark flex-1 text-right'}>Amount (RWA)</span>
+          <span className={'text-sm font-medium text-grey-dark flex-1 text-right'}>Status</span>
+          <span className={'text-sm font-medium text-grey-dark flex-1 text-right'}>TXID</span>
         </div>
 
         <div className={'flex flex-col'}>
@@ -96,16 +96,16 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
             txs.map(tx => (
               <div key={tx.id} className={'-mt-px bg-bg-primary border border-stroke-primary h-[52px] flex items-center px-3 gap-2'}>
                 <span className={'text-sm text-black flex-1 truncate'}>{tx.poolName}</span>
-                <span className={'text-sm text-blue w-[120px] shrink-0'}>{formatDate(tx.date)}</span>
-                <span className={'text-sm text-black w-[140px] shrink-0 text-right'}>{tx.amountRwa.toLocaleString()}</span>
-                <span className={'w-[110px] shrink-0 flex items-center gap-1.5 text-sm text-black'}>
+                <span className={'text-sm text-blue flex-1 text-right'}>{formatDate(tx.date)}</span>
+                <span className={'text-sm text-black flex-1 text-right'}>{tx.amountRwa.toLocaleString()}</span>
+                <span className={'flex-1 flex items-center justify-end gap-1.5 text-sm text-black'}>
                   <Icon name={STATUS_ICON[tx.status]} className={'size-4 shrink-0'} />
                   {STATUS_LABELS[tx.status]}
                 </span>
                 <button
                   type={'button'}
                   onClick={() => handleCopy(tx.txHash)}
-                  className={'w-[140px] shrink-0 flex items-center justify-end gap-1.5 text-sm text-black cursor-pointer'}
+                  className={'flex-1 flex items-center justify-end gap-1.5 text-sm text-black cursor-pointer'}
                 >
                   {truncateHash(tx.txHash)}
                   <CopyIcon />
