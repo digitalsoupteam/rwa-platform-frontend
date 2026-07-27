@@ -1,7 +1,6 @@
 import React, { FC, PropsWithChildren } from 'react';
 import Header from './Header';
 import Footer from './Footer';
-import { Onboarding } from '@/components/dashboard';
 
 const DashboardLayout: FC<PropsWithChildren> = ({ children }) => {
   return (
@@ -9,7 +8,6 @@ const DashboardLayout: FC<PropsWithChildren> = ({ children }) => {
       <Header />
       <main className={'grow'}>{children}</main>
       <Footer />
-      <Onboarding />
     </div>
   );
 };
