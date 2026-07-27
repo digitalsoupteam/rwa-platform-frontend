@@ -1,7 +1,7 @@
 'use client';
 
 import React, { FC } from 'react';
-import { Icon, toast } from '@/components/ui';
+import { Icon, Tooltip, toast } from '@/components/ui';
 import type { IconType } from '@/components/ui';
 
 // 'in_progress' and 'failed' have no data source today (the indexed
@@ -34,6 +34,13 @@ const STATUS_ICON: Record<TxStatus, IconType> = {
   in_progress: 'inProgress',
   completed: 'completed',
   failed: 'failed',
+};
+
+const STATUS_TOOLTIPS: Record<TxStatus, string> = {
+  pending: 'The payment has been initiated and is awaiting confirmation',
+  in_progress: 'Your transaction is being processed on the blockchain. It may take a few minutes',
+  completed: 'All investor have received their funds according to their share',
+  failed: 'This transaction failed. Please try again later',
 };
 
 function formatDate(ts: number): string {
@@ -102,6 +109,7 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
                 <span className={'flex-1 flex items-center justify-end gap-1.5 text-sm text-black'}>
                   <Icon name={STATUS_ICON[tx.status]} className={'size-4 shrink-0'} />
                   {STATUS_LABELS[tx.status]}
+                  <Tooltip content={STATUS_TOOLTIPS[tx.status]} />
                 </span>
                 <button
                   type={'button'}
@@ -129,6 +137,7 @@ const TransactionHistoryTable: FC<TransactionHistoryTableProps> = ({ txs, isLoad
               <span className={'w-fit flex items-center gap-1.5 bg-bg-primary rounded-full px-3 py-1.5 text-xs font-medium text-black'}>
                 <Icon name={STATUS_ICON[tx.status]} className={'size-4 shrink-0'} />
                 {STATUS_LABELS[tx.status]}
+                <Tooltip content={STATUS_TOOLTIPS[tx.status]} />
               </span>
 
               <div>

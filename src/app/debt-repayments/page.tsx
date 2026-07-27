@@ -13,7 +13,7 @@ import {
   STATUS_LABELS,
 } from '@/components/debt-repayments';
 import type { DebtRepaymentPool, DebtRepaymentStatus } from '@/components/debt-repayments';
-import { WithdrawalFilterModal, TransactionHistoryTable } from '@/components/withdrawals';
+import { WithdrawalFilterModal, TransactionHistoryTable, TX_STATUS_LABELS } from '@/components/withdrawals';
 import type { FilterCategory, PeriodRange, WithdrawalTx } from '@/components/withdrawals';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { GET_COMPANIES } from '@/lib/company/operations';
@@ -116,6 +116,10 @@ const DebtRepaymentsPage: FC = () => {
 
   const [historyPage, setHistoryPage] = useState(1);
   const [historyMobileVisibleCount, setHistoryMobileVisibleCount] = useState(ROWS_PER_PAGE);
+  const [historyFilterOpen, setHistoryFilterOpen] = useState(false);
+  const [historyActiveFilterCategory, setHistoryActiveFilterCategory] = useState<FilterCategory>('Status');
+  const [historyFilterSelections, setHistoryFilterSelections] = useState<Record<string, string[]>>({});
+  const [historyPeriodRange, setHistoryPeriodRange] = useState<PeriodRange | null>(null);
 
   // Query 1: companies owned directly by the current user
   const { data: companiesOwnedData } = useQuery(GET_COMPANIES, {
@@ -258,9 +262,61 @@ const DebtRepaymentsPage: FC = () => {
       .sort((a, b) => b.date - a.date);
   }, [rawTxs, pools]);
 
-  const historyTotalPages = Math.max(1, Math.ceil(historyTxs.length / ROWS_PER_PAGE));
-  const paginatedHistory = historyTxs.slice((historyPage - 1) * ROWS_PER_PAGE, historyPage * ROWS_PER_PAGE);
-  const mobileHistory = historyTxs.slice(0, historyMobileVisibleCount);
+  const historyCategoryOptions = useMemo<Partial<Record<FilterCategory, string[]>>>(
+    () => ({
+      Status: Object.values(TX_STATUS_LABELS),
+      Pool: [...new Set(historyTxs.map(tx => tx.poolName))],
+    }),
+    [historyTxs]
+  );
+
+  const historyActiveFilterCount = useMemo(
+    () => Object.values(historyFilterSelections).filter(v => v.length > 0).length + (historyPeriodRange ? 1 : 0),
+    [historyFilterSelections, historyPeriodRange]
+  );
+
+  const handleHistoryToggle = (category: FilterCategory, value: string) => {
+    if (value === '__all__') {
+      setHistoryFilterSelections(prev => ({ ...prev, [category]: [] }));
+      return;
+    }
+    setHistoryFilterSelections(prev => {
+      const current = prev[category] ?? [];
+      const next = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+      return { ...prev, [category]: next };
+    });
+  };
+
+  const filteredHistoryTxs = useMemo(() => {
+    let rows = historyTxs;
+
+    const statusSel = historyFilterSelections['Status'] ?? [];
+    if (statusSel.length > 0) {
+      rows = rows.filter(tx => statusSel.includes(TX_STATUS_LABELS[tx.status]));
+    }
+
+    const poolSel = historyFilterSelections['Pool'] ?? [];
+    if (poolSel.length > 0) {
+      rows = rows.filter(tx => poolSel.includes(tx.poolName));
+    }
+
+    if (historyPeriodRange) {
+      const fromTs = new Date(historyPeriodRange.from).getTime() / 1000;
+      const toTs = new Date(historyPeriodRange.to).getTime() / 1000 + 86400; // inclusive of the whole "to" day
+      rows = rows.filter(tx => tx.date >= fromTs && tx.date < toTs);
+    }
+
+    return rows;
+  }, [historyTxs, historyFilterSelections, historyPeriodRange]);
+
+  const historyTotalPages = Math.max(1, Math.ceil(filteredHistoryTxs.length / ROWS_PER_PAGE));
+  const paginatedHistory = filteredHistoryTxs.slice((historyPage - 1) * ROWS_PER_PAGE, historyPage * ROWS_PER_PAGE);
+  const mobileHistory = filteredHistoryTxs.slice(0, historyMobileVisibleCount);
+
+  useEffect(() => {
+    setHistoryMobileVisibleCount(ROWS_PER_PAGE);
+    setHistoryPage(1);
+  }, [historyFilterSelections, historyPeriodRange]);
 
   const handlePay = (row: DebtRepaymentPool) => {
     const derived = derivedRows.find(r => r.row.id === row.id);
@@ -453,20 +509,55 @@ const DebtRepaymentsPage: FC = () => {
                 <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
               </div>
 
-              <div className={'max-lg:hidden'}>
-                <TransactionHistoryTable txs={paginatedHistory} isLoading={txLoading} />
-              </div>
-              <div className={'lg:hidden flex flex-col gap-3'}>
-                <TransactionHistoryTable txs={mobileHistory} isLoading={txLoading} />
-                {historyMobileVisibleCount < historyTxs.length && (
-                  <Button
-                    visualType={'quinary'}
-                    className={'w-full justify-center'}
-                    onClick={() => setHistoryMobileVisibleCount(c => c + ROWS_PER_PAGE)}
-                  >
-                    Show more
+              <div className={'flex flex-col'}>
+                <div
+                  className={
+                    'bg-bg-primary border border-stroke-primary rounded-t-lg flex justify-start px-3 py-4 relative z-10 ' +
+                    'max-lg:bg-transparent max-lg:border-0 max-lg:rounded-none max-lg:px-0 max-lg:py-0'
+                  }
+                >
+                  <Button visualType={'quinary'} onClick={() => setHistoryFilterOpen(prev => !prev)}>
+                    <Icon name={'plus'} className={'size-3.5'} />
+                    Filter
+                    {historyActiveFilterCount > 0 && (
+                      <span
+                        className={
+                          'bg-blue text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center leading-none'
+                        }
+                      >
+                        {historyActiveFilterCount}
+                      </span>
+                    )}
                   </Button>
-                )}
+                  <WithdrawalFilterModal
+                    open={historyFilterOpen}
+                    onClose={() => setHistoryFilterOpen(false)}
+                    categories={['Status', 'Period', 'Pool']}
+                    activeCategory={historyActiveFilterCategory}
+                    onCategoryChange={setHistoryActiveFilterCategory}
+                    selections={historyFilterSelections}
+                    onToggle={handleHistoryToggle}
+                    categoryOptions={historyCategoryOptions}
+                    periodRange={historyPeriodRange}
+                    onPeriodRangeChange={setHistoryPeriodRange}
+                  />
+                </div>
+
+                <div className={'max-lg:hidden'}>
+                  <TransactionHistoryTable txs={paginatedHistory} isLoading={txLoading} />
+                </div>
+                <div className={'lg:hidden flex flex-col gap-3'}>
+                  <TransactionHistoryTable txs={mobileHistory} isLoading={txLoading} />
+                  {historyMobileVisibleCount < filteredHistoryTxs.length && (
+                    <Button
+                      visualType={'quinary'}
+                      className={'w-full justify-center'}
+                      onClick={() => setHistoryMobileVisibleCount(c => c + ROWS_PER_PAGE)}
+                    >
+                      Show more
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className={'max-lg:hidden'}>
