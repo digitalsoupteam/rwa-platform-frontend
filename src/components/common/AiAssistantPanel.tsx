@@ -11,15 +11,14 @@ import {
   GET_USER_ASSISTANTS,
   UPDATE_ASSISTANT,
 } from '@/lib/assistant/operations';
-import { getRememberedRole, rememberMessageRoles } from '@/lib/assistant/messageRoles';
-import { AssistantContext } from '@/gql/graphql';
+import { AssistantContext, MessageSender } from '@/gql/graphql';
 import { Button, Icon, TextArea, toast } from '@/components/ui';
 import CrossSVG from '../../../public/icons/cross.svg';
 
 interface ChatMessage {
   id: string;
   text: string;
-  role: 'user' | 'assistant';
+  role: MessageSender;
 }
 
 interface AssistantSummary {
@@ -115,16 +114,12 @@ const AiAssistantPanel: FC<AiAssistantPanelProps> = ({ isOpen, onClose }) => {
     if (!historyData?.getMessageHistory) return;
 
     const chronological = [...historyData.getMessageHistory].reverse();
-    const inferred: Array<{ id: string; role: 'user' | 'assistant' }> = [];
+    const resolved = chronological.map(message => ({
+      id: message.id,
+      text: message.text,
+      role: message.sender,
+    }));
 
-    const resolved = chronological.map((message, index) => {
-      const remembered = getRememberedRole(message.id);
-      const role = remembered ?? (index % 2 === 0 ? 'user' : 'assistant');
-      if (!remembered) inferred.push({ id: message.id, role });
-      return { id: message.id, text: message.text, role };
-    });
-
-    if (inferred.length > 0) rememberMessageRoles(inferred);
     setMessages(resolved);
   }, [historyData]);
 
@@ -152,17 +147,13 @@ const AiAssistantPanel: FC<AiAssistantPanelProps> = ({ isOpen, onClose }) => {
     const isFirstMessage = messages.length === 0;
 
     setInputValue('');
-    setMessages(prev => [...prev, { id: `pending-${Date.now()}`, text, role: 'user' }]);
+    setMessages(prev => [...prev, { id: `pending-${Date.now()}`, text, role: MessageSender.User }]);
 
     try {
       const result = await createMessage({ variables: { input: { assistantId, text } } });
-      const [userMessage, aiMessage] = result.data?.createMessage ?? [];
-      if (userMessage && aiMessage) {
-        rememberMessageRoles([
-          { id: userMessage.id, role: 'user' },
-          { id: aiMessage.id, role: 'assistant' },
-        ]);
-        setMessages(prev => [...prev, { id: aiMessage.id, text: aiMessage.text, role: 'assistant' }]);
+      const [, aiMessage] = result.data?.createMessage ?? [];
+      if (aiMessage) {
+        setMessages(prev => [...prev, { id: aiMessage.id, text: aiMessage.text, role: aiMessage.sender }]);
       }
 
       if (isFirstMessage) {
@@ -240,7 +231,9 @@ const AiAssistantPanel: FC<AiAssistantPanelProps> = ({ isOpen, onClose }) => {
                 key={message.id}
                 className={clsx(
                   'max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm',
-                  message.role === 'user' ? 'self-end bg-blue-dark text-white' : 'self-start bg-grey-light text-black'
+                  message.role === MessageSender.User
+                    ? 'self-end bg-blue-dark text-white'
+                    : 'self-start bg-grey-light text-black'
                 )}
               >
                 {message.text}

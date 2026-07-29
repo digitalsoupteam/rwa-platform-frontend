@@ -36,6 +36,7 @@ export const CREATE_MESSAGE = graphql(`
       id
       assistantId
       text
+      sender
     }
   }
 `);
@@ -46,6 +47,7 @@ export const GET_MESSAGE_HISTORY = graphql(`
       id
       assistantId
       text
+      sender
     }
   }
 `);
