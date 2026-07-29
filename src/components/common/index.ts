@@ -10,6 +10,23 @@ import DetailedCalendar from './DetailedCalendar';
 import ShareMenu from './ShareMenu';
 import CountryChip from './CountryChip';
 import SocialLinksRow from './SocialLinksRow';
+import AiAssistantButton from './AiAssistantButton';
+import AiAssistantPanel from './AiAssistantPanel';
 
-export { FAQ, CallbackForm, Gallery, TokenizeAnyBusiness, WideGallery, Modal, ConfirmModal, Calendar, DetailedCalendar, ShareMenu, CountryChip, SocialLinksRow };
+export {
+  FAQ,
+  CallbackForm,
+  Gallery,
+  TokenizeAnyBusiness,
+  WideGallery,
+  Modal,
+  ConfirmModal,
+  Calendar,
+  DetailedCalendar,
+  ShareMenu,
+  CountryChip,
+  SocialLinksRow,
+  AiAssistantButton,
+  AiAssistantPanel,
+};
 export type { DateRange } from './DetailedCalendar';

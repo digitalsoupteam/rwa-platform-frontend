@@ -14,6 +14,10 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n": typeof types.CreateAssistantDocument,
+    "\n  query GetUserAssistants {\n    getUserAssistants {\n      id\n      name\n      contextPreferences\n    }\n  }\n": typeof types.GetUserAssistantsDocument,
+    "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      id\n      assistantId\n      text\n    }\n  }\n": typeof types.CreateMessageDocument,
+    "\n  query GetMessageHistory($assistantId: ID!) {\n    getMessageHistory(assistantId: $assistantId) {\n      id\n      assistantId\n      text\n    }\n  }\n": typeof types.GetMessageHistoryDocument,
     "\n  mutation Authenticate($input: AuthenticateInput!) {\n    authenticate(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": typeof types.AuthenticateDocument,
     "\n  mutation RefreshToken($input: RefreshTokenInput!) {\n    refreshToken(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": typeof types.RefreshTokenDocument,
     "\n  mutation RevokeTokens($input: RevokeTokensInput!) {\n    revokeTokens(input: $input) {\n      revokedCount\n    }\n  }\n": typeof types.RevokeTokensDocument,
@@ -94,6 +98,10 @@ type Documents = {
     "\n  query GetWithdrawalTransactions($input: GetTransactionsInput!) {\n    getTransactions(input: $input) {\n      id\n      from\n      to\n      poolAddress\n      transactionHash\n      amount\n      createdAt\n    }\n  }\n": typeof types.GetWithdrawalTransactionsDocument,
 };
 const documents: Documents = {
+    "\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n": types.CreateAssistantDocument,
+    "\n  query GetUserAssistants {\n    getUserAssistants {\n      id\n      name\n      contextPreferences\n    }\n  }\n": types.GetUserAssistantsDocument,
+    "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      id\n      assistantId\n      text\n    }\n  }\n": types.CreateMessageDocument,
+    "\n  query GetMessageHistory($assistantId: ID!) {\n    getMessageHistory(assistantId: $assistantId) {\n      id\n      assistantId\n      text\n    }\n  }\n": types.GetMessageHistoryDocument,
     "\n  mutation Authenticate($input: AuthenticateInput!) {\n    authenticate(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": types.AuthenticateDocument,
     "\n  mutation RefreshToken($input: RefreshTokenInput!) {\n    refreshToken(input: $input) {\n      userId\n      wallet\n      accessToken\n      refreshToken\n    }\n  }\n": types.RefreshTokenDocument,
     "\n  mutation RevokeTokens($input: RevokeTokensInput!) {\n    revokeTokens(input: $input) {\n      revokedCount\n    }\n  }\n": types.RevokeTokensDocument,
@@ -188,6 +196,22 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetUserAssistants {\n    getUserAssistants {\n      id\n      name\n      contextPreferences\n    }\n  }\n"): (typeof documents)["\n  query GetUserAssistants {\n    getUserAssistants {\n      id\n      name\n      contextPreferences\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      id\n      assistantId\n      text\n    }\n  }\n"): (typeof documents)["\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      id\n      assistantId\n      text\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetMessageHistory($assistantId: ID!) {\n    getMessageHistory(assistantId: $assistantId) {\n      id\n      assistantId\n      text\n    }\n  }\n"): (typeof documents)["\n  query GetMessageHistory($assistantId: ID!) {\n    getMessageHistory(assistantId: $assistantId) {\n      id\n      assistantId\n      text\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

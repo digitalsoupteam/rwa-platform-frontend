@@ -8,6 +8,7 @@ import { WagmiProvider } from 'wagmi';
 import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { bscTestnet } from 'wagmi/chains';
 import { Toaster } from 'sonner';
+import { AiAssistantButton } from '@/components/common';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -28,7 +29,10 @@ export function Providers({ children }: ProvidersProps) {
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              {children}
+              <AiAssistantButton />
+            </AuthProvider>
             <Toaster position='top-right' visibleToasts={5} />
           </RainbowKitProvider>
         </QueryClientProvider>
