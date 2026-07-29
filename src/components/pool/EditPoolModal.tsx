@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, ChangeEventHandler, DragEvent, useEffect, useRef, useState } from 'react';
+import React, { FC, ChangeEventHandler, DragEvent, FormEventHandler, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import clsx from 'clsx';
 import { useMutation } from '@apollo/client/react';
@@ -32,11 +32,7 @@ async function uploadPoolImage(poolId: string, file: File): Promise<string> {
   return json.imageUrl as string;
 }
 
-const STEPS = [
-  { label: 'Info' },
-  { label: 'Image' },
-  { label: 'Categories' },
-];
+const STEP_COUNT = 3;
 
 interface EditPoolModalProps {
   pool: AnyPool;
@@ -116,7 +112,7 @@ const EditPoolModal: FC<EditPoolModalProps> = ({ pool, isOpen, onClose }) => {
 
   const handleSubmit = async () => {
     try {
-      await editPool({
+      const result = await editPool({
         variables: {
           input: {
             id: pool.id,
@@ -129,10 +125,14 @@ const EditPoolModal: FC<EditPoolModalProps> = ({ pool, isOpen, onClose }) => {
           },
         },
       });
+
+      if (result.error) throw result.error;
+
       onClose();
       toast('Pool successfully updated!');
-    } catch {
-      toast('Failed to update pool. Please try again.', 'error');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update pool. Please try again.';
+      toast(message, 'error');
     }
   };
 
@@ -148,56 +148,63 @@ const EditPoolModal: FC<EditPoolModalProps> = ({ pool, isOpen, onClose }) => {
 
   const imageSrc = imageLink;
 
-  const isLast = step === STEPS.length - 1;
+  const step0NextHandler: FormEventHandler<HTMLFormElement> = evt => {
+    evt.preventDefault();
+    handleNext();
+  };
 
   return (
     <Modal isOpened={isOpen} closeModal={onClose}>
       {/* Header */}
-      <div className={'pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary'}>
-        <div className={'text-base font-medium'}>{STEPS[step].label}</div>
+      <div className={'pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-6'}>
+        <div className={'text-base font-medium'}>Update pool</div>
+        <div className={'text-xs text-text-secondary mt-0.5'}>Step {step + 1} of {STEP_COUNT}</div>
       </div>
 
-      {/* Step content */}
-      <div className={'px-4 py-5 min-h-[220px] flex flex-col'}>
-
-        {/* Step 0 — Info */}
-        {step === 0 && (
-          <div className={'flex flex-col gap-4 flex-1'}>
-            <div className={'flex flex-col gap-1.5'}>
-              <div className={'text-sm font-medium'}>
-                Pool name<span className={'text-red-bright'}>*</span>
-              </div>
-              <Input
-                placeholder={'For example, «Growth Pool Series A»'}
-                size={'sm'}
-                colorScheme={'light'}
-                errorMessage={errors.name}
-                type={'text'}
-                name={'poolName'}
-                value={nameValue}
-                onChange={nameChangeHandler}
-              />
+      {/* Step 0 — Info */}
+      {step === 0 && (
+        <form onSubmit={step0NextHandler}>
+          <div className={'px-4 mb-6'}>
+            <div className={'text-sm font-medium mb-3'}>
+              Pool name<span className={'text-red-bright'}>*</span>
             </div>
-            <div className={'flex flex-col gap-1.5'}>
-              <div className={'text-sm font-medium'}>
-                Description<span className={'text-red-bright'}>*</span>
-              </div>
-              <TextArea
-                className={'h-[110px]'}
-                maxLength={250}
-                errorMessage={errors.description}
-                placeholder={'Write a short description for this pool'}
-                name={'poolDescription'}
-                value={descriptionValue}
-                onChange={descriptionChangeHandler}
-              />
-            </div>
+            <Input
+              placeholder={'For example, «Growth Pool Series A»'}
+              size={'sm'}
+              colorScheme={'light'}
+              errorMessage={errors.name}
+              type={'text'}
+              name={'poolName'}
+              value={nameValue}
+              onChange={nameChangeHandler}
+            />
           </div>
-        )}
+          <div className={'px-4 mb-6'}>
+            <div className={'text-sm font-medium mb-3'}>
+              Description<span className={'text-red-bright'}>*</span>
+            </div>
+            <TextArea
+              className={'h-[110px]'}
+              maxLength={250}
+              errorMessage={errors.description}
+              placeholder={'Write a short description for this pool'}
+              name={'poolDescription'}
+              value={descriptionValue}
+              onChange={descriptionChangeHandler}
+            />
+          </div>
+          <div className={'px-4 flex justify-end'}>
+            <Button visualType={'quaternary'} type={'submit'}>
+              Next
+            </Button>
+          </div>
+        </form>
+      )}
 
-        {/* Step 1 — Image */}
-        {step === 1 && (
-          <div className={'flex flex-col gap-3 flex-1'}>
+      {/* Step 1 — Image */}
+      {step === 1 && (
+        <div>
+          <div className={'px-4 mb-6'}>
             <div
               className={clsx(
                 'relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-8 cursor-pointer tr-d-all overflow-hidden',
@@ -238,42 +245,39 @@ const EditPoolModal: FC<EditPoolModalProps> = ({ pool, isOpen, onClose }) => {
               <button
                 type='button'
                 onClick={e => { e.stopPropagation(); setImageLink(null); }}
-                className={'text-xs text-label-tertiary hover:text-red cursor-pointer tr-d-all self-start'}
+                className={'mt-3 text-xs text-label-tertiary hover:text-red cursor-pointer tr-d-all'}
               >
                 Remove image
               </button>
             )}
           </div>
-        )}
-
-        {/* Step 2 — Categories */}
-        {step === 2 && (
-          <div className={'flex-1'}>
-            <CategoryCheckboxes selected={selectedTags} onChange={setSelectedTags} title='Pool categories' />
-          </div>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className={'px-4 pb-4 flex justify-between items-center'}>
-        <span className={'text-xs text-label-tertiary'}>{step + 1} / {STEPS.length}</span>
-        <div className={'flex gap-2'}>
-          {step > 0 && (
+          <div className={'px-4 flex justify-between'}>
             <Button visualType={'quinary'} type={'button'} onClick={handleBack}>
               Back
             </Button>
-          )}
-          {!isLast ? (
             <Button visualType={'quaternary'} type={'button'} onClick={handleNext}>
               Next
             </Button>
-          ) : (
+          </div>
+        </div>
+      )}
+
+      {/* Step 2 — Categories */}
+      {step === 2 && (
+        <div>
+          <div className={'px-4 mb-6'}>
+            <CategoryCheckboxes selected={selectedTags} onChange={setSelectedTags} title='Pool categories' />
+          </div>
+          <div className={'px-4 flex justify-between'}>
+            <Button visualType={'quinary'} type={'button'} onClick={handleBack}>
+              Back
+            </Button>
             <Button visualType={'quaternary'} type={'button'} onClick={handleSubmit} disabled={loading || uploading}>
               {loading ? 'Saving…' : 'Apply'}
             </Button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </Modal>
   );
 };

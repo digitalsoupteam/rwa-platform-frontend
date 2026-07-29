@@ -4,15 +4,31 @@ import { useParams, useRouter } from 'next/navigation';
 import React, { ChangeEventHandler, FC, FormEventHandler, useEffect, useState } from 'react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
-import { Button, ButtonBorderDash, Icon, Input, TextArea, Title, toast } from '@/components/ui';
+import {
+  Button,
+  ButtonBorderDash,
+  CountrySelect,
+  EMPTY_SOCIALS,
+  Icon,
+  Input,
+  socialsFromArray,
+  socialsToArray,
+  SocialsErrors,
+  SocialsInput,
+  SocialsValue,
+  TextArea,
+  Title,
+  toast,
+  validateSocials,
+} from '@/components/ui';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { GET_COMPANY, UPDATE_COMPANY, DELETE_COMPANY } from '@/lib/company/operations';
 import { CREATE_BUSINESS, GET_BUSINESSES } from '@/lib/business/operations';
 import { GET_POOLS } from '@/lib/pool/operations';
-import { Modal, ShareMenu } from '@/components/common';
-import { CategoryCheckboxes, TeamSection } from '@/components/dashboard';
+import { CountryChip, Modal, ShareMenu, SocialLinksRow } from '@/components/common';
+import { BusinessTypeSelect, CategoryCheckboxes, TeamSection } from '@/components/dashboard';
 import { ProjectCard } from '@/components/project';
-import { BusinessOwnerType } from '@/gql/graphql';
+import { BusinessOwnerType, BusinessType } from '@/gql/graphql';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 
@@ -21,13 +37,20 @@ const CompanyPage: FC = () => {
   const [deletingCompanyStatus, setDeletingCompanyStatus] = useState<'idle' | 'approve' | 'pending'>('idle');
   const [nameValue, setNameValue] = useState('');
   const [aboutValue, setAboutValue] = useState('');
-  const [errors, setErrors] = useState({ name: '', about: '' });
+  const [countryValue, setCountryValue] = useState<string | null>(null);
+  const [socialsValue, setSocialsValue] = useState<SocialsValue>(EMPTY_SOCIALS);
+  const [socialsErrors, setSocialsErrors] = useState<SocialsErrors>({});
+  const [errors, setErrors] = useState({ name: '', about: '', country: '' });
 
   const [isCreateProjectModalOpened, setIsCreateProjectModalOpened] = useState(false);
   const [projectStep, setProjectStep] = useState<1 | 2>(1);
   const [projectNameValue, setProjectNameValue] = useState('');
   const [projectAboutValue, setProjectAboutValue] = useState('');
-  const [projectErrors, setProjectErrors] = useState({ name: '', about: '' });
+  const [projectCountryValue, setProjectCountryValue] = useState<string | null>(null);
+  const [projectBusinessType, setProjectBusinessType] = useState<BusinessType | null>(null);
+  const [projectSocialsValue, setProjectSocialsValue] = useState<SocialsValue>(EMPTY_SOCIALS);
+  const [projectSocialsErrors, setProjectSocialsErrors] = useState<SocialsErrors>({});
+  const [projectErrors, setProjectErrors] = useState({ name: '', about: '', country: '', businessType: '' });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const params = useParams();
@@ -76,6 +99,7 @@ const CompanyPage: FC = () => {
 
   const validateName = (value?: string) => (value || nameValue).length > 2;
   const validateAbout = (value?: string) => (value || aboutValue).length > 2;
+  const validateCountry = (value?: string | null) => Boolean(value ?? countryValue);
 
   const nameChangeHandler: ChangeEventHandler<HTMLInputElement> = evt => {
     if (validateName(evt.target.value)) setErrors(prev => ({ ...prev, name: '' }));
@@ -85,6 +109,10 @@ const CompanyPage: FC = () => {
     if (validateAbout(evt.target.value)) setErrors(prev => ({ ...prev, about: '' }));
     setAboutValue(evt.target.value);
   };
+  const countryChangeHandler = (code: string) => {
+    if (validateCountry(code)) setErrors(prev => ({ ...prev, country: '' }));
+    setCountryValue(code);
+  };
 
   const formSubmitHandler: FormEventHandler<HTMLFormElement> = async evt => {
     evt.preventDefault();
@@ -93,31 +121,40 @@ const CompanyPage: FC = () => {
 
     const isNameValid = validateName();
     const isAboutValid = validateAbout();
+    const isCountryValid = validateCountry();
+    const newSocialsErrors = validateSocials(socialsValue);
 
     if (!isNameValid) currentErrors.name = 'Enter company name';
     if (!isAboutValid) currentErrors.about = 'Enter about';
+    if (!isCountryValid) currentErrors.country = 'Select country';
 
     setErrors(currentErrors);
+    setSocialsErrors(newSocialsErrors);
 
-    if (!isAboutValid || !isNameValid) return;
+    if (!isAboutValid || !isNameValid || !isCountryValid || Object.keys(newSocialsErrors).length > 0) return;
 
     try {
-      await updateCompany({
+      const result = await updateCompany({
         variables: {
           input: {
             id,
             updateData: {
               name: nameValue,
               description: aboutValue,
+              country: countryValue,
+              socials: socialsToArray(socialsValue),
             },
           },
         },
       });
 
+      if (result.error) throw result.error;
+
       setIsEditModalOpened(false);
       toast('Company successfully updated!');
     } catch (err) {
-      toast('Failed to update company. Please try again.', 'error');
+      const message = err instanceof Error ? err.message : 'Failed to update company. Please try again.';
+      toast(message, 'error');
     }
   };
 
@@ -145,6 +182,8 @@ const CompanyPage: FC = () => {
 
   const validateProjectName = (value?: string) => (value ?? projectNameValue).length > 2;
   const validateProjectAbout = (value?: string) => (value ?? projectAboutValue).length > 2;
+  const validateProjectCountry = (value?: string | null) => Boolean(value ?? projectCountryValue);
+  const validateProjectBusinessType = (value?: BusinessType | null) => Boolean(value ?? projectBusinessType);
 
   const projectNameChangeHandler: ChangeEventHandler<HTMLInputElement> = evt => {
     if (validateProjectName(evt.target.value)) setProjectErrors(prev => ({ ...prev, name: '' }));
@@ -154,13 +193,25 @@ const CompanyPage: FC = () => {
     if (validateProjectAbout(evt.target.value)) setProjectErrors(prev => ({ ...prev, about: '' }));
     setProjectAboutValue(evt.target.value);
   };
+  const projectCountryChangeHandler = (code: string) => {
+    if (validateProjectCountry(code)) setProjectErrors(prev => ({ ...prev, country: '' }));
+    setProjectCountryValue(code);
+  };
+  const projectBusinessTypeChangeHandler = (value: BusinessType) => {
+    if (validateProjectBusinessType(value)) setProjectErrors(prev => ({ ...prev, businessType: '' }));
+    setProjectBusinessType(value);
+  };
 
   const closeCreateProjectModal = () => {
     setIsCreateProjectModalOpened(false);
     setProjectStep(1);
     setProjectNameValue('');
     setProjectAboutValue('');
-    setProjectErrors({ name: '', about: '' });
+    setProjectCountryValue(null);
+    setProjectBusinessType(null);
+    setProjectSocialsValue(EMPTY_SOCIALS);
+    setProjectSocialsErrors({});
+    setProjectErrors({ name: '', about: '', country: '', businessType: '' });
     setSelectedCategories([]);
   };
 
@@ -170,19 +221,27 @@ const CompanyPage: FC = () => {
     const currentErrors = { ...projectErrors };
     const isNameValid = validateProjectName();
     const isAboutValid = validateProjectAbout();
+    const isCountryValid = validateProjectCountry();
+    const isBusinessTypeValid = validateProjectBusinessType();
 
     if (!isNameValid) currentErrors.name = 'Enter project name';
     if (!isAboutValid) currentErrors.about = 'Enter description';
+    if (!isCountryValid) currentErrors.country = 'Select country';
+    if (!isBusinessTypeValid) currentErrors.businessType = 'Select business type';
 
     setProjectErrors(currentErrors);
-    if (!isNameValid || !isAboutValid) return;
+    if (!isNameValid || !isAboutValid || !isCountryValid || !isBusinessTypeValid) return;
 
     setProjectStep(2);
   };
 
   const createProjectSubmitHandler = async () => {
+    const newSocialsErrors = validateSocials(projectSocialsValue);
+    setProjectSocialsErrors(newSocialsErrors);
+    if (Object.keys(newSocialsErrors).length > 0) return;
+
     try {
-      await createBusiness({
+      const result = await createBusiness({
         variables: {
           input: {
             name: projectNameValue,
@@ -191,15 +250,21 @@ const CompanyPage: FC = () => {
             ownerType: BusinessOwnerType.Company,
             chainId: '97',
             tags: selectedCategories,
+            country: projectCountryValue,
+            businessType: projectBusinessType,
+            socials: socialsToArray(projectSocialsValue),
           },
         },
       });
 
+      if (result.error) throw result.error;
+
       await refetchBusinesses();
       closeCreateProjectModal();
       toast('Project successfully created!');
-    } catch {
-      toast('Failed to create project. Please try again.', 'error');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create project. Please try again.';
+      toast(message, 'error');
     }
   };
 
@@ -208,6 +273,8 @@ const CompanyPage: FC = () => {
 
     setNameValue(companyData.getCompany.name);
     setAboutValue(companyData.getCompany.description);
+    setCountryValue(companyData.getCompany.country ?? null);
+    setSocialsValue(socialsFromArray(companyData.getCompany.socials));
   }, [companyData]);
 
   const company = companyData?.getCompany;
@@ -230,12 +297,16 @@ const CompanyPage: FC = () => {
               />
               <div className={'flex flex-col gap-6 border-b-1 border-stroke-primary pb-6 lg:grid lg:grid-cols-2'}>
                 <div>
-                  <Title className={'mb-4'} size={'xs'}>
-                    {updatedCompany?.updateCompany.name || companyData.getCompany.name}
-                  </Title>
-                  <div className={'text-base text-black max-w-[560px]'}>
+                  <div className={'flex items-center gap-3 mb-4'}>
+                    <Title size={'xs'}>
+                      {updatedCompany?.updateCompany.name || companyData.getCompany.name}
+                    </Title>
+                    <CountryChip code={updatedCompany?.updateCompany.country ?? companyData.getCompany.country} />
+                  </div>
+                  <div className={'text-base text-black max-w-[560px] mb-4'}>
                     {updatedCompany?.updateCompany.description || companyData.getCompany.description}
                   </div>
+                  <SocialLinksRow socials={updatedCompany?.updateCompany.socials ?? companyData.getCompany.socials} />
                 </div>
                 <div className={'flex gap-2 lg:items-end lg:justify-end'}>
                   {canEdit && (
@@ -290,6 +361,8 @@ const CompanyPage: FC = () => {
                       riskScore: business.riskScore,
                       poolsCount: stats?.count ?? 0,
                       rewardPercent: avgReward,
+                      country: business.country,
+                      businessType: business.businessType,
                     }}
                   />
                 </Link>
@@ -350,6 +423,22 @@ const CompanyPage: FC = () => {
                 onChange={projectAboutChangeHandler}
               />
             </div>
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium mb-3'}>
+                Country<span className={'text-red-bright'}>*</span>
+              </div>
+              <CountrySelect
+                value={projectCountryValue}
+                onChange={projectCountryChangeHandler}
+                errorMessage={projectErrors.country}
+              />
+            </div>
+            <div className={'px-4 mb-6'}>
+              <BusinessTypeSelect value={projectBusinessType} onChange={projectBusinessTypeChangeHandler} />
+              {projectErrors.businessType && (
+                <div className={'pt-2 text-xs/[1] text-red-bright'}>{projectErrors.businessType}</div>
+              )}
+            </div>
             <div className={'px-4 flex justify-end'}>
               <Button visualType={'quaternary'} type={'submit'}>
                 Next
@@ -362,6 +451,10 @@ const CompanyPage: FC = () => {
           <div>
             <div className={'px-4 mb-6'}>
               <CategoryCheckboxes selected={selectedCategories} onChange={setSelectedCategories} />
+            </div>
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium uppercase mb-3'}>Socials</div>
+              <SocialsInput value={projectSocialsValue} onChange={setProjectSocialsValue} errors={projectSocialsErrors} />
             </div>
             <div className={'px-4 flex justify-between'}>
               <Button visualType={'quinary'} type={'button'} onClick={() => setProjectStep(1)}>
@@ -398,6 +491,13 @@ const CompanyPage: FC = () => {
           </div>
           <div className={'px-4 mb-6'}>
             <div className={'text-sm font-medium mb-3'}>
+              Country
+              <span className={'text-red-bright'}>*</span>
+            </div>
+            <CountrySelect value={countryValue} onChange={countryChangeHandler} errorMessage={errors.country} />
+          </div>
+          <div className={'px-4 mb-6'}>
+            <div className={'text-sm font-medium mb-3'}>
               About
               <span className={'text-red-bright'}>*</span>
             </div>
@@ -410,6 +510,10 @@ const CompanyPage: FC = () => {
               value={aboutValue}
               onChange={aboutChangeHandler}
             />
+          </div>
+          <div className={'px-4 mb-6'}>
+            <div className={'text-sm font-medium uppercase mb-3'}>Socials</div>
+            <SocialsInput value={socialsValue} onChange={setSocialsValue} errors={socialsErrors} />
           </div>
           <div className={'px-4 flex justify-between'}>
             <Button className={'relative'} visualType={'quinary'} type={'button'} onClick={deleteCompanyHandler}>

@@ -8,6 +8,8 @@ import ConfirmModal from './ConfirmModal';
 import Calendar from './Calendar';
 import DetailedCalendar from './DetailedCalendar';
 import ShareMenu from './ShareMenu';
+import CountryChip from './CountryChip';
+import SocialLinksRow from './SocialLinksRow';
 
-export { FAQ, CallbackForm, Gallery, TokenizeAnyBusiness, WideGallery, Modal, ConfirmModal, Calendar, DetailedCalendar, ShareMenu };
+export { FAQ, CallbackForm, Gallery, TokenizeAnyBusiness, WideGallery, Modal, ConfirmModal, Calendar, DetailedCalendar, ShareMenu, CountryChip, SocialLinksRow };
 export type { DateRange } from './DetailedCalendar';

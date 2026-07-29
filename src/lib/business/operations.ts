@@ -9,6 +9,12 @@ export const GET_BUSINESS_WITH_RISK = gql`
       description
       tags
       riskScore
+      country
+      businessType
+      socials {
+        type
+        url
+      }
       ownerId
       ownerType
       image
@@ -25,6 +31,12 @@ export const GET_BUSINESS = graphql(`
       name
       description
       tags
+      country
+      businessType
+      socials {
+        type
+        url
+      }
       ownerId
       ownerType
       chainId
@@ -74,6 +86,12 @@ export const CREATE_BUSINESS = graphql(`
       id
       name
       description
+      country
+      businessType
+      socials {
+        type
+        url
+      }
       ownerId
       ownerType
       chainId
@@ -92,6 +110,12 @@ export const EDIT_BUSINESS = graphql(`
       id
       name
       description
+      country
+      businessType
+      socials {
+        type
+        url
+      }
       image
       imageUrl
       fileId
@@ -107,6 +131,12 @@ export const GET_BUSINESSES = graphql(`
       description
       tags
       riskScore
+      country
+      businessType
+      socials {
+        type
+        url
+      }
       ownerId
       ownerType
       chainId

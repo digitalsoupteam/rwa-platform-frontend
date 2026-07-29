@@ -10,7 +10,9 @@ import type { MarketplaceProject } from '@/components/marketplace';
 import { RISK_SCORE_RANGES, POOL_STAGES, POOL_TYPES, type PoolStage, type PoolType } from '@/components/marketplace/MarketplaceFilters';
 import type { FilterChip } from '@/components/marketplace/MobileFiltersModal';
 import { GET_POOLS } from '@/lib/pool/operations';
+import { GET_BUSINESSES } from '@/lib/business/operations';
 import { formatTicker } from '@/lib/formatTicker';
+import { getCountryByCode } from '@/lib/countries';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -125,6 +127,7 @@ const Marketplace: FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStages, setSelectedStages] = useState<PoolStage[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<PoolType[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
   const activeChips: FilterChip[] = [
     ...selectedRanges.map(i => ({
@@ -143,6 +146,10 @@ const Marketplace: FC = () => {
       label: POOL_TYPES.find(t => t.value === type)!.label,
       onRemove: () => setSelectedTypes(prev => prev.filter(t => t !== type)),
     })),
+    ...selectedCountries.map(code => ({
+      label: getCountryByCode(code)?.name ?? code,
+      onRemove: () => setSelectedCountries(prev => prev.filter(c => c !== code)),
+    })),
   ];
 
   const clearAllFilters = () => {
@@ -150,9 +157,14 @@ const Marketplace: FC = () => {
     setSelectedCategories([]);
     setSelectedStages([]);
     setSelectedTypes([]);
+    setSelectedCountries([]);
   };
 
   const { data, loading, error } = useQuery(GET_POOLS, {
+    variables: { input: { filter: {} } },
+  });
+
+  const { data: businessesData } = useQuery(GET_BUSINESSES, {
     variables: { input: { filter: {} } },
   });
 
@@ -161,6 +173,13 @@ const Marketplace: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rawPools: AnyPool[] = (data as any)?.getPools ?? [];
   const categories: string[] = Array.from(new Set<string>(rawPools.flatMap((p: AnyPool) => p.tags ?? []))).sort();
+
+  const businessCountryMap: Record<string, string> = Object.fromEntries(
+    (businessesData?.getBusinesses ?? [])
+      .filter(b => !!b.country)
+      .map(b => [b.id, b.country as string])
+  );
+  const countries: string[] = Array.from(new Set(Object.values(businessCountryMap))).sort();
 
   function getPoolStage(pool: AnyPool): PoolStage {
     if (pool.isFullyReturned) return 'paying_profit';
@@ -182,6 +201,10 @@ const Marketplace: FC = () => {
       if (selectedTypes.length === 0) return true;
       const poolType: PoolType = pool.fixedSell ? 'fixed' : 'flexible';
       return selectedTypes.includes(poolType);
+    })
+    .filter((pool: AnyPool) => {
+      if (selectedCountries.length === 0) return true;
+      return selectedCountries.includes(businessCountryMap[pool.businessId]);
     })
     .map(poolToProject)
     .filter((p: MarketplaceProject) => {
@@ -231,7 +254,7 @@ const Marketplace: FC = () => {
           <div className={'flex gap-5 items-start'}>
             {/* Sidebar (desktop only) */}
             <div className={'hidden lg:block w-[272px] shrink-0 sticky top-24'}>
-              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} selectedRanges={selectedRanges} onRangeChange={setSelectedRanges} categories={categories} selectedCategories={selectedCategories} onCategoryChange={setSelectedCategories} selectedStages={selectedStages} onStageChange={setSelectedStages} selectedTypes={selectedTypes} onTypeChange={setSelectedTypes} />
+              <MarketplaceFilters sortBy={sortBy} onSortChange={setSortBy} selectedRanges={selectedRanges} onRangeChange={setSelectedRanges} categories={categories} selectedCategories={selectedCategories} onCategoryChange={setSelectedCategories} selectedStages={selectedStages} onStageChange={setSelectedStages} selectedTypes={selectedTypes} onTypeChange={setSelectedTypes} countries={countries} selectedCountries={selectedCountries} onCountryChange={setSelectedCountries} />
             </div>
 
             {/* Content column */}
@@ -342,6 +365,9 @@ const Marketplace: FC = () => {
           onStageChange={setSelectedStages}
           selectedTypes={selectedTypes}
           onTypeChange={setSelectedTypes}
+          countries={countries}
+          selectedCountries={selectedCountries}
+          onCountryChange={setSelectedCountries}
         />
       )}
     </CommonLayout>

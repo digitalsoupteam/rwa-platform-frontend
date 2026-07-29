@@ -13,8 +13,12 @@ import Pagination from './Pagination';
 import Checkbox from './Checkbox';
 import Radio from './Radio';
 import Tooltip from './Tooltip';
+import CountrySelect from './CountrySelect';
+import SocialsInput from './SocialsInput';
 
 import type { IconType } from './Icon';
+import type { SocialLinkValue, SocialsErrors, SocialsValue } from './SocialsInput';
 
-export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination, Checkbox, Radio, Tooltip };
-export type { IconType };
+export { Button, Title, Socials, Card, ButtonLink, Input, SwiperControls, Icon, ButtonBorderDash, TextArea, Toast, toast, Pagination, Checkbox, Radio, Tooltip, CountrySelect, SocialsInput };
+export { EMPTY_SOCIALS, socialsToArray, socialsFromArray, validateSocials } from './SocialsInput';
+export type { IconType, SocialLinkValue, SocialsValue, SocialsErrors };

@@ -3,8 +3,22 @@
 import React, { ChangeEventHandler, FC, FormEventHandler, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Breadcrumbs, CategoryCheckboxes, DocumentsSection, FaqSection } from '@/components/dashboard';
-import { Button, Input, TextArea, Title, toast } from '@/components/ui';
+import { Breadcrumbs, BusinessTypeSelect, CategoryCheckboxes, DocumentsSection, FaqSection } from '@/components/dashboard';
+import {
+  Button,
+  CountrySelect,
+  EMPTY_SOCIALS,
+  Input,
+  socialsFromArray,
+  socialsToArray,
+  SocialsErrors,
+  SocialsInput,
+  SocialsValue,
+  TextArea,
+  Title,
+  toast,
+  validateSocials,
+} from '@/components/ui';
 import { useMutation, useQuery, useApolloClient } from '@apollo/client/react';
 import {
   EDIT_BUSINESS,
@@ -17,8 +31,9 @@ import { GET_SIGNATURE_TASK } from '@/lib/pool/operations';
 import { ERC20_APPROVE_ABI, FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS } from '@/lib/contracts';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { NewsList } from '@/components/news';
-import { Modal } from '@/components/common';
+import { CountryChip, Modal, SocialLinksRow } from '@/components/common';
 import { PoolsSection } from '@/components/pool';
+import { BusinessType } from '@/gql/graphql';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { useAuth } from '@/lib/auth/AuthContext';
 
@@ -44,10 +59,15 @@ const DEPLOY_STATUS_LABELS: Record<DeployStatus, string> = {
 
 const ProjectPage: FC = () => {
   const [isEditModalOpened, setIsEditModalOpened] = useState(false);
+  const [editStep, setEditStep] = useState<1 | 2>(1);
   const [nameValue, setNameValue] = useState('');
   const [aboutValue, setAboutValue] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [errors, setErrors] = useState({ name: '', about: '' });
+  const [countryValue, setCountryValue] = useState<string | null>(null);
+  const [businessTypeValue, setBusinessTypeValue] = useState<BusinessType | null>(null);
+  const [socialsValue, setSocialsValue] = useState<SocialsValue>(EMPTY_SOCIALS);
+  const [socialsErrors, setSocialsErrors] = useState<SocialsErrors>({});
+  const [errors, setErrors] = useState({ name: '', about: '', country: '', businessType: '' });
 
   const [deployStatus, setDeployStatus] = useState<DeployStatus>('idle');
   const [deployTxHash, setDeployTxHash] = useState<`0x${string}` | undefined>();
@@ -236,6 +256,8 @@ const ProjectPage: FC = () => {
 
   const validateName = (value?: string) => (value ?? nameValue).length > 2;
   const validateAbout = (value?: string) => (value ?? aboutValue).length > 2;
+  const validateCountry = (value?: string | null) => Boolean(value ?? countryValue);
+  const validateBusinessType = (value?: BusinessType | null) => Boolean(value ?? businessTypeValue);
 
   const nameChangeHandler: ChangeEventHandler<HTMLInputElement> = evt => {
     if (validateName(evt.target.value)) setErrors(prev => ({ ...prev, name: '' }));
@@ -247,21 +269,53 @@ const ProjectPage: FC = () => {
     setAboutValue(evt.target.value);
   };
 
-  const formSubmitHandler: FormEventHandler<HTMLFormElement> = async evt => {
+  const countryChangeHandler = (code: string) => {
+    if (validateCountry(code)) setErrors(prev => ({ ...prev, country: '' }));
+    setCountryValue(code);
+  };
+
+  const businessTypeChangeHandler = (value: BusinessType) => {
+    if (validateBusinessType(value)) setErrors(prev => ({ ...prev, businessType: '' }));
+    setBusinessTypeValue(value);
+  };
+
+  const openEditModal = () => {
+    setEditStep(1);
+    setIsEditModalOpened(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpened(false);
+    setEditStep(1);
+  };
+
+  const editStep1NextHandler: FormEventHandler<HTMLFormElement> = evt => {
     evt.preventDefault();
 
     const currentErrors = { ...errors };
     const isNameValid = validateName();
     const isAboutValid = validateAbout();
+    const isCountryValid = validateCountry();
+    const isBusinessTypeValid = validateBusinessType();
 
     if (!isNameValid) currentErrors.name = 'Enter project name';
     if (!isAboutValid) currentErrors.about = 'Enter description';
+    if (!isCountryValid) currentErrors.country = 'Select country';
+    if (!isBusinessTypeValid) currentErrors.businessType = 'Select business type';
 
     setErrors(currentErrors);
-    if (!isNameValid || !isAboutValid) return;
+    if (!isNameValid || !isAboutValid || !isCountryValid || !isBusinessTypeValid) return;
+
+    setEditStep(2);
+  };
+
+  const editProjectSubmitHandler = async () => {
+    const newSocialsErrors = validateSocials(socialsValue);
+    setSocialsErrors(newSocialsErrors);
+    if (Object.keys(newSocialsErrors).length > 0) return;
 
     try {
-      await editBusiness({
+      const result = await editBusiness({
         variables: {
           input: {
             id: projectId,
@@ -269,15 +323,21 @@ const ProjectPage: FC = () => {
               name: nameValue,
               description: aboutValue,
               tags: selectedCategories,
+              country: countryValue,
+              businessType: businessTypeValue,
+              socials: socialsToArray(socialsValue),
             },
           },
         },
       });
 
-      setIsEditModalOpened(false);
+      if (result.error) throw result.error;
+
+      closeEditModal();
       toast('Project successfully updated!');
-    } catch {
-      toast('Failed to update project. Please try again.', 'error');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update project. Please try again.';
+      toast(message, 'error');
     }
   };
 
@@ -286,6 +346,9 @@ const ProjectPage: FC = () => {
     setNameValue(project.name);
     setAboutValue(project.description ?? '');
     setSelectedCategories(project.tags ?? []);
+    setCountryValue(project.country ?? null);
+    setBusinessTypeValue((project.businessType as BusinessType | undefined) ?? null);
+    setSocialsValue(socialsFromArray(project.socials));
   }, [project]);
 
   const isDeploying = deployStatus !== 'idle';
@@ -306,6 +369,7 @@ const ProjectPage: FC = () => {
               <div>
                 <div className={'flex items-center gap-3 mb-4'}>
                   <Title size={'xs'}>{updatedBusiness?.editBusiness.name ?? project.name}</Title>
+                  <CountryChip code={updatedBusiness?.editBusiness.country ?? project.country} />
                   {isDeployed && (
                     <span
                       className={'text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700 shrink-0'}
@@ -314,9 +378,10 @@ const ProjectPage: FC = () => {
                     </span>
                   )}
                 </div>
-                <div className={'text-base text-black max-w-[560px]'}>
+                <div className={'text-base text-black max-w-[560px] mb-4'}>
                   {updatedBusiness?.editBusiness.description ?? project.description}
                 </div>
+                <SocialLinksRow socials={updatedBusiness?.editBusiness.socials ?? project.socials} />
               </div>
               <div className={'flex flex-wrap gap-2 lg:items-end lg:justify-end'}>
                 {!isDeployed && canEdit && (
@@ -335,7 +400,7 @@ const ProjectPage: FC = () => {
                       'max-md:w-full before:size-3.5 before:mask-[url(/icons/edit.svg)] mask-contain before:bg-current'
                     }
                     visualType={'quinary'}
-                    onClick={() => setIsEditModalOpened(true)}
+                    onClick={openEditModal}
                   >
                     Update
                   </Button>
@@ -378,49 +443,80 @@ const ProjectPage: FC = () => {
         </Wrapper>
       </section>
 
-      <Modal isOpened={isEditModalOpened} closeModal={() => setIsEditModalOpened(false)}>
-        <div className={'text-base font-medium pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-6'}>
-          Edit project
+      <Modal isOpened={isEditModalOpened} closeModal={closeEditModal}>
+        <div className={'pr-14 pb-4.5 pl-4 border-b-1 border-stroke-primary mb-6'}>
+          <div className={'text-base font-medium'}>Edit project</div>
+          <div className={'text-xs text-text-secondary mt-0.5'}>Step {editStep} of 2</div>
         </div>
-        <form onSubmit={formSubmitHandler}>
-          <div className={'px-4 mb-6'}>
-            <div className={'text-sm font-medium mb-3'}>
-              Project name<span className={'text-red-bright'}>*</span>
+
+        {editStep === 1 && (
+          <form onSubmit={editStep1NextHandler}>
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium mb-3'}>
+                Project name<span className={'text-red-bright'}>*</span>
+              </div>
+              <Input
+                placeholder={'For example, «Green Fund Series A»'}
+                size={'sm'}
+                colorScheme={'light'}
+                errorMessage={errors.name}
+                type={'text'}
+                name={'projectName'}
+                value={nameValue}
+                onChange={nameChangeHandler}
+              />
             </div>
-            <Input
-              placeholder={'For example, «Green Fund Series A»'}
-              size={'sm'}
-              colorScheme={'light'}
-              errorMessage={errors.name}
-              type={'text'}
-              name={'projectName'}
-              value={nameValue}
-              onChange={nameChangeHandler}
-            />
-          </div>
-          <div className={'px-4 mb-6'}>
-            <div className={'text-sm font-medium mb-3'}>
-              Description<span className={'text-red-bright'}>*</span>
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium mb-3'}>
+                Description<span className={'text-red-bright'}>*</span>
+              </div>
+              <TextArea
+                className={'h-[110px]'}
+                maxLength={250}
+                errorMessage={errors.about}
+                placeholder={'Write a short description for your project'}
+                name={'projectAbout'}
+                value={aboutValue}
+                onChange={aboutChangeHandler}
+              />
             </div>
-            <TextArea
-              className={'h-[110px]'}
-              maxLength={250}
-              errorMessage={errors.about}
-              placeholder={'Write a short description for your project'}
-              name={'projectAbout'}
-              value={aboutValue}
-              onChange={aboutChangeHandler}
-            />
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium mb-3'}>
+                Country<span className={'text-red-bright'}>*</span>
+              </div>
+              <CountrySelect value={countryValue} onChange={countryChangeHandler} errorMessage={errors.country} />
+            </div>
+            <div className={'px-4 mb-6'}>
+              <BusinessTypeSelect value={businessTypeValue} onChange={businessTypeChangeHandler} />
+              {errors.businessType && <div className={'pt-2 text-xs/[1] text-red-bright'}>{errors.businessType}</div>}
+            </div>
+            <div className={'px-4 flex justify-end'}>
+              <Button visualType={'quaternary'} type={'submit'}>
+                Next
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {editStep === 2 && (
+          <div>
+            <div className={'px-4 mb-6'}>
+              <CategoryCheckboxes selected={selectedCategories} onChange={setSelectedCategories} />
+            </div>
+            <div className={'px-4 mb-6'}>
+              <div className={'text-sm font-medium uppercase mb-3'}>Socials</div>
+              <SocialsInput value={socialsValue} onChange={setSocialsValue} errors={socialsErrors} />
+            </div>
+            <div className={'px-4 flex justify-between'}>
+              <Button visualType={'quinary'} type={'button'} onClick={() => setEditStep(1)}>
+                Back
+              </Button>
+              <Button visualType={'quaternary'} type={'button'} disabled={updatingBusiness} onClick={editProjectSubmitHandler}>
+                Apply
+              </Button>
+            </div>
           </div>
-          <div className={'px-4 mb-6'}>
-            <CategoryCheckboxes selected={selectedCategories} onChange={setSelectedCategories} />
-          </div>
-          <div className={'px-4 flex justify-end'}>
-            <Button visualType={'quaternary'} type={'submit'} disabled={updatingBusiness}>
-              Apply
-            </Button>
-          </div>
-        </form>
+        )}
       </Modal>
     </DashboardLayout>
   );

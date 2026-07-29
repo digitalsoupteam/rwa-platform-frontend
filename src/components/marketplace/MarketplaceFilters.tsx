@@ -3,6 +3,7 @@
 import React, { FC, useState } from 'react';
 import clsx from 'clsx';
 import { Checkbox, Radio, Icon } from '@/components/ui';
+import { getCountryByCode } from '@/lib/countries';
 
 interface FilterSectionProps {
   title: string;
@@ -50,6 +51,9 @@ interface MarketplaceFiltersProps {
   onStageChange?: (stages: PoolStage[]) => void;
   selectedTypes?: PoolType[];
   onTypeChange?: (types: PoolType[]) => void;
+  countries?: string[];
+  selectedCountries?: string[];
+  onCountryChange?: (countries: string[]) => void;
 }
 
 export const POOL_STAGES = [
@@ -83,7 +87,7 @@ export const POOL_TYPES = [
 
 export type PoolType = typeof POOL_TYPES[number]['value'];
 
-const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange, selectedRanges = [], onRangeChange, categories = [], selectedCategories = [], onCategoryChange, selectedStages = [], onStageChange, selectedTypes = [], onTypeChange }) => {
+const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = 'newest', onSortChange, selectedRanges = [], onRangeChange, categories = [], selectedCategories = [], onCategoryChange, selectedStages = [], onStageChange, selectedTypes = [], onTypeChange, countries = [], selectedCountries = [], onCountryChange }) => {
   return (
     <div className={clsx('flex flex-col', className)}>
       <FilterSection title={'Sort by'}>
@@ -129,6 +133,26 @@ const MarketplaceFilters: FC<MarketplaceFiltersProps> = ({ className, sortBy = '
                   ? [...selectedCategories, cat]
                   : selectedCategories.filter(c => c !== cat);
                 onCategoryChange?.(next);
+              }}
+            />
+          ))
+        )}
+      </FilterSection>
+
+      <FilterSection title={'Country'}>
+        {countries.length === 0 ? (
+          <span className={'text-sm text-grey-dark'}>No countries available</span>
+        ) : (
+          countries.map(code => (
+            <Checkbox
+              key={code}
+              label={`${getCountryByCode(code)?.flag ?? ''} ${getCountryByCode(code)?.name ?? code}`.trim()}
+              checked={selectedCountries.includes(code)}
+              onChange={e => {
+                const next = e.target.checked
+                  ? [...selectedCountries, code]
+                  : selectedCountries.filter(c => c !== code);
+                onCountryChange?.(next);
               }}
             />
           ))

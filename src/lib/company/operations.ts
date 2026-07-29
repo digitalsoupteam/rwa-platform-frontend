@@ -6,6 +6,11 @@ export const CREATE_COMPANY = graphql(`
       id
       name
       description
+      country
+      socials {
+        type
+        url
+      }
       ownerId
       createdAt
       updatedAt
@@ -19,6 +24,11 @@ export const GET_COMPANIES = graphql(`
       id
       name
       description
+      country
+      socials {
+        type
+        url
+      }
       ownerId
       createdAt
       updatedAt
@@ -32,6 +42,11 @@ export const GET_COMPANY = graphql(`
       id
       name
       description
+      country
+      socials {
+        type
+        url
+      }
       ownerId
       users {
         id
@@ -55,6 +70,11 @@ export const UPDATE_COMPANY = graphql(`
       id
       name
       description
+      country
+      socials {
+        type
+        url
+      }
       ownerId
       createdAt
       updatedAt

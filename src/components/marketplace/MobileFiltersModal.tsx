@@ -24,6 +24,9 @@ interface MobileFiltersModalProps {
   onStageChange?: (stages: PoolStage[]) => void;
   selectedTypes?: PoolType[];
   onTypeChange?: (types: PoolType[]) => void;
+  countries?: string[];
+  selectedCountries?: string[];
+  onCountryChange?: (countries: string[]) => void;
 }
 
 const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
@@ -41,6 +44,9 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
   onStageChange,
   selectedTypes,
   onTypeChange,
+  countries,
+  selectedCountries,
+  onCountryChange,
 }) => {
   useEffect(() => {
     document.body.classList.add('locked');
@@ -85,7 +91,7 @@ const MobileFiltersModal: FC<MobileFiltersModalProps> = ({
 
       {/* Scrollable filter body */}
       <div className={'flex-1 overflow-y-auto px-3'}>
-        <MarketplaceFilters sortBy={sortBy} onSortChange={onSortChange} selectedRanges={selectedRanges} onRangeChange={onRangeChange} categories={categories} selectedCategories={selectedCategories} onCategoryChange={onCategoryChange} selectedStages={selectedStages} onStageChange={onStageChange} selectedTypes={selectedTypes} onTypeChange={onTypeChange} />
+        <MarketplaceFilters sortBy={sortBy} onSortChange={onSortChange} selectedRanges={selectedRanges} onRangeChange={onRangeChange} categories={categories} selectedCategories={selectedCategories} onCategoryChange={onCategoryChange} selectedStages={selectedStages} onStageChange={onStageChange} selectedTypes={selectedTypes} onTypeChange={onTypeChange} countries={countries} selectedCountries={selectedCountries} onCountryChange={onCountryChange} />
       </div>
 
       {/* Fixed bottom bar */}
