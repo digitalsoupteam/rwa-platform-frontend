@@ -15,6 +15,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 type Documents = {
     "\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n": typeof types.CreateAssistantDocument,
+    "\n  mutation UpdateAssistant($input: UpdateAssistantInput!) {\n    updateAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n": typeof types.UpdateAssistantDocument,
     "\n  query GetUserAssistants {\n    getUserAssistants {\n      id\n      name\n      contextPreferences\n    }\n  }\n": typeof types.GetUserAssistantsDocument,
     "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      id\n      assistantId\n      text\n    }\n  }\n": typeof types.CreateMessageDocument,
     "\n  query GetMessageHistory($assistantId: ID!) {\n    getMessageHistory(assistantId: $assistantId) {\n      id\n      assistantId\n      text\n    }\n  }\n": typeof types.GetMessageHistoryDocument,
@@ -99,6 +100,7 @@ type Documents = {
 };
 const documents: Documents = {
     "\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n": types.CreateAssistantDocument,
+    "\n  mutation UpdateAssistant($input: UpdateAssistantInput!) {\n    updateAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n": types.UpdateAssistantDocument,
     "\n  query GetUserAssistants {\n    getUserAssistants {\n      id\n      name\n      contextPreferences\n    }\n  }\n": types.GetUserAssistantsDocument,
     "\n  mutation CreateMessage($input: CreateMessageInput!) {\n    createMessage(input: $input) {\n      id\n      assistantId\n      text\n    }\n  }\n": types.CreateMessageDocument,
     "\n  query GetMessageHistory($assistantId: ID!) {\n    getMessageHistory(assistantId: $assistantId) {\n      id\n      assistantId\n      text\n    }\n  }\n": types.GetMessageHistoryDocument,
@@ -200,6 +202,10 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAssistant($input: CreateAssistantInput!) {\n    createAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateAssistant($input: UpdateAssistantInput!) {\n    updateAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateAssistant($input: UpdateAssistantInput!) {\n    updateAssistant(input: $input) {\n      id\n      name\n      contextPreferences\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
