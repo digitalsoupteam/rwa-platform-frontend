@@ -3,13 +3,13 @@
 import React, { FC } from 'react';
 import Image from 'next/image';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
 import { Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 export const EasyStartSection: FC = () => {
   const { openConnectModal } = useConnectModal();
-  const { address } = useAccount();
+  const { isAuthenticated } = useAuth();
 
   return (
     <section className={'mb-25 md:mb-50 overflow-hidden'}>
@@ -25,8 +25,8 @@ export const EasyStartSection: FC = () => {
             <Button
               className={'mt-auto md:w-fit'}
               visualType={'tertiary'}
-              onClick={address ? undefined : openConnectModal}
-              href={address ? '/my-companies/' : undefined}
+              onClick={isAuthenticated ? undefined : openConnectModal}
+              href={isAuthenticated ? '/add-pool/' : undefined}
             >
               Create first pool
             </Button>
