@@ -76,13 +76,15 @@ export async function refreshAccessToken(): Promise<boolean> {
   return true;
 }
 
+export const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
+
 function clearTokensAndRedirect() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('userId');
   localStorage.removeItem('wallet');
-  window.location.href = '/';
+  window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
 }
 
 const errorLink = new ErrorLink(({ error, operation, forward }) => {

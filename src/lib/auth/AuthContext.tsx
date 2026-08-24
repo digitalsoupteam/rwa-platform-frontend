@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { useAccount, useDisconnect, useConnections, useWalletClient } from 'wagmi';
 import { signTypedData } from 'viem/actions';
 import { authService } from './authService';
-import { refreshAccessToken } from '../apollo/client';
+import { AUTH_SESSION_EXPIRED_EVENT, refreshAccessToken } from '../apollo/client';
 import { AuthTokens, User } from '@/gql/graphql';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/Toast';
@@ -135,6 +135,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     checkAuth();
   }, [address, walletClient, login]);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setIsAuthenticated(false);
+      setUser(null);
+      toast('Session expired. Please sign in again.', 'error');
+      router.push('/');
+    };
+
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, [router]);
 
   const logout = () => {
     authService.logout();
