@@ -131,7 +131,7 @@ const Header: FC = () => {
       </header>
       <div
         className={clsx(
-          'fixed top-0 right-0 bottom-0 left-0 h-screen w-screen tr-d-all bg-transparent lg:hidden',
+          'z-100 fixed top-0 right-0 bottom-0 left-0 h-screen w-screen tr-d-all bg-transparent lg:hidden',
           isMenuOpened && '!bg-[#494A53]/60 pointer-events-auto',
           !isMenuOpened && 'pointer-events-none'
         )}
