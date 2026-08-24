@@ -241,13 +241,13 @@ const PoolPage: FC = () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tranches: AnyPool[] = pool?.incomingTranches ?? [];
-  const totalDebtWei = tranches.reduce((sum: bigint, t: AnyPool) => {
+  const goalWei = (() => {
     try {
-      return sum + BigInt(t.amount);
+      return pool?.expectedHoldAmount ? BigInt(pool.expectedHoldAmount) : BigInt(0);
     } catch {
-      return sum;
+      return BigInt(0);
     }
-  }, BigInt(0));
+  })();
 
   return (
     <DashboardLayout>
@@ -495,7 +495,7 @@ const PoolPage: FC = () => {
                                   <span>
                                     <span>{getTrancheUsdt(t.amount)} USDT</span>
                                     <span className='text-[#9B9BA5] ml-1'>
-                                      ({getTranchePercent(t.amount, totalDebtWei)}%)
+                                      ({getTranchePercent(t.amount, goalWei)}%)
                                     </span>
                                   </span>
                                   <div className='flex justify-end'>{isReturned ? <CheckIcon /> : <ClockIcon />}</div>
