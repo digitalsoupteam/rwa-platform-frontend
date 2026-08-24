@@ -11,7 +11,7 @@ export const GetStartedSection: FC = () => {
   const { address } = useAccount();
 
   return (
-    <section className={'mb-25 md:mb-50'}>
+    <section id={'get-started'} className={'mb-25 md:mb-50'}>
       <Wrapper>
         <Title className={'text-center mb-10 md:mb-15'} size={'lg'} level={2}>
           Get started with this

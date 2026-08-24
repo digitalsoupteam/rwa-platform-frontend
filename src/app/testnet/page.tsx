@@ -21,7 +21,7 @@ const Testnet: FC = () => {
             <p className={'text-base/[1.4] text-center text-white mb-8'}>
               Earn points for testing features. Points will convert into DAO tokens after testnet
             </p>
-            <Button className={'w-full mb-15 md:w-fit'} visualType={'primary'} href={'/marketplace/'}>
+            <Button className={'w-full mb-15 md:w-fit'} visualType={'primary'} href={'#get-started'}>
               Start collecting points
             </Button>
           </div>
@@ -52,6 +52,7 @@ const Testnet: FC = () => {
           </div>
         </Wrapper>
       </section>
+      <GetStartedSection />
       <section className={'mb-25 md:mb-50'}>
         <Wrapper>
           <Card
@@ -191,7 +192,6 @@ const Testnet: FC = () => {
           </div>
         </Wrapper>
       </section>
-      <GetStartedSection />
       <FAQ
         title={'Useful information before you start'}
         faqList={[
