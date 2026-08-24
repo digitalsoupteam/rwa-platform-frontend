@@ -31,7 +31,7 @@ import { GET_SIGNATURE_TASK } from '@/lib/pool/operations';
 import { ERC20_APPROVE_ABI, FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS } from '@/lib/contracts';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { NewsList } from '@/components/news';
-import { CountryChip, Modal, SocialLinksRow } from '@/components/common';
+import { CountryChip, Modal, ShareMenu, SocialLinksRow } from '@/components/common';
 import { PoolsSection } from '@/components/pool';
 import { BusinessType } from '@/gql/graphql';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
@@ -405,14 +405,7 @@ const ProjectPage: FC = () => {
                     Update
                   </Button>
                 )}
-                <Button
-                  className={
-                    'max-md:w-full before:size-3.5 before:mask-[url(/icons/share.svg)] mask-contain before:bg-current'
-                  }
-                  visualType={'quinary'}
-                >
-                  Share
-                </Button>
+                <ShareMenu className={'max-md:w-full'} />
               </div>
             </div>
           )}

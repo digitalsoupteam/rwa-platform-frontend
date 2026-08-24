@@ -12,6 +12,7 @@ import { GET_POOL_BY_ID, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
+import { ShareMenu } from '@/components/common';
 import { BuyTokenWidget, EditPoolModal, PriceChart, PoolTransactions } from '@/components/pool';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -308,10 +309,7 @@ const PoolPage: FC = () => {
                   Edit
                 </Button>
               )}
-              <Button visualType={'quinary'}>
-                <Icon name={'share'} />
-                Share
-              </Button>
+              <ShareMenu />
             </div>
           </div>
         </Wrapper>
