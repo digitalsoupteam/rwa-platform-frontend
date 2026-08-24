@@ -4,7 +4,8 @@ import React, { FC } from 'react';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Button, Title, toast } from '@/components/ui';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { GET_UNLOCK_TIME, REQUEST_GAS, REQUEST_HOLD } from '@/lib/faucet/operations';
+import { GET_UNLOCK_TIME, REQUEST_GAS, REQUEST_HOLD, REQUEST_PLATFORM } from '@/lib/faucet/operations';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 function formatUnlock(ts: number): string {
   if (!ts || ts <= Date.now() / 1000) return 'Available now';
@@ -16,16 +17,24 @@ function formatUnlock(ts: number): string {
 }
 
 const FaucetPage: FC = () => {
-  const { data: unlockData, refetch } = useQuery(GET_UNLOCK_TIME, { fetchPolicy: 'network-only' });
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const {
+    data: unlockData,
+    loading: unlockLoading,
+    refetch,
+  } = useQuery(GET_UNLOCK_TIME, { fetchPolicy: 'network-only', skip: !isAuthenticated });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const unlockTime = (unlockData as any)?.getUnlockTime;
 
   const now = Date.now() / 1000;
-  const holdLocked = unlockTime?.holdUnlockTime > now;
-  const gasLocked = unlockTime?.gasUnlockTime > now;
+  const notReady = authLoading || !isAuthenticated || unlockLoading;
+  const holdLocked = notReady || unlockTime?.holdUnlockTime > now;
+  const gasLocked = notReady || unlockTime?.gasUnlockTime > now;
+  const platformLocked = notReady || unlockTime?.platformUnlockTime > now;
 
   const [requestHold, { loading: claimingHold }] = useMutation(REQUEST_HOLD);
   const [requestGas, { loading: claimingGas }] = useMutation(REQUEST_GAS);
+  const [requestPlatform, { loading: claimingPlatform }] = useMutation(REQUEST_PLATFORM);
 
   const handleClaimHold = async () => {
     try {
@@ -49,6 +58,17 @@ const FaucetPage: FC = () => {
     }
   };
 
+  const handleClaimPlatform = async () => {
+    try {
+      await requestPlatform({ variables: { input: { amount: 10000 } } });
+      await refetch();
+      toast('10 000 PLT tokens sent to your wallet!');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to claim PLT';
+      toast(msg, 'error');
+    }
+  };
+
   return (
     <DashboardLayout>
       <section className={'mb-12'}>
@@ -58,17 +78,18 @@ const FaucetPage: FC = () => {
             Claim test tokens to use platform features on BSC Testnet.
           </p>
 
-          <div className={'grid gap-4 sm:grid-cols-2 max-w-2xl'}>
-            <div className={'p-6 border border-stroke-primary rounded-xl flex flex-col gap-4'}>
+          <div className={'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl'}>
+            <div className={'h-full p-6 border border-stroke-primary rounded-xl flex flex-col gap-4'}>
               <div>
                 <div className={'text-lg font-semibold mb-1'}>HOLD Token</div>
-                <div className={'text-sm text-label-tertiary'}>Required to deploy projects and pools</div>
+                <div className={'text-sm text-label-tertiary min-h-10'}>Required to deploy projects and pools</div>
               </div>
               <div className={'text-2xl font-bold'}>500 HOLD</div>
               <div className={'text-sm text-label-tertiary'}>
                 {unlockTime ? formatUnlock(unlockTime.holdUnlockTime) : '—'}
               </div>
               <Button
+                className={'mt-auto'}
                 visualType={'quaternary'}
                 disabled={holdLocked || claimingHold}
                 onClick={handleClaimHold}
@@ -77,21 +98,41 @@ const FaucetPage: FC = () => {
               </Button>
             </div>
 
-            <div className={'p-6 border border-stroke-primary rounded-xl flex flex-col gap-4'}>
+            <div className={'h-full p-6 border border-stroke-primary rounded-xl flex flex-col gap-4'}>
               <div>
                 <div className={'text-lg font-semibold mb-1'}>BNB Gas</div>
-                <div className={'text-sm text-label-tertiary'}>Required to pay transaction fees</div>
+                <div className={'text-sm text-label-tertiary min-h-10'}>Required to pay transaction fees</div>
               </div>
               <div className={'text-2xl font-bold'}>0.01 BNB</div>
               <div className={'text-sm text-label-tertiary'}>
                 {unlockTime ? formatUnlock(unlockTime.gasUnlockTime) : '—'}
               </div>
               <Button
+                className={'mt-auto'}
                 visualType={'quaternary'}
                 disabled={gasLocked || claimingGas}
                 onClick={handleClaimGas}
               >
                 {claimingGas ? 'Claiming…' : 'Claim BNB'}
+              </Button>
+            </div>
+
+            <div className={'h-full p-6 border border-stroke-primary rounded-xl flex flex-col gap-4'}>
+              <div>
+                <div className={'text-lg font-semibold mb-1'}>PLT Token</div>
+                <div className={'text-sm text-label-tertiary min-h-10'}>Required to stake and participate in governance</div>
+              </div>
+              <div className={'text-2xl font-bold'}>10 000 PLT</div>
+              <div className={'text-sm text-label-tertiary'}>
+                {unlockTime ? formatUnlock(unlockTime.platformUnlockTime) : '—'}
+              </div>
+              <Button
+                className={'mt-auto'}
+                visualType={'quaternary'}
+                disabled={platformLocked || claimingPlatform}
+                onClick={handleClaimPlatform}
+              >
+                {claimingPlatform ? 'Claiming…' : 'Claim PLT'}
               </Button>
             </div>
           </div>

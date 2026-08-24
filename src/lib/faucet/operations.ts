@@ -31,3 +31,14 @@ export const REQUEST_HOLD = gql`
     }
   }
 `;
+
+export const REQUEST_PLATFORM = gql`
+  mutation RequestPlatform($input: RequestTokenInput!) {
+    requestPlatform(input: $input) {
+      id
+      tokenType
+      amount
+      transactionHash
+    }
+  }
+`;
