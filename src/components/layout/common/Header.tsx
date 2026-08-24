@@ -8,11 +8,11 @@ import { useConnectModal, useAccountModal } from '@rainbow-me/rainbowkit';
 
 import { Wrapper } from '@/components/layout';
 import { Button, ButtonLink } from '@/components/ui';
-import { useAccount } from 'wagmi';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 const Header: FC = () => {
   const { openConnectModal } = useConnectModal();
-  const { address } = useAccount();
+  const { isAuthenticated, isLoading } = useAuth();
   const [opened, setOpened] = useState(false);
 
   const navLinks = [
@@ -24,7 +24,7 @@ const Header: FC = () => {
       text: 'Tokenize a business',
       link: '/tokenization/',
     },
-    { text: 'AirDrop', link: '/testnet/' },
+    { text: 'Testnet', link: '/testnet/' },
     { text: 'Support', link: '#' },
   ];
 
@@ -69,7 +69,7 @@ const Header: FC = () => {
           </Link>
           <div className={'flex gap-4 items-center lg:hidden'}>
             <div className='lg:hidden'>
-              {!address && (
+              {!isLoading && !isAuthenticated && (
                 <button className={'text-white text-base/[1.2] font-semibold'} onClick={openConnectModal}>
                   Sign in
                 </button>
@@ -98,12 +98,12 @@ const Header: FC = () => {
               ))}
           </ul>
           <div className={'max-lg:hidden'}>
-            {!address && (
+            {!isLoading && !isAuthenticated && (
               <Button visualType={'secondary'} onClick={openConnectModal}>
                 Sign In
               </Button>
             )}
-            {address && (
+            {!isLoading && isAuthenticated && (
               <Button visualType={'primary'} href={'/portfolio/'}>
                 Portfolio
               </Button>
