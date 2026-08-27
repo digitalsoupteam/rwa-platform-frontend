@@ -89,7 +89,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (!address) return;
+      if (!address) {
+        setIsAuthenticated(false);
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
 
       const isAuth = authService.isAuthenticated();
 
