@@ -5,6 +5,7 @@ import React, { FC, MouseEventHandler, useEffect, useRef, useState } from 'react
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 import { Wrapper } from '@/components/layout';
 
@@ -17,7 +18,8 @@ const Header: FC = () => {
   const [isProfileOpened, setIsProfileOpened] = useState(false);
   const [isAddPoolModalOpen, setIsAddPoolModalOpen] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement | null>(null);
-  const { logout } = useAuth();
+  const { logout, isAuthenticated, isLoading } = useAuth();
+  const { openConnectModal } = useConnectModal();
   const pathname = usePathname();
 
   const navLinkClassName = (href: string) => {
@@ -75,44 +77,51 @@ const Header: FC = () => {
             </div>
 
             <div className={'flex gap-2.5'}>
-              <div className={'relative'} ref={profileContainerRef}>
-                <button
-                  className={clsx(
-                    'cursor-pointer flex justify-center items-center bg-bg-tertiary text-black size-11.5 rounded-xl max-lg:hidden',
-                    isProfileOpened ? 'outline-2 outline-stroke-secondary' : 'outline-transparent'
-                  )}
-                  onClick={() => setIsProfileOpened(!isProfileOpened)}
-                >
-                  <Icon className={'size-5'} name={'person'} />
-                </button>
-                <div
-                  className={clsx(
-                    'absolute top-full right-0 mt-2 w-max rounded-lg border-1 border-stroke-primary pt-2 bg-white shadow-base',
-                    isProfileOpened ? 'block' : 'hidden'
-                  )}
-                >
-                  <div className={'flex flex-col gap-0.5 text-sm font-regular'}>
-                    <Link className={'px-3 py-1.5'} href={'/my-companies/'}>
-                      My companies
-                    </Link>
-                    <Link className={'px-3 py-1.5'} href={'/rwa-platform-frontend/public'}>
-                      Tranches
-                    </Link>
-                    <Link className={'px-3 py-1.5'} href={'/dao/'}>
-                      Governance
-                    </Link>
-                    <button
-                      className={
-                        'cursor-pointer flex items-center justify-between gap-2 py-2.5 pl-3 pr-2 mt-2 text-red-bright border-t-1 border-stroke-primary'
-                      }
-                      onClick={logout}
-                    >
-                      Logout
-                      <Icon className={'size-4'} name={'logout'} />
-                    </button>
+              {!isLoading && !isAuthenticated && (
+                <Button className={'rounded-xl max-lg:hidden'} visualType={'secondary'} onClick={openConnectModal}>
+                  Sign In
+                </Button>
+              )}
+              {!isLoading && isAuthenticated && (
+                <div className={'relative'} ref={profileContainerRef}>
+                  <button
+                    className={clsx(
+                      'cursor-pointer flex justify-center items-center bg-bg-tertiary text-black size-11.5 rounded-xl max-lg:hidden',
+                      isProfileOpened ? 'outline-2 outline-stroke-secondary' : 'outline-transparent'
+                    )}
+                    onClick={() => setIsProfileOpened(!isProfileOpened)}
+                  >
+                    <Icon className={'size-5'} name={'person'} />
+                  </button>
+                  <div
+                    className={clsx(
+                      'absolute top-full right-0 mt-2 w-max rounded-lg border-1 border-stroke-primary pt-2 bg-white shadow-base',
+                      isProfileOpened ? 'block' : 'hidden'
+                    )}
+                  >
+                    <div className={'flex flex-col gap-0.5 text-sm font-regular'}>
+                      <Link className={'px-3 py-1.5'} href={'/my-companies/'}>
+                        My companies
+                      </Link>
+                      <Link className={'px-3 py-1.5'} href={'/rwa-platform-frontend/public'}>
+                        Tranches
+                      </Link>
+                      <Link className={'px-3 py-1.5'} href={'/dao/'}>
+                        Governance
+                      </Link>
+                      <button
+                        className={
+                          'cursor-pointer flex items-center justify-between gap-2 py-2.5 pl-3 pr-2 mt-2 text-red-bright border-t-1 border-stroke-primary'
+                        }
+                        onClick={logout}
+                      >
+                        Logout
+                        <Icon className={'size-4'} name={'logout'} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
               <button
                 className={
                   'cursor-pointer flex justify-center items-center bg-bg-tertiary text-black size-11.5 rounded-xl lg:hidden'
@@ -171,27 +180,36 @@ const Header: FC = () => {
             </Link>
           </div>
           <div className={'flex flex-col'}>
-            <Link className={'py-2.5 text-base'} href={'/my-companies'}>
-              My companies
-            </Link>
-            <Link className={'py-2.5 text-base'} href={'/my-companies'}>
-              Tranches
-            </Link>
-            <Link className={'py-2.5 text-base'} href={'/my-companies'}>
-              Contact support
-            </Link>
-            <Link className={'py-2.5 text-base'} href={'/dao'}>
-              Governance
-            </Link>
-            <button
-              className={
-                'flex items-center gap-2 py-2.5 text-base text-red-bright mt-2 border-t-1 border-stroke-primary'
-              }
-              onClick={logout}
-            >
-              <Icon className={'size-4.5'} name={'logout'} />
-              Logout
-            </button>
+            {!isLoading && !isAuthenticated && (
+              <button className={'py-2.5 text-base text-left'} onClick={openConnectModal}>
+                Sign In
+              </button>
+            )}
+            {!isLoading && isAuthenticated && (
+              <>
+                <Link className={'py-2.5 text-base'} href={'/my-companies'}>
+                  My companies
+                </Link>
+                <Link className={'py-2.5 text-base'} href={'/my-companies'}>
+                  Tranches
+                </Link>
+                <Link className={'py-2.5 text-base'} href={'/my-companies'}>
+                  Contact support
+                </Link>
+                <Link className={'py-2.5 text-base'} href={'/dao'}>
+                  Governance
+                </Link>
+                <button
+                  className={
+                    'flex items-center gap-2 py-2.5 text-base text-red-bright mt-2 border-t-1 border-stroke-primary'
+                  }
+                  onClick={logout}
+                >
+                  <Icon className={'size-4.5'} name={'logout'} />
+                  Logout
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
