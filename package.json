@@ -25,7 +25,10 @@
     "swiper": "^11.2.10",
     "viem": "^2.7.9",
     "wagmi": "^2.5.7",
-    "world-countries": "^5.1.0"
+    "world-countries": "^5.1.0",
+    "@x402/core": "*",
+    "@x402/evm": "*",
+    "@x402/svm": "*"
   },
   "devDependencies": {
     "@0no-co/graphqlsp": "^1.15.2",
