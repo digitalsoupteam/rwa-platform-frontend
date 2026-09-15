@@ -7,6 +7,7 @@ import { Button, Title, toast } from '@/components/ui';
 import { Calendar, ConfirmModal } from '@/components/common';
 import { useMutation, useApolloClient } from '@apollo/client/react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
+import { parseUnits, formatUnits } from 'viem';
 import clsx from 'clsx';
 import { CREATE_POOL, REQUEST_POOL_APPROVAL_SIGNATURES, GET_SIGNATURE_TASK } from '@/lib/pool/operations';
 import { FACTORY_ABI, FACTORY_ADDRESS, HOLD_TOKEN_ADDRESS, ERC20_APPROVE_ABI } from '@/lib/contracts';
@@ -20,11 +21,73 @@ const PRICE_IMPACT_PERCENT = BigInt(101); // 100 is absent from the on-chain liq
 const ENTRY_PERIOD_DAYS = 90; // contract max; calendar months can exceed 90 days
 const POLL_INTERVAL_MS = 3_000;
 const POLL_TIMEOUT_MS = 120_000;
+const HOLD_DECIMALS = 18;
 
 // ── Deploy helpers ─────────────────────────────────────────────────────────────
-function toWei(amount: string | number): bigint {
-  const n = typeof amount === 'string' ? Math.round(parseFloat(amount)) : Math.round(amount);
-  return BigInt(n) * BigInt(10) ** BigInt(18);
+// Parses a raw decimal string directly into wei — never round-trip through a float,
+// or precision is lost (e.g. a tranche amount silently truncated to a whole token).
+function toWei(amount: string): bigint {
+  if (!amount) return BigInt(0);
+  try {
+    return parseUnits(amount, HOLD_DECIMALS);
+  } catch {
+    return BigInt(0);
+  }
+}
+
+// Formats a wei amount back to a clean decimal string for display, trimming trailing zeros.
+function formatWei(wei: bigint): string {
+  if (wei <= BigInt(0)) return '';
+  const [whole, frac] = formatUnits(wei, HOLD_DECIMALS).split('.');
+  const trimmedFrac = frac ? frac.replace(/0+$/, '') : '';
+  return trimmedFrac ? `${whole}.${trimmedFrac}` : whole;
+}
+
+// Parses a percent string (up to 2 decimal places) directly into basis points.
+function toBps(percent: string): bigint {
+  if (!percent) return BigInt(0);
+  try {
+    return parseUnits(percent, 2);
+  } catch {
+    return BigInt(0);
+  }
+}
+
+// Formats basis points back into a percent string with up to 2 decimal places.
+function formatBps(bps: bigint): string {
+  if (bps <= BigInt(0)) return '';
+  const [whole, frac] = formatUnits(bps, 2).split('.');
+  const trimmedFrac = frac ? frac.replace(/0+$/, '') : '';
+  return trimmedFrac ? `${whole}.${trimmedFrac}` : whole;
+}
+
+// Integer division rounded to the nearest whole unit (a, b > 0) — plain BigInt division
+// truncates, which under-reports amt/total ratios like amount-derived percentages.
+function roundedDiv(a: bigint, b: bigint): bigint {
+  if (b <= BigInt(0)) return BigInt(0);
+  return (a + b / BigInt(2)) / b;
+}
+
+// Largest-remainder allocation of 10000 bps across weights that sum exactly to the
+// total — rounding each row's percent independently (as roundedDiv does) can leave the
+// displayed percentages off by a bp or two even though the underlying amounts add up
+// exactly, so once the tranches are fully allocated we distribute the rounding slack
+// to the rows with the largest fractional remainder instead.
+function allocateBpsExact(weights: bigint[]): bigint[] {
+  const total = weights.reduce((sum, w) => sum + w, BigInt(0));
+  if (total <= BigInt(0)) return weights.map(() => BigInt(0));
+  const floors = weights.map(w => (w * BigInt(10000)) / total);
+  const remainders = weights.map(w => (w * BigInt(10000)) % total);
+  let left = BigInt(10000) - floors.reduce((sum, b) => sum + b, BigInt(0));
+  const order = remainders
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => (b.r > a.r ? 1 : b.r < a.r ? -1 : 0));
+  const result = [...floors];
+  for (let k = 0; k < order.length && left > BigInt(0); k++) {
+    result[order[k].i] += BigInt(1);
+    left -= BigInt(1);
+  }
+  return result;
 }
 
 function daysFromTimingOption(option: string): number {
@@ -244,7 +307,10 @@ const AddPoolContent: FC = () => {
   const goalNum = parseNum(financialGoal);
   const profitNum = parseNum(profitability);
   const commission = goalNum * COMMISSION_RATE;
-  const debtAmount = goalNum > 0 && profitNum >= 0 ? goalNum * (1 + profitNum / 100) : 0;
+  const goalWei = toWei(financialGoal);
+  const rewardBps = toBps(profitability);
+  const debtAmountWei = goalWei > BigInt(0) ? goalWei + (goalWei * rewardBps) / BigInt(10000) : BigInt(0);
+  const debtAmount = Number(formatUnits(debtAmountWei, HOLD_DECIMALS));
   const endDate = startDate ? addDays(startDate, ENTRY_PERIOD_DAYS) : '';
 
   const hasCommission = goalNum > 0;
@@ -252,8 +318,11 @@ const AddPoolContent: FC = () => {
   const hasEndDate = !!startDate;
   const hasAllCards = hasCommission && hasDebt && hasEndDate;
 
-  const trancheTotal = tranches.reduce((sum, t) => sum + parseNum(t.amount), 0);
-  const tranchePercent = debtAmount > 0 ? Math.min((trancheTotal / debtAmount) * 100, 100) : 0;
+  const trancheTotalWei = tranches.reduce((sum, t) => sum + toWei(t.amount), BigInt(0));
+  const trancheTotal = Number(formatUnits(trancheTotalWei, HOLD_DECIMALS));
+  const tranchePercent = debtAmountWei > BigInt(0)
+    ? Math.min(Number(roundedDiv(trancheTotalWei * BigInt(10000), debtAmountWei)) / 100, 100)
+    : 0;
   const hasAnyTranche = tranches.some(t => t.timing);
 
   const updateTranche = useCallback(
@@ -262,36 +331,53 @@ const AddPoolContent: FC = () => {
         let clampedValue = value;
 
         if (field === 'percent' && value !== '') {
-          const otherPct = prev.reduce((sum, t, j) => j !== index ? sum + (parseFloat(t.percent) || 0) : sum, 0);
-          const maxPct = 100 - otherPct;
-          const pct = parseFloat(value) || 0;
-          if (pct > maxPct) clampedValue = String(maxPct);
+          const otherBps = prev.reduce((sum, t, j) => j !== index ? sum + toBps(t.percent) : sum, BigInt(0));
+          const maxBps = BigInt(10000) - otherBps;
+          const bps = toBps(value);
+          if (bps > maxBps) clampedValue = formatBps(maxBps);
         } else if (field === 'amount' && value !== '') {
-          const otherAmt = prev.reduce((sum, t, j) => j !== index ? sum + (parseFloat(t.amount) || 0) : sum, 0);
-          const maxAmt = debtAmount - otherAmt;
-          const amt = parseFloat(value) || 0;
-          if (amt > maxAmt) clampedValue = String(maxAmt);
+          const otherAmtWei = prev.reduce((sum, t, j) => j !== index ? sum + toWei(t.amount) : sum, BigInt(0));
+          const maxAmtWei = debtAmountWei - otherAmtWei;
+          const amtWei = toWei(value);
+          if (amtWei > maxAmtWei) clampedValue = formatWei(maxAmtWei);
         }
 
         const next = prev.map((t, i) => (i === index ? { ...t, [field]: clampedValue } : t));
         const t = { ...next[index] };
 
         if (field === 'percent') {
-          const pct = parseFloat(clampedValue) || 0;
-          if (debtAmount > 0 && pct > 0) {
-            const otherAmt = prev.reduce((sum, t, j) => j !== index ? sum + (parseFloat(t.amount) || 0) : sum, 0);
-            const maxAmt = Math.floor(debtAmount - otherAmt);
-            const rawAmt = Math.round((pct / 100) * debtAmount);
-            t.amount = String(Math.min(rawAmt, maxAmt));
+          const bps = toBps(clampedValue);
+          if (debtAmountWei > BigInt(0) && bps > BigInt(0)) {
+            const otherAmtWei = prev.reduce((sum, t, j) => j !== index ? sum + toWei(t.amount) : sum, BigInt(0));
+            const maxAmtWei = debtAmountWei - otherAmtWei;
+            const rawAmtWei = roundedDiv(bps * debtAmountWei, BigInt(10000));
+            t.amount = formatWei(rawAmtWei > maxAmtWei ? maxAmtWei : rawAmtWei);
           } else {
             t.amount = '';
           }
         } else if (field === 'amount') {
-          const amt = parseFloat(clampedValue) || 0;
-          t.percent = debtAmount > 0 && amt > 0 ? String(+((amt / debtAmount) * 100).toFixed(2)) : '';
+          const amtWei = toWei(clampedValue);
+          t.percent = debtAmountWei > BigInt(0) && amtWei > BigInt(0)
+            ? formatBps(roundedDiv(amtWei * BigInt(10000), debtAmountWei))
+            : '';
         }
 
         next[index] = t;
+
+        if (field === 'amount') {
+          // Match the same criterion as trancheTotal/tranchePercent below (all rows with
+          // an amount, regardless of whether a timing has been picked yet) so the row
+          // percentages and the "Tranche total" progress bar always agree.
+          const filledIdx = next.reduce<number[]>((acc, row, i) => (toWei(row.amount) > BigInt(0) ? [...acc, i] : acc), []);
+          const filledAmounts = filledIdx.map(i => toWei(next[i].amount));
+          const filledTotal = filledAmounts.reduce((sum, w) => sum + w, BigInt(0));
+          if (debtAmountWei > BigInt(0) && filledIdx.length > 0 && filledTotal === debtAmountWei) {
+            const bpsList = allocateBpsExact(filledAmounts);
+            filledIdx.forEach((i, k) => {
+              next[i] = { ...next[i], percent: formatBps(bpsList[k]) };
+            });
+          }
+        }
 
         if (field === 'timing' && value && index === next.length - 1 && next.length < MAX_TRANCHES) {
           next.push({ timing: '', percent: '', amount: '' });
@@ -300,7 +386,7 @@ const AddPoolContent: FC = () => {
         return next;
       });
     },
-    [debtAmount]
+    [debtAmountWei]
   );
 
   const deleteTranche = (index: number) => {
@@ -331,8 +417,7 @@ const AddPoolContent: FC = () => {
     const completionPeriodExpired = lastDeadline + BigInt(30 * 86400);
 
     // Single outgoing tranche: full financial goal disbursed to owner 1 day after fundraising end
-    const holdAmount = toWei(goalNum);
-    const outgoingAmounts = [holdAmount];
+    const outgoingAmounts = [goalWei];
     const outgoingTimestamps = [BigInt(endUnix + 86400)];
 
     return {
@@ -344,7 +429,7 @@ const AddPoolContent: FC = () => {
       outgoingAmounts,
       outgoingTimestamps,
     };
-  }, [startDate, tranches, goalNum]);
+  }, [startDate, tranches, goalWei]);
 
   // ── Validate and open confirmation modal ──────────────────────────────────
   const handleDeployClick = () => {
@@ -380,8 +465,7 @@ const AddPoolContent: FC = () => {
       const { startUnix, endUnix, completionPeriodExpiredUnix, incomingAmounts, incomingDeadlines, outgoingAmounts, outgoingTimestamps } =
         buildTranches();
 
-      const holdAmount = toWei(goalNum);
-      const rewardBps = BigInt(Math.round(+((profitNum * 100).toFixed(2))));
+      const holdAmount = goalWei;
 
       const totalExpected = holdAmount + (holdAmount * rewardBps) / BigInt(10000);
       const totalIncoming = incomingAmounts.reduce((a, b) => a + b, BigInt(0));
