@@ -573,43 +573,7 @@ const Portfolio: FC = () => {
   // Payouts tab — same eligible pools as tabFiltered, mapped to schedule/claim data
   const payoutRows = useMemo(() => {
     const eligible = applyRowFilters(derived.poolRows.filter(r => r.status === 'paying_out'), filterSelections);
-    const real = eligible.map(derivePayoutRow);
-    if (real.length > 0) return real;
-    // TEMP MOCK DATA FOR REVIEW — REMOVE BEFORE COMMIT
-    const now = Date.now() / 1000;
-    const day = 86400;
-    const mk = (i: number, overrides: Partial<PortfolioPayoutPool> = {}): { pool: PortfolioPayoutPool; tranches: PayoutTranche[] } => ({
-      pool: {
-        id: `mock-${i}`,
-        poolAddress: '0x0000000000000000000000000000000000000000',
-        rwaAddress: '0x0000000000000000000000000000000000000000',
-        name: 'Smart Farm Expansion',
-        aiRating: 4.96,
-        nextPaymentDate: now + (i - 2) * day * 5,
-        nextPaymentIsOverdue: i === 0,
-        completedTranches: i + 6,
-        totalTranches: 10 + i,
-        profitPct: '4%',
-        paymentAmount: i === 4 ? null : 1500,
-        totalAvailable: 3678,
-        claimable: i === 1 || i === 2,
-        description: 'GreentechCapital LLC is a forward-thinking company dedicated to the development and implementation of innovative green technologies.',
-        companyName: 'GreentechCapital LLC',
-        projectName: 'Smart Farm Expansion',
-        virtualHoldReserve: '0',
-        realHoldReserve: '0',
-        virtualRwaReserve: '0',
-        exitFeePercent: '100',
-        ...overrides,
-      },
-      tranches: [
-        { amount: 5500, date: now + 5 * day, completed: false },
-        { amount: 5500, date: now + 10 * day, completed: false },
-        { amount: 5500, date: now + 15 * day, completed: false },
-        { amount: 5500, date: now - 5 * day, completed: true },
-      ],
-    });
-    return Array.from({ length: 10 }, (_, i) => mk(i, i === 4 ? { nextPaymentDate: null, paymentAmount: null } : {}));
+    return eligible.map(derivePayoutRow);
   }, [derived.poolRows, filterSelections]);
 
   const payoutDetail = useMemo(
