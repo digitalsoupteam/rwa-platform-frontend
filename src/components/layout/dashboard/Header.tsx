@@ -10,13 +10,11 @@ import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { Wrapper } from '@/components/layout';
 
 import { Button, Icon } from '@/components/ui';
-import { AddPoolModal } from '@/components/pool';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 const Header: FC = () => {
   const [isMenuOpened, setIsMenuOpened] = useState(false);
   const [isProfileOpened, setIsProfileOpened] = useState(false);
-  const [isAddPoolModalOpen, setIsAddPoolModalOpen] = useState(false);
   const profileContainerRef = useRef<HTMLDivElement | null>(null);
   const { logout, isAuthenticated, isLoading } = useAuth();
   const { openConnectModal } = useConnectModal();
@@ -100,9 +98,6 @@ const Header: FC = () => {
                     )}
                   >
                     <div className={'flex flex-col gap-0.5 text-sm font-regular'}>
-                      <Link className={'px-3 py-1.5'} href={'/my-companies/'}>
-                        My companies
-                      </Link>
                       <Link className={'px-3 py-1.5'} href={'/rwa-platform-frontend/public'}>
                         Tranches
                       </Link>
@@ -130,10 +125,11 @@ const Header: FC = () => {
               >
                 <Icon className={'size-5'} name={'burger'} />
               </button>
-              <Button className={'rounded-xl max-lg:hidden'} visualType={'quaternary'} onClick={() => setIsAddPoolModalOpen(true)}>
-                <Icon name={'plus'} />
-                Add pool
-              </Button>
+              {!isLoading && isAuthenticated && (
+                <Button className={'rounded-xl max-lg:hidden'} visualType={'quaternary'} href={'/my-companies/'}>
+                  My companies
+                </Button>
+              )}
             </div>
           </div>
         </Wrapper>
@@ -157,10 +153,11 @@ const Header: FC = () => {
             <Link className={'flex items-center justify-center w-[81px] md:w-[95px]'} href={'/'}>
               <Image className={'w-full h-auto'} src={'/images/logo-dark.svg'} width={'85'} height={'24'} alt={' '} />
             </Link>
-            <Button className={'rounded-xl'} visualType={'quaternary'} onClick={() => setIsAddPoolModalOpen(true)}>
-              <Icon name={'plus'} />
-              Add pool
-            </Button>
+            {!isLoading && isAuthenticated && (
+              <Button className={'rounded-xl'} visualType={'quaternary'} href={'/my-companies/'}>
+                My companies
+              </Button>
+            )}
           </div>
           <div className={'grow flex flex-col gap-2'}>
             <Link className={navLinkClassName('/marketplace/')} href={'/marketplace/'}>
@@ -188,9 +185,6 @@ const Header: FC = () => {
             {!isLoading && isAuthenticated && (
               <>
                 <Link className={'py-2.5 text-base'} href={'/my-companies'}>
-                  My companies
-                </Link>
-                <Link className={'py-2.5 text-base'} href={'/my-companies'}>
                   Tranches
                 </Link>
                 <Link className={'py-2.5 text-base'} href={'/my-companies'}>
@@ -213,7 +207,6 @@ const Header: FC = () => {
           </div>
         </div>
       </div>
-      <AddPoolModal isOpen={isAddPoolModalOpen} onClose={() => setIsAddPoolModalOpen(false)} />
     </>
   );
 };
