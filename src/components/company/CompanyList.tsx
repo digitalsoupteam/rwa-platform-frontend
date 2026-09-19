@@ -46,6 +46,7 @@ const CompanyList: FC = () => {
     refetch: refetchUserCompanies,
   } = useQuery(GET_COMPANIES, {
     variables: { input: { filter: { ownerId: user?.userId } } },
+    skip: !user?.userId,
   });
 
   const validateName = (value?: string) => (value || nameValue).length > 2;
@@ -97,7 +98,7 @@ const CompanyList: FC = () => {
 
       if (result.error) throw result.error;
 
-      await refetchUserCompanies();
+      if (user?.userId) await refetchUserCompanies();
       setIsCreateModalOpened(false);
       setNameValue('');
       setAboutValue('');
