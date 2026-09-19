@@ -176,7 +176,7 @@ const Tooltip: FC<{ text: string; children: React.ReactNode }> = ({ text, childr
     >
       {children}
       {visible && (
-        <span className="absolute left-0 bottom-full mb-2 z-50 w-64 bg-white rounded-xl shadow-base border border-stroke-primary p-3 text-xs text-grey-dark leading-relaxed whitespace-normal pointer-events-none">
+        <span className="absolute left-0 bottom-full mb-2 z-50 w-64 max-md:fixed max-md:left-1/2 max-md:top-1/2 max-md:bottom-auto max-md:mb-0 max-md:-translate-x-1/2 max-md:-translate-y-1/2 bg-white rounded-xl shadow-base border border-stroke-primary p-3 text-xs text-grey-dark leading-relaxed whitespace-normal pointer-events-none">
           {text}
         </span>
       )}
@@ -636,7 +636,7 @@ const AddPoolContent: FC = () => {
       {/* Page header */}
       <section className="mb-10">
         <Wrapper>
-          <div className="border-b border-stroke-primary pb-6 flex justify-between items-center">
+          <div className="border-b border-stroke-primary pb-6 flex justify-between items-center max-md:flex-wrap max-md:gap-3">
             <Title size="xs">New pool</Title>
             <div className="flex items-center gap-3">
               {deployStatus && (
@@ -664,9 +664,9 @@ const AddPoolContent: FC = () => {
 
             <div className="flex flex-col gap-5">
               {/* Pool name */}
-              <div className="flex items-start gap-6">
-                <label className="w-44 shrink-0 pt-2.5 text-sm text-grey-dark">Pool name</label>
-                <div className="relative w-[330px]">
+              <div className="flex items-start gap-6 max-md:flex-col max-md:gap-2">
+                <label className="w-44 shrink-0 max-md:w-auto pt-2.5 max-md:pt-0 text-sm text-grey-dark">Pool name</label>
+                <div className="relative w-[330px] max-md:w-full">
                   <input
                     value={name}
                     maxLength={50}
@@ -681,9 +681,9 @@ const AddPoolContent: FC = () => {
               </div>
 
               {/* Description */}
-              <div className="flex items-start gap-6">
-                <label className="w-44 shrink-0 pt-2.5 text-sm text-grey-dark">Description</label>
-                <div className="relative w-[330px]">
+              <div className="flex items-start gap-6 max-md:flex-col max-md:gap-2">
+                <label className="w-44 shrink-0 max-md:w-auto pt-2.5 max-md:pt-0 text-sm text-grey-dark">Description</label>
+                <div className="relative w-[330px] max-md:w-full">
                   <textarea
                     value={description}
                     maxLength={250}
@@ -704,13 +704,13 @@ const AddPoolContent: FC = () => {
           <section>
             <h2 className="text-xl font-semibold mb-6">Pool parameters</h2>
 
-            <div className={clsx('flex gap-8', !hasAllCards && 'items-start')}>
+            <div className={clsx('flex gap-8 max-md:flex-col max-md:gap-5', !hasAllCards && 'items-start max-md:items-stretch')}>
               {/* Left: form fields */}
               <div className="flex flex-col gap-5 flex-1">
                 {/* Financial goal */}
-                <div className="flex items-center gap-6">
-                  <label className="w-44 shrink-0 text-sm text-grey-dark">Financial goal</label>
-                  <div className="relative w-[330px]">
+                <div className="flex items-center gap-6 max-md:flex-col max-md:items-start max-md:gap-2">
+                  <label className="w-44 shrink-0 max-md:w-auto text-sm text-grey-dark">Financial goal</label>
+                  <div className="relative w-[330px] max-md:w-full">
                     <input
                       value={financialGoal}
                       onChange={e => setFinancialGoal(e.target.value.replace(/[^0-9]/g, ''))}
@@ -722,14 +722,14 @@ const AddPoolContent: FC = () => {
                 </div>
 
                 {/* Profitability */}
-                <div className="flex items-center gap-6">
-                  <label className="w-44 shrink-0 text-sm text-grey-dark flex items-center gap-1.5">
+                <div className="flex items-center gap-6 max-md:flex-col max-md:items-start max-md:gap-2">
+                  <label className="w-44 shrink-0 max-md:w-auto text-sm text-grey-dark flex items-center gap-1.5">
                     Profitability
                     <Tooltip text="Best option is not too high and not too low. Profitability can't be higher than 100%. Profitability will be included in the total amount of debt">
                       <InfoIcon />
                     </Tooltip>
                   </label>
-                  <div className="relative w-[330px]">
+                  <div className="relative w-[330px] max-md:w-full">
                     <input
                       value={profitability}
                       onChange={e => {
@@ -744,9 +744,9 @@ const AddPoolContent: FC = () => {
                 </div>
 
                 {/* Pool type */}
-                <div className="flex items-center gap-6">
-                  <label className="w-44 shrink-0 text-sm text-grey-dark">Pool type</label>
-                  <div className="flex gap-3">
+                <div className="flex items-center gap-6 max-md:flex-col max-md:items-start max-md:gap-2">
+                  <label className="w-44 shrink-0 max-md:w-auto text-sm text-grey-dark">Pool type</label>
+                  <div className="flex gap-3 max-md:flex-wrap">
                     {(
                       [
                         {
@@ -790,9 +790,9 @@ const AddPoolContent: FC = () => {
                 </div>
 
                 {/* Collection start date */}
-                <div className="flex items-center gap-6">
-                  <label className="w-44 shrink-0 text-sm text-grey-dark">Collection start date</label>
-                  <div className="relative w-[330px]">
+                <div className="flex items-center gap-6 max-md:flex-col max-md:items-start max-md:gap-2">
+                  <label className="w-44 shrink-0 max-md:w-auto text-sm text-grey-dark">Collection start date</label>
+                  <div className="relative w-[330px] max-md:w-full">
                     <button
                       type="button"
                       onClick={() => setShowCalendar(o => !o)}
@@ -818,7 +818,7 @@ const AddPoolContent: FC = () => {
 
               {/* Right: stacked info cards (only when not all cards present) */}
               {!hasAllCards && (hasCommission || hasDebt || hasEndDate) && (
-                <div className="flex flex-col gap-3 w-[340px] shrink-0">
+                <div className="flex flex-col gap-3 w-[340px] shrink-0 max-md:w-full">
                   {hasCommission && (
                     <InfoCard
                       label="Comission:"
@@ -852,7 +852,7 @@ const AddPoolContent: FC = () => {
           {hasAllCards && (
             <section>
               <h2 className="text-xl font-semibold mb-4">Terms</h2>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
                 <InfoCard
                   label="Comission:"
                   value={`${formatNumber(commission)} USDT`}
@@ -886,8 +886,7 @@ const AddPoolContent: FC = () => {
 
             <div className="bg-grey-light rounded-2xl overflow-hidden">
               {/* Table header */}
-              <div className="grid items-center px-6 py-3 text-sm text-grey-dark gap-4"
-                style={{ gridTemplateColumns: '60px 1fr 180px 220px 130px' }}>
+              <div className="grid items-center px-6 py-3 text-sm text-grey-dark gap-4 md:grid-cols-[60px_1fr_180px_220px_130px] max-md:hidden">
                 <div>№</div>
                 <div>Tranche timing (days post-end)</div>
                 <div>Precent of debt</div>
@@ -908,46 +907,72 @@ const AddPoolContent: FC = () => {
                 ) : <div />}
               </div>
 
+              {hasAnyTranche && (
+                <div className="md:hidden flex justify-end px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={clearAll}
+                    className="flex items-center gap-1 text-blue text-sm hover:opacity-70 cursor-pointer"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                    Clear everything
+                  </button>
+                </div>
+              )}
+
               {/* Rows */}
               <div className="divide-y divide-stroke-primary">
                 {tranches.map((tranche, i) => (
                   <div
                     key={i}
-                    className="grid items-center px-6 py-3 gap-4 bg-white"
-                    style={{ gridTemplateColumns: '60px 1fr 180px 220px 130px' }}
+                    className="grid items-center px-6 py-3 gap-4 bg-white max-md:grid-cols-2 max-md:px-4 md:grid-cols-[60px_1fr_180px_220px_130px]"
                   >
-                    <span className="text-sm text-grey-dark">{i + 1}</span>
+                    <span className="text-sm text-grey-dark max-md:col-span-2 max-md:font-semibold max-md:text-black">
+                      <span className="md:hidden">Tranche № </span>
+                      {i + 1}
+                    </span>
 
-                    <TimingDropdown
-                      value={tranche.timing}
-                      onChange={v => updateTranche(i, 'timing', v)}
-                      minOption={i > 0 ? tranches[i - 1].timing : undefined}
-                    />
+                    <div className="max-md:col-span-2">
+                      <div className="md:hidden mb-1 text-xs text-grey-dark">Tranche timing (days post-end)</div>
+                      <TimingDropdown
+                        value={tranche.timing}
+                        onChange={v => updateTranche(i, 'timing', v)}
+                        minOption={i > 0 ? tranches[i - 1].timing : undefined}
+                      />
+                    </div>
 
                     {/* Percent of debt */}
-                    <div className="relative">
-                      <input
-                        value={tranche.percent}
-                        onChange={e => updateTranche(i, 'percent', e.target.value.replace(/[^0-9.]/g, ''))}
-                        placeholder="0"
-                        className="w-full px-3 py-2.5 pr-8 rounded-lg border border-stroke-primary bg-white text-sm outline-none placeholder:text-label-tertiary tr-d-all focus:border-grey-dark"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-grey text-sm pointer-events-none">%</span>
+                    <div>
+                      <div className="md:hidden mb-1 text-xs text-grey-dark">Percent of debt</div>
+                      <div className="relative">
+                        <input
+                          value={tranche.percent}
+                          onChange={e => updateTranche(i, 'percent', e.target.value.replace(/[^0-9.]/g, ''))}
+                          placeholder="0"
+                          className="w-full px-3 py-2.5 pr-8 rounded-lg border border-stroke-primary bg-white text-sm outline-none placeholder:text-label-tertiary tr-d-all focus:border-grey-dark"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-grey text-sm pointer-events-none">%</span>
+                      </div>
                     </div>
 
                     {/* Amount of debt */}
-                    <div className="relative">
-                      <input
-                        value={tranche.amount}
-                        onChange={e => updateTranche(i, 'amount', e.target.value.replace(/[^0-9.]/g, ''))}
-                        placeholder="0"
-                        className="w-full px-3 py-2.5 pr-8 rounded-lg border border-stroke-primary bg-white text-sm outline-none placeholder:text-label-tertiary tr-d-all focus:border-grey-dark"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-grey text-sm pointer-events-none">₮</span>
+                    <div>
+                      <div className="md:hidden mb-1 text-xs text-grey-dark">Amount of debt (USDT)</div>
+                      <div className="relative">
+                        <input
+                          value={tranche.amount}
+                          onChange={e => updateTranche(i, 'amount', e.target.value.replace(/[^0-9.]/g, ''))}
+                          placeholder="0"
+                          className="w-full px-3 py-2.5 pr-8 rounded-lg border border-stroke-primary bg-white text-sm outline-none placeholder:text-label-tertiary tr-d-all focus:border-grey-dark"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-grey text-sm pointer-events-none">₮</span>
+                      </div>
                     </div>
 
                     {/* Delete */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end max-md:col-span-2">
                       {tranche.timing && (
                         <button
                           type="button"
