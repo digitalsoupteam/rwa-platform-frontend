@@ -521,7 +521,7 @@ const CompanyPage: FC = () => {
               {deletingCompanyStatus === 'approve' && (
                 <>
                   <span>Yes. I'm sure</span>
-                  <span className={'pointer-events-none text-start absolute w-max text-red-500 left-full ml-2'}>
+                  <span className={'pointer-events-none text-start absolute w-max text-red-500 left-full ml-2 max-md:hidden'}>
                     Are your sure? <br />
                     You cannot cancel this.
                   </span>
@@ -533,6 +533,12 @@ const CompanyPage: FC = () => {
               Apply
             </Button>
           </div>
+          {deletingCompanyStatus === 'approve' && (
+            <p className={'md:hidden px-4 mt-3 text-red-500'}>
+              Are your sure? <br />
+              You cannot cancel this.
+            </p>
+          )}
         </form>
       </Modal>
     </DashboardLayout>
