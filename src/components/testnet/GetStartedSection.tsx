@@ -24,7 +24,7 @@ export const GetStartedSection: FC = () => {
             size={'lg'}
           >
             <Title className={'text-white'} size={'md'} level={4}>
-              Connect your Web3&nbsp;wallet
+              {address ? 'Claim button available!' : <>Connect your Web3&nbsp;wallet</>}
             </Title>
             <Button
               className={'w-fit'}
