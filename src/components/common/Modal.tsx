@@ -19,12 +19,14 @@ const Modal: FC<ModalProps> = ({ children, isOpened, closeModal }) => {
   return (
     <section
       className={clsx(
-        'z-30 fixed top-0 right-0 bottom-0 left-0 flex items-center justify-center bg-[#494A53]/60 px-4',
+        'z-30 fixed top-0 right-0 bottom-0 left-0 flex items-center justify-center bg-[#494A53]/60 px-4 max-md:py-4',
         isOpened ? 'block' : 'hidden'
       )}
       onClick={evt => evt.currentTarget === evt.target && closeModal()}
     >
-      <div className={'relative py-4 bg-white w-full max-w-[448px] rounded-lg'}>
+      <div
+        className={'relative py-4 bg-white w-full max-w-[448px] rounded-lg max-md:max-h-full max-md:overflow-y-auto'}
+      >
         <button className={'absolute top-3.5 right-4 size-6'} onClick={closeModal}>
           <CrossSVG className={'size-6'} />
         </button>

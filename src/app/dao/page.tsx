@@ -11,6 +11,7 @@ import { useConnectModal } from '@rainbow-me/rainbowkit';
 import clsx from 'clsx';
 
 import { GET_PROPOSALS, GET_VOTES } from '@/lib/dao/operations';
+import { useKeepInViewport } from '@/lib/useKeepInViewport';
 import { GOVERNANCE_ABI, CONFIG_ABI, DAO_STAKING_ABI, POOL_PAUSE_ABI, TREASURY_ABI } from '@/lib/dao/abi';
 import {
   GOVERNANCE_ADDRESS, CONFIG_ADDRESS, DAO_STAKING_ADDRESS, TREASURY_ADDRESS, PLT_TOKEN_ADDRESS,
@@ -463,6 +464,7 @@ const Dropdown: FC<{ placeholder: string; options: string[]; value: string; onCh
 
 const Tooltip: FC<{ text: string }> = ({ text }) => {
   const [visible, setVisible] = useState(false);
+  const { ref: tipRef, shift } = useKeepInViewport<HTMLDivElement>(visible);
   return (
     <span className={'relative inline-flex items-center'}>
       <button
@@ -476,9 +478,16 @@ const Tooltip: FC<{ text: string }> = ({ text }) => {
         <Icon name={'info'} className={'size-3.5 text-grey-dark'} />
       </button>
       {visible && (
-        <div className={'absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[280px] bg-white border border-stroke-primary rounded-xl p-4 shadow-base z-30'}>
+        <div
+          ref={tipRef}
+          className={'absolute bottom-full left-1/2 mb-2 w-[280px] bg-white border border-stroke-primary rounded-xl p-4 shadow-base z-30'}
+          style={{ transform: `translateX(calc(-50% + ${shift}px))` }}
+        >
           <p className={'text-sm leading-[1.2] text-grey-dark'}>{text}</p>
-          <div className={'absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-stroke-primary'} />
+          <div
+            className={'absolute top-full -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-stroke-primary'}
+            style={{ left: `calc(50% - ${shift}px)` }}
+          />
         </div>
       )}
     </span>
