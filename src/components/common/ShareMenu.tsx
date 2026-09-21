@@ -51,10 +51,17 @@ const ShareMenu: FC<ShareMenuProps> = ({ url, title, className }) => {
         Share
       </Button>
       {open && (
-        <div className={'absolute top-full right-0 mt-1 z-50 w-[199px]'}>
+        <div
+          className={
+            'z-50 max-md:fixed max-md:inset-0 max-md:flex max-md:items-center max-md:justify-center max-md:bg-[#494A53]/60 max-md:px-4 md:absolute md:top-full md:right-0 md:mt-1 md:w-[199px]'
+          }
+          onClick={evt => {
+            if (evt.currentTarget === evt.target) setOpen(false);
+          }}
+        >
           <div
             className={
-              'bg-white border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] overflow-clip pt-2'
+              'bg-white border border-stroke-primary rounded-lg shadow-[0px_2px_13.4px_0px_rgba(0,0,0,0.2)] overflow-clip pt-2 max-md:w-full max-md:max-w-[260px]'
             }
           >
             <div className={'flex flex-col gap-0.5 px-1'}>
