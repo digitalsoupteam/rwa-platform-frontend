@@ -74,6 +74,11 @@ const Header: FC = () => {
                   Sign in
                 </button>
               )}
+              {!isLoading && isAuthenticated && (
+                <Link className={'text-white text-base/[1.2] font-semibold'} href={'/portfolio/'}>
+                  My account
+                </Link>
+              )}
             </div>
             <button
               className={'cursor-pointer flex flex-col items-center justify-center gap-[3.5px] size-8 lg:hidden'}
