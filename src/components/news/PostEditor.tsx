@@ -10,7 +10,7 @@ import UploadMediaModal from './UploadMediaModal';
 import Image from 'next/image';
 
 type TextBlock = { type: 'text'; id: string; content: string };
-type ImageBlock = { type: 'image'; id: string; link: string; external?: boolean };
+type ImageBlock = { type: 'image'; id: string; link: string };
 type Block = TextBlock | ImageBlock;
 
 let blockIdCounter = 0;
@@ -67,7 +67,7 @@ function parseBlocks(content: string): Block[] {
     if (Array.isArray(parsed)) {
       return parsed.map(b =>
         b.type === 'image'
-          ? ({ type: 'image', id: nextId(), link: b.link, external: b.external } as ImageBlock)
+          ? ({ type: 'image', id: nextId(), link: b.link } as ImageBlock)
           : ({ type: 'text', id: nextId(), content: b.content ?? '' } as TextBlock)
       );
     }
@@ -126,7 +126,7 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
 
       const serializedBlocks = blocks.map(b =>
         b.type === 'image'
-          ? { type: 'image', link: b.link, external: b.external }
+          ? { type: 'image', link: b.link }
           : { type: 'text', content: b.content }
       );
 
@@ -201,21 +201,6 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
     return result.data!.createGallery.id;
   };
 
-  const handleEmbedLink = (url: string) => {
-    if (!uploadModalBlockId) return;
-    const insertAfterBlockId = uploadModalBlockId;
-    setUploadModalBlockId(null);
-    const newTextId = nextId();
-    setBlocks(prev => {
-      const idx = prev.findIndex(b => b.id === insertAfterBlockId);
-      if (idx === -1) return prev;
-      const imageBlock: ImageBlock = { type: 'image', id: nextId(), link: url, external: true };
-      const textBlock: TextBlock = { type: 'text', id: newTextId, content: '' };
-      return [...prev.slice(0, idx + 1), imageBlock, textBlock, ...prev.slice(idx + 1)];
-    });
-    setFocusBlockId(newTextId);
-  };
-
   const handleFileSelected = async (file: File) => {
     if (!uploadModalBlockId) return;
 
@@ -276,10 +261,8 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
               <div key={block.id} className={'group relative rounded-xl overflow-hidden my-2'}>
                 <Image
                   src={
-                    block.external
-                      ? block.link
-                      : (process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/') +
-                        block.link.split('/').pop()
+                    (process.env.NEXT_PUBLIC_FILE_ENDPOINT ?? 'https://192.168.100.20/files/') +
+                    block.link.split('/').pop()
                   }
                   alt={'Post image'}
                   width={800}
@@ -327,7 +310,6 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
                   uploading={uploading}
                   onClose={() => setUploadModalBlockId(null)}
                   onFileSelected={handleFileSelected}
-                  onEmbedLink={handleEmbedLink}
                 />
               )}
             </div>

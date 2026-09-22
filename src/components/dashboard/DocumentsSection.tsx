@@ -28,8 +28,6 @@ const ALLOWED_MIME = [
   'text/plain',
 ];
 
-type Tab = 'upload' | 'embed';
-
 // ─── File icon ────────────────────────────────────────────────────────────────
 
 const FileIcon: FC<{ className?: string }> = ({ className }) => (
@@ -57,18 +55,15 @@ interface DocumentPopoverProps {
   editDoc?: DocumentItem | null;
   containerRef: React.RefObject<HTMLDivElement | null>;
   onClose: () => void;
-  onSubmit: (data: { name: string; file?: File; embedUrl?: string }) => void;
+  onSubmit: (data: { name: string; file?: File }) => void;
   loading?: boolean;
 }
 
 const DocumentPopover: FC<DocumentPopoverProps> = ({ className, editDoc, containerRef, onClose, onSubmit, loading }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [tab, setTab] = useState<Tab>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
-  const [embedUrl, setEmbedUrl] = useState('');
-  const [embedError, setEmbedError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState('');
@@ -76,12 +71,6 @@ const DocumentPopover: FC<DocumentPopoverProps> = ({ className, editDoc, contain
   useEffect(() => {
     if (editDoc) {
       setName(editDoc.name);
-      if (editDoc.url?.startsWith('http')) {
-        setTab('embed');
-        setEmbedUrl(editDoc.url);
-      } else {
-        setTab('upload');
-      }
     }
   }, [editDoc]);
 
@@ -124,18 +113,12 @@ const DocumentPopover: FC<DocumentPopoverProps> = ({ className, editDoc, contain
       return;
     }
 
-    if (tab === 'upload' && !editDoc) {
+    if (!editDoc) {
       if (!file) {
         setFileError('Please select a file');
         return;
       }
       onSubmit({ name: name.trim(), file });
-    } else if (tab === 'embed') {
-      if (!editDoc && !embedUrl.trim()) {
-        setEmbedError('Enter a URL');
-        return;
-      }
-      onSubmit({ name: name.trim(), embedUrl: embedUrl.trim() || undefined });
     } else {
       onSubmit({ name: name.trim(), file: file ?? undefined });
     }
@@ -150,76 +133,41 @@ const DocumentPopover: FC<DocumentPopoverProps> = ({ className, editDoc, contain
           className
         )}
       >
-        <div className={'flex border-b border-stroke-primary'}>
-          {(['upload', 'embed'] as const).map(t => (
-            <button
-              key={t}
-              type={'button'}
-              onClick={() => setTab(t)}
-              className={clsx(
-                'relative px-4 py-3 text-sm font-medium transition-colors',
-                tab === t ? 'text-blue' : 'text-label-tertiary hover:text-grey-dark'
-              )}
-            >
-              {t === 'upload' ? 'Upload' : 'Embed link'}
-              {tab === t && <span className={'absolute bottom-0 left-0 right-0 h-0.5 bg-blue rounded-t-sm'} />}
-            </button>
-          ))}
-        </div>
-
         <div className={'p-3'}>
-          {tab === 'upload' && (
-            <div className={'mb-3'}>
-              <div
-                className={clsx(
-                  'flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed py-8 cursor-pointer transition-colors',
-                  fileError
-                    ? 'border-red-bright bg-red-bright/5'
-                    : isDragging
-                      ? 'border-blue bg-blue-light/40'
-                      : 'border-stroke-primary hover:border-blue hover:bg-blue-light/30'
-                )}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-              >
-                {file ? (
-                  <>
-                    <FileIcon className={'text-blue'} />
-                    <span className={'text-sm text-blue font-medium'}>{file.name}</span>
-                    <span className={'text-xs text-blue'}>Successfully selected</span>
-                  </>
-                ) : (
-                  <>
-                    <FileIcon className={fileError ? 'text-red-bright' : 'text-label-tertiary'} />
-                    <span className={clsx('text-sm font-medium', fileError ? 'text-red-bright' : 'text-grey-dark')}>
-                      Choose a file
-                    </span>
-                    <span className={'text-xs text-label-tertiary'}>The maximum size per file is 5 MB</span>
-                  </>
-                )}
-              </div>
-              {fileError && <p className={'text-xs text-red-bright mt-1.5'}>{fileError}</p>}
-              <input ref={fileInputRef} type={'file'} className={'hidden'} onChange={handleInputChange} />
+          <div className={'mb-3'}>
+            <div
+              className={clsx(
+                'flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed py-8 cursor-pointer transition-colors',
+                fileError
+                  ? 'border-red-bright bg-red-bright/5'
+                  : isDragging
+                    ? 'border-blue bg-blue-light/40'
+                    : 'border-stroke-primary hover:border-blue hover:bg-blue-light/30'
+              )}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
+              {file ? (
+                <>
+                  <FileIcon className={'text-blue'} />
+                  <span className={'text-sm text-blue font-medium'}>{file.name}</span>
+                  <span className={'text-xs text-blue'}>Successfully selected</span>
+                </>
+              ) : (
+                <>
+                  <FileIcon className={fileError ? 'text-red-bright' : 'text-label-tertiary'} />
+                  <span className={clsx('text-sm font-medium', fileError ? 'text-red-bright' : 'text-grey-dark')}>
+                    Choose a file
+                  </span>
+                  <span className={'text-xs text-label-tertiary'}>The maximum size per file is 5 MB</span>
+                </>
+              )}
             </div>
-          )}
-
-          {tab === 'embed' && (
-            <div className={'mb-3'}>
-              <input
-                type={'text'}
-                placeholder={'https://...'}
-                value={embedUrl}
-                onChange={e => { setEmbedUrl(e.target.value); setEmbedError(''); }}
-                className={clsx(
-                  'w-full rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-label-tertiary tr-d-all',
-                  embedError ? 'border-red-bright text-red-bright focus:border-red-bright' : 'border-stroke-primary focus:border-blue'
-                )}
-              />
-              {embedError && <p className={'text-xs text-red-bright mt-1.5'}>{embedError}</p>}
-            </div>
-          )}
+            {fileError && <p className={'text-xs text-red-bright mt-1.5'}>{fileError}</p>}
+            <input ref={fileInputRef} type={'file'} className={'hidden'} onChange={handleInputChange} />
+          </div>
 
           <div className={'mb-3'}>
             <div className={'text-sm font-medium mb-1.5'}>
@@ -380,7 +328,7 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId, can
 
   const closePopover = () => setPopoverTarget(null);
 
-  const handleSubmit = async (data: { name: string; file?: File; embedUrl?: string }) => {
+  const handleSubmit = async (data: { name: string; file?: File }) => {
     if (!folderId) return;
 
     if (editingDoc) {
@@ -389,10 +337,7 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId, can
           variables: {
             input: {
               id: editingDoc.id,
-              updateData: {
-                name: data.name,
-                ...(data.embedUrl !== undefined ? { url: data.embedUrl } : {}),
-              },
+              updateData: { name: data.name },
             },
           },
         });
@@ -409,15 +354,6 @@ const DocumentsSection: FC<DocumentsSectionProps> = ({ projectId, companyId, can
     try {
       if (data.file) {
         await uploadDocumentMultipart(folderId, data.name, data.file);
-      } else if (data.embedUrl) {
-        const blob = new Blob([data.embedUrl], { type: 'text/plain' });
-        const placeholderFile = new File([blob], data.name + '.txt', { type: 'text/plain' });
-        const created = await uploadDocumentMultipart(folderId, data.name, placeholderFile);
-        await updateDocument({
-          variables: {
-            input: { id: created.id, updateData: { url: data.embedUrl } },
-          },
-        });
       }
       await refetchDocuments();
       toast('Document added!');

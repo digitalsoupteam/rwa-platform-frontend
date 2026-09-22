@@ -14,10 +14,7 @@ interface TeamMember {
   photoUrl?: string;
 }
 
-type Tab = 'upload' | 'embed';
-
 const ALLOWED_MIME = ['image/png', 'image/jpeg', 'image/jpg'];
-const IMAGE_URL_RE = /\.(jpe?g|png|gif|webp|svg)(\?.*)?$/i;
 
 // ─── Popover ──────────────────────────────────────────────────────────────────
 
@@ -51,11 +48,8 @@ const FileIcon: FC<{ className?: string }> = ({ className }) => (
 const MemberPopover: FC<MemberPopoverProps> = ({ className, editMember, containerRef, onClose, onSubmit, loading }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [tab, setTab] = useState<Tab>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
-  const [embedUrl, setEmbedUrl] = useState('');
-  const [embedError, setEmbedError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [name, setName] = useState('');
   const [position, setPosition] = useState('');
@@ -65,13 +59,7 @@ const MemberPopover: FC<MemberPopoverProps> = ({ className, editMember, containe
     if (editMember) {
       setName(editMember.name);
       setPosition(editMember.position ?? '');
-      if (editMember.photoUrl?.startsWith('http')) {
-        setTab('embed');
-        setEmbedUrl(editMember.photoUrl);
-      } else {
-        setTab('upload');
-        setFile(null);
-      }
+      setFile(null);
     }
   }, [editMember]);
 
@@ -118,16 +106,7 @@ const MemberPopover: FC<MemberPopoverProps> = ({ className, editMember, containe
       setNameError('Enter full name');
       return;
     }
-    let photoUrl: string | undefined;
-    if (tab === 'upload' && file) {
-      photoUrl = URL.createObjectURL(file);
-    } else if (tab === 'embed') {
-      if (embedUrl.trim() && !IMAGE_URL_RE.test(embedUrl.trim())) {
-        setEmbedError('The link does not lead to media content');
-        return;
-      }
-      photoUrl = embedUrl.trim() || undefined;
-    }
+    const photoUrl = file ? URL.createObjectURL(file) : undefined;
     onSubmit({ name: name.trim(), position: position.trim(), photoUrl });
   };
 
@@ -140,84 +119,46 @@ const MemberPopover: FC<MemberPopoverProps> = ({ className, editMember, containe
           className
         )}
       >
-        {/* Tabs */}
-        <div className={'flex border-b border-stroke-primary'}>
-          {(['upload', 'embed'] as const).map(t => (
-            <button
-              key={t}
-              type={'button'}
-              onClick={() => setTab(t)}
-              className={clsx(
-                'relative px-4 py-3 text-sm font-medium transition-colors',
-                tab === t ? 'text-blue' : 'text-label-tertiary hover:text-grey-dark'
-              )}
-            >
-              {t === 'upload' ? 'Upload' : 'Embed link'}
-              {tab === t && <span className={'absolute bottom-0 left-0 right-0 h-0.5 bg-blue rounded-t-sm'} />}
-            </button>
-          ))}
-        </div>
-
         <div className={'p-3'}>
-          {/* Upload tab */}
-          {tab === 'upload' && (
-            <div className={'mb-3'}>
-              <div
-                className={clsx(
-                  'flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed py-8 cursor-pointer transition-colors',
-                  fileError
-                    ? 'border-red-bright bg-red-bright/5'
-                    : isDragging
-                      ? 'border-blue bg-blue-light/40'
-                      : 'border-stroke-primary hover:border-blue hover:bg-blue-light/30'
-                )}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleDrop}
-              >
-                {file ? (
-                  <>
-                    <FileIcon className={'text-blue'} />
-                    <span className={'text-sm text-blue font-medium'}>{file.name}</span>
-                    <span className={'text-xs text-blue'}>Successfully downloaded</span>
-                  </>
-                ) : (
-                  <>
-                    <FileIcon className={fileError ? 'text-red-bright' : 'text-label-tertiary'} />
-                    <span className={clsx('text-sm font-medium', fileError ? 'text-red-bright' : 'text-grey-dark')}>
-                      {fileError ? 'Error when uploading' : 'Choose a file'}
-                    </span>
-                    <span className={'text-xs text-label-tertiary'}>The maximum size per file is 5 MB</span>
-                  </>
-                )}
-              </div>
-              {fileError && <p className={'text-xs text-red-bright mt-1.5'}>{fileError}</p>}
-              <input ref={fileInputRef} type={'file'} accept={'.png,.jpg,.jpeg'} className={'hidden'} onChange={handleInputChange} />
+          <div className={'mb-3'}>
+            <div
+              className={clsx(
+                'flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed py-8 cursor-pointer transition-colors',
+                fileError
+                  ? 'border-red-bright bg-red-bright/5'
+                  : isDragging
+                    ? 'border-blue bg-blue-light/40'
+                    : 'border-stroke-primary hover:border-blue hover:bg-blue-light/30'
+              )}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+            >
+              {file ? (
+                <>
+                  <FileIcon className={'text-blue'} />
+                  <span className={'text-sm text-blue font-medium'}>{file.name}</span>
+                  <span className={'text-xs text-blue'}>Successfully downloaded</span>
+                </>
+              ) : (
+                <>
+                  <FileIcon className={fileError ? 'text-red-bright' : 'text-label-tertiary'} />
+                  <span className={clsx('text-sm font-medium', fileError ? 'text-red-bright' : 'text-grey-dark')}>
+                    {fileError ? 'Error when uploading' : 'Choose a file'}
+                  </span>
+                  <span className={'text-xs text-label-tertiary'}>The maximum size per file is 5 MB</span>
+                </>
+              )}
             </div>
-          )}
-
-          {/* Embed link tab */}
-          {tab === 'embed' && (
-            <div className={'mb-3'}>
-              <input
-                type={'text'}
-                placeholder={'https://...'}
-                value={embedUrl}
-                onChange={e => { setEmbedUrl(e.target.value); setEmbedError(''); }}
-                className={clsx(
-                  'w-full rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-label-tertiary tr-d-all',
-                  embedError ? 'border-red-bright text-red-bright focus:border-red-bright' : 'border-stroke-primary focus:border-blue'
-                )}
-              />
-              {embedError && <p className={'text-xs text-red-bright mt-1.5'}>{embedError}</p>}
-            </div>
-          )}
+            {fileError && <p className={'text-xs text-red-bright mt-1.5'}>{fileError}</p>}
+            <input ref={fileInputRef} type={'file'} accept={'.png,.jpg,.jpeg'} className={'hidden'} onChange={handleInputChange} />
+          </div>
 
           {/* Name */}
           <div className={'mb-2'}>
             <div className={'text-sm font-medium mb-1.5'}>
-              {tab === 'embed' ? 'Full name' : 'Name'}<span className={'text-red-bright'}>*</span>
+              Name<span className={'text-red-bright'}>*</span>
             </div>
             <Input
               placeholder={'Ivan Ivanov'}
