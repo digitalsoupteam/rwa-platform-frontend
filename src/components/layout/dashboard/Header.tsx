@@ -102,7 +102,7 @@ const Header: FC = () => {
                         Tranches
                       </Link>
                       <Link className={'px-3 py-1.5'} href={'/dao/'}>
-                        Governance
+                        DAO
                       </Link>
                       <button
                         className={
@@ -191,7 +191,7 @@ const Header: FC = () => {
                   Contact support
                 </Link>
                 <Link className={'py-2.5 text-base'} href={'/dao'}>
-                  Governance
+                  DAO
                 </Link>
                 <button
                   className={

@@ -25,6 +25,7 @@ const Header: FC = () => {
       link: '/tokenization/',
     },
     { text: 'Testnet', link: '/testnet/' },
+    { text: 'DAO', link: '/dao/' },
     { text: 'Support', link: '#' },
   ];
 
