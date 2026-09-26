@@ -1089,7 +1089,7 @@ const DaoPage: FC = () => {
             <span className={'text-base text-grey-dark'}>{walletAddress}</span>
           </div>
           <div className={'flex flex-col gap-1.5'}>
-            <h1 className={'text-4xl font-semibold leading-[1.2] text-[#1d1d1f]'}>Governance</h1>
+            <h1 className={'text-4xl font-semibold leading-[1.2] text-[#1d1d1f]'}>DAO</h1>
             <p className={'text-base font-medium text-black'}>
               Stake PLT, vote on proposals and help control key Slices protocol decisions.
               <br />
