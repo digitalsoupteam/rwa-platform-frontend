@@ -78,6 +78,11 @@ const FaucetPage: FC = () => {
   const holdClaimed = !notReady && unlockTime?.holdUnlockTime > now;
   const gasClaimed = !notReady && unlockTime?.gasUnlockTime > now;
   const platformClaimed = !notReady && unlockTime?.platformUnlockTime > now;
+  // A visitor who isn't signed in yet (as opposed to still loading) sees the same
+  // "inactive" look as a claimed button, but clicking it prompts them to sign in
+  // instead of sending a claim — Sign In itself stays reachable via the page header.
+  const notAuthenticated = !authLoading && !isAuthenticated;
+  const stillLoading = authLoading || unlockLoading;
 
   const [tipOpen, setTipOpen] = useState<'hold' | 'gas' | 'platform' | null>(null);
   const openTip = (key: 'hold' | 'gas' | 'platform') => setTipOpen(key);
@@ -88,6 +93,10 @@ const FaucetPage: FC = () => {
   const [requestPlatform, { loading: claimingPlatform }] = useMutation(REQUEST_PLATFORM);
 
   const handleClaimHold = async () => {
+    if (notAuthenticated) {
+      toast('Sign in to claim', 'warning');
+      return;
+    }
     if (holdClaimed) {
       toast(`1 claim available in ${formatCooldown(unlockTime.holdUnlockTime)}`, 'warning');
       return;
@@ -103,6 +112,10 @@ const FaucetPage: FC = () => {
   };
 
   const handleClaimGas = async () => {
+    if (notAuthenticated) {
+      toast('Sign in to claim', 'warning');
+      return;
+    }
     if (gasClaimed) {
       toast(`1 claim available in ${formatCooldown(unlockTime.gasUnlockTime)}`, 'warning');
       return;
@@ -118,6 +131,10 @@ const FaucetPage: FC = () => {
   };
 
   const handleClaimPlatform = async () => {
+    if (notAuthenticated) {
+      toast('Sign in to claim', 'warning');
+      return;
+    }
     if (platformClaimed) {
       toast(`1 claim available in ${formatCooldown(unlockTime.platformUnlockTime)}`, 'warning');
       return;
@@ -161,9 +178,9 @@ const FaucetPage: FC = () => {
                   text={`1 claim available in ${unlockTime ? formatCooldown(unlockTime.holdUnlockTime) : ''}`}
                 />
                 <Button
-                  className={clsx('w-full', holdClaimed && '!bg-grey-light !text-grey-dark')}
+                  className={clsx('w-full', (holdClaimed || notAuthenticated) && '!bg-grey-light !text-grey-dark')}
                   visualType={'quaternary'}
-                  disabled={notReady || claimingHold}
+                  disabled={stillLoading || claimingHold}
                   onClick={handleClaimHold}
                 >
                   {claimingHold ? 'Claiming…' : holdClaimed ? 'Claimed' : 'Claim HOLD'}
@@ -190,9 +207,9 @@ const FaucetPage: FC = () => {
                   text={`1 claim available in ${unlockTime ? formatCooldown(unlockTime.gasUnlockTime) : ''}`}
                 />
                 <Button
-                  className={clsx('w-full', gasClaimed && '!bg-grey-light !text-grey-dark')}
+                  className={clsx('w-full', (gasClaimed || notAuthenticated) && '!bg-grey-light !text-grey-dark')}
                   visualType={'quaternary'}
-                  disabled={notReady || claimingGas}
+                  disabled={stillLoading || claimingGas}
                   onClick={handleClaimGas}
                 >
                   {claimingGas ? 'Claiming…' : gasClaimed ? 'Claimed' : 'Claim BNB'}
@@ -219,9 +236,9 @@ const FaucetPage: FC = () => {
                   text={`1 claim available in ${unlockTime ? formatCooldown(unlockTime.platformUnlockTime) : ''}`}
                 />
                 <Button
-                  className={clsx('w-full', platformClaimed && '!bg-grey-light !text-grey-dark')}
+                  className={clsx('w-full', (platformClaimed || notAuthenticated) && '!bg-grey-light !text-grey-dark')}
                   visualType={'quaternary'}
-                  disabled={notReady || claimingPlatform}
+                  disabled={stillLoading || claimingPlatform}
                   onClick={handleClaimPlatform}
                 >
                   {claimingPlatform ? 'Claiming…' : platformClaimed ? 'Claimed' : 'Claim PLT'}
