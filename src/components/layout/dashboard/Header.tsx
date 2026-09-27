@@ -63,6 +63,9 @@ const Header: FC = () => {
               <Link className={navLinkClassName('/testnet/')} href={'/testnet/'}>
                 Testnet
               </Link>
+              <Link className={navLinkClassName('/dao/')} href={'/dao/'}>
+                DAO
+              </Link>
               <Link className={navLinkClassName('/debt-repayments/')} href={'/debt-repayments/'}>
                 Debt repayments
               </Link>
@@ -165,6 +168,9 @@ const Header: FC = () => {
             </Link>
             <Link className={navLinkClassName('/testnet/')} href={'/testnet/'}>
               Testnet
+            </Link>
+            <Link className={navLinkClassName('/dao/')} href={'/dao/'}>
+              DAO
             </Link>
             <Link className={navLinkClassName('/debt-repayments/')} href={'/debt-repayments/'}>
               Debt repayments
