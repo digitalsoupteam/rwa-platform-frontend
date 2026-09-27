@@ -5,7 +5,7 @@ import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Icon, Pagination, toast } from '@/components/ui';
 import { Modal } from '@/components/common';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
-import { useQuery } from '@apollo/client/react';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { encodeFunctionData, formatUnits, parseUnits } from 'viem';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import clsx from 'clsx';
@@ -660,6 +660,7 @@ const ProposalCard: FC<{ proposal: Proposal }> = ({ proposal }) => {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
+  const apolloClient = useApolloClient();
 
   // skip for ended proposals — receipt doesn't change and saves an RPC call per card
   const { data: receipt, refetch: refetchReceipt } = useReadContract({
@@ -687,6 +688,9 @@ const ProposalCard: FC<{ proposal: Proposal }> = ({ proposal }) => {
       await publicClient!.waitForTransactionReceipt({ hash: tx });
       toast('Vote submitted!');
       refetchReceipt(); // indexer usually catches up in <5s, worst case user sees stale % briefly
+      // also ask the indexer-backed lists to refetch, so the aggregate for/against and voter
+      // count (not just this user's own receipt) pick up the new vote without a manual reload
+      apolloClient.refetchQueries({ include: ['GetProposals', 'GetVotes'] });
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Vote failed', 'error');
     } finally {
@@ -843,6 +847,7 @@ const CreateProposalForm: FC = () => {
 
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
+  const apolloClient = useApolloClient();
 
   const availableActions = contract ? (ACTIONS_BY_CONTRACT[contract] ?? []) : [];
   const params = action ? (PARAMS_BY_ACTION[action] ?? []) : [];
@@ -880,6 +885,9 @@ const CreateProposalForm: FC = () => {
       });
       await publicClient!.waitForTransactionReceipt({ hash: tx });
       toast('Proposal created!');
+      // the proposals/votes lists are indexer-backed (not read from chain directly), so ask
+      // them to refetch — otherwise the new proposal only shows up after a manual reload
+      apolloClient.refetchQueries({ include: ['GetProposals', 'GetVotes'] });
       setConfirmOpen(false);
       setContract(''); setAction(''); setParamValues({}); setDescription(''); setShowErrors(false);
     } catch (err) {
