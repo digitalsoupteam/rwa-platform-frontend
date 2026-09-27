@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Button, Title, toast } from '@/components/ui';
@@ -70,6 +70,16 @@ const FaucetPage: FC = () => {
   } = useQuery(GET_UNLOCK_TIME, { fetchPolicy: 'network-only', skip: !isAuthenticated });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const unlockTime = (unlockData as any)?.getUnlockTime;
+
+  // formatUnlock/formatCooldown already read Date.now() fresh on every call — the countdown
+  // was only ever frozen because nothing made the page re-render once mounted. This tick
+  // forces a re-render every 30s (plenty for a minutes-granularity countdown) so the labels,
+  // and the tooltip while it's open, count down for real instead of showing a stale value.
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => forceTick(t => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const now = Date.now() / 1000;
   const notReady = authLoading || !isAuthenticated || unlockLoading;
