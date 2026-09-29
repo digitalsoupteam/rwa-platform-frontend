@@ -16,30 +16,29 @@ type Block = TextBlock | ImageBlock;
 let blockIdCounter = 0;
 const nextId = () => String(++blockIdCounter);
 
-const uploadImageMultipart = async (galleryId: string, file: File): Promise<{ id: string; link: string }> => {
+const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT ?? 'http://localhost:443';
+
+const uploadImageMultipart = async (galleryId: string, file: File): Promise<{ id: string; url: string }> => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:443/gateway/graphql';
 
   const formData = new FormData();
-  formData.append(
-    'operations',
-    JSON.stringify({
-      query: `mutation CreateImage($input: CreateImageInput!) { createImage(input: $input) { id link } }`,
-      variables: { input: { galleryId, name: file.name, description: '', file: null } },
-    })
-  );
-  formData.append('map', JSON.stringify({ '0': ['variables.input.file'] }));
-  formData.append('0', file);
+  formData.append('file', file);
+  formData.append('galleryId', galleryId);
+  formData.append('name', file.name);
+  formData.append('description', '');
 
-  const response = await fetch(endpoint, {
+  const response = await fetch(`${API_ENDPOINT}/api/gallery/createImage`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
 
-  const json = await response.json();
-  if (json.errors?.length) throw new Error(json.errors[0].message);
-  return json.data.createImage as { id: string; link: string };
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Failed to upload image');
+  }
+
+  return (await response.json()) as { id: string; url: string };
 };
 
 export interface PostEditorData {
@@ -216,7 +215,7 @@ const PostEditor = forwardRef<PostEditorHandle, PostEditorProps>(({ projectId, p
       setBlocks(prev => {
         const idx = prev.findIndex(b => b.id === insertAfterBlockId);
         if (idx === -1) return prev;
-        const imageBlock: ImageBlock = { type: 'image', id: nextId(), link: uploaded.link };
+        const imageBlock: ImageBlock = { type: 'image', id: nextId(), link: uploaded.url };
         const textBlock: TextBlock = { type: 'text', id: newTextId, content: '' };
         return [...prev.slice(0, idx + 1), imageBlock, textBlock, ...prev.slice(idx + 1)];
       });
