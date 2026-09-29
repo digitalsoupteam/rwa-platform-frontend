@@ -9,7 +9,7 @@ export const GET_PROPOSALS = gql`
       target
       data
       description
-      startTime
+      creationTime
       endTime
       state
       chainId
