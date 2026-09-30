@@ -1,18 +1,13 @@
 import { apolloClient } from '../apollo/client';
-import { AUTHENTICATE, REFRESH_TOKEN, REVOKE_TOKENS } from './operations';
+import { AUTHENTICATE, REVOKE_TOKENS } from './operations';
 import {
   AuthenticateInput,
   AuthenticateMutation,
   AuthTokens,
-  RefreshTokenMutation,
   RevokeTokensInput,
   RevokeTokensMutation,
 } from '@/gql/graphql';
-
-const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
-const USER_ID_KEY = 'userId';
-const WALLET_KEY = 'wallet';
+import { saveTokens } from './tokenManager';
 
 interface EIP712TypedData {
   types: {
@@ -69,29 +64,7 @@ export const authService = {
     }
 
     const tokens: AuthTokens = data.authenticate;
-    this.saveTokens(tokens);
-    return tokens;
-  },
-
-  async refreshTokens(): Promise<AuthTokens | null> {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-
-    if (!refreshToken) return null;
-
-    const { data, error } = await apolloClient.mutate<RefreshTokenMutation>({
-      mutation: REFRESH_TOKEN,
-      variables: { input: { refreshToken } },
-    });
-
-    if (error) {
-      this.clearTokens();
-      throw new Error(`Token refresh error: ${error.message}`);
-    }
-
-    if (!data?.refreshToken) throw new Error('Refresh failed: no tokens returned');
-
-    const tokens = data?.refreshToken;
-    this.saveTokens(tokens);
+    saveTokens(tokens);
     return tokens;
   },
 
@@ -105,35 +78,5 @@ export const authService = {
     if (!data?.revokeTokens) throw new Error('Token revocation failed');
 
     return data?.revokeTokens?.revokedCount || 0;
-  },
-
-  logout(): void {
-    this.clearTokens();
-  },
-
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem(ACCESS_TOKEN_KEY);
-  },
-
-  getWallet(): string | null {
-    return localStorage.getItem(WALLET_KEY);
-  },
-
-  getUserId(): string | null {
-    return localStorage.getItem(USER_ID_KEY);
-  },
-
-  saveTokens(tokens: AuthTokens): void {
-    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
-    localStorage.setItem(USER_ID_KEY, tokens.userId);
-    localStorage.setItem(WALLET_KEY, tokens.wallet);
-  },
-
-  clearTokens(): void {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem(USER_ID_KEY);
-    localStorage.removeItem(WALLET_KEY);
   },
 };

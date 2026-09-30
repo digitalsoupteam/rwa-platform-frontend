@@ -12,18 +12,6 @@ export const AUTHENTICATE = gql`
   }
 `;
 
-// Refresh token mutation
-export const REFRESH_TOKEN = gql`
-  mutation RefreshToken($input: RefreshTokenInput!) {
-    refreshToken(input: $input) {
-      userId
-      wallet
-      accessToken
-      refreshToken
-    }
-  }
-`;
-
 // Revoke tokens mutation
 export const REVOKE_TOKENS = gql`
   mutation RevokeTokens($input: RevokeTokensInput!) {
