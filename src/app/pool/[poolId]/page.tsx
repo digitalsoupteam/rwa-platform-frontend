@@ -10,6 +10,7 @@ import { Breadcrumbs } from '@/components/dashboard';
 import { NewsList } from '@/components/news';
 import { GET_POOL_BY_ID, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
 import { getCollectedHold } from '@/lib/pool/collected';
+import { getPoolStatus, getPoolTradeState } from '@/lib/pool/status';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
@@ -38,18 +39,6 @@ function formatDate(ts: number | null | undefined): string {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yyyy = d.getFullYear();
   return `${dd}.${mm}.${yyyy}`;
-}
-
-function getPoolStatus(pool: AnyPool): string {
-  if (pool.paused) return 'Paused';
-  const now = Date.now() / 1000;
-  if (pool.poolAddress) {
-    if (pool.entryPeriodStart && pool.entryPeriodExpired) {
-      if (now >= pool.entryPeriodStart && now <= pool.entryPeriodExpired) return 'Collecting';
-    }
-    return 'Active';
-  }
-  return 'Pending';
 }
 
 function getProgressPercent(pool: AnyPool): number {
@@ -237,7 +226,7 @@ const PoolPage: FC = () => {
 
   const [priceInt, priceDec] = livePrice.split('.');
   const progress = pool ? getProgressPercent(pool) : 0;
-  const status = pool ? getPoolStatus(pool) : '—';
+  const status = pool ? getPoolStatus(pool, now) : '—';
   const isFlexible = pool ? !pool.fixedSell : false;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -513,9 +502,9 @@ const PoolPage: FC = () => {
 
               {/* ── Buy / Sell widget ─────────────────────────────────────── */}
               {(() => {
-                const now = Math.floor(Date.now() / 1000);
-                const start = pool?.entryPeriodStart;
-                const expired = pool?.entryPeriodExpired;
+                if (!pool) return <BuyTokenWidget pool={pool} />;
+                const start = pool.entryPeriodStart;
+                const { buyDisabledReason, sellDisabledReason } = getPoolTradeState(pool, now);
                 if (start && now < start) {
                   return (
                     <div className='bg-white border border-stroke-primary rounded-2xl p-5 flex flex-col gap-2'>
@@ -526,17 +515,21 @@ const PoolPage: FC = () => {
                     </div>
                   );
                 }
-                if (expired && now > expired) {
+                if (buyDisabledReason && sellDisabledReason) {
                   return (
                     <div className='bg-white border border-stroke-primary rounded-2xl p-5 flex flex-col gap-2'>
-                      <span className='text-base font-bold text-[#1D1D1F]'>Collecting closed</span>
-                      <span className='text-sm text-grey-dark'>
-                        The entry period ended on {formatDate(expired)}.
-                      </span>
+                      <span className='text-base font-bold text-[#1D1D1F]'>Trading unavailable</span>
+                      <span className='text-sm text-grey-dark'>{buyDisabledReason}.</span>
                     </div>
                   );
                 }
-                return <BuyTokenWidget pool={pool} />;
+                return (
+                  <BuyTokenWidget
+                    pool={pool}
+                    buyDisabledReason={buyDisabledReason}
+                    sellDisabledReason={sellDisabledReason}
+                  />
+                );
               })()}
             </div>
           </div>

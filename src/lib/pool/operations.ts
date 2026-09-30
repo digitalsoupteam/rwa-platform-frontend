@@ -29,6 +29,9 @@ export const GET_POOL_BY_ID = gql`
       virtualHoldReserve
       virtualRwaReserve
       isTargetReached
+      isFullyReturned
+      awaitingRwaAmount
+      allowEntryBurn
       ownerId
       ownerType
       incomingTranches {

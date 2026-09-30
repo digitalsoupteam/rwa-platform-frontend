@@ -127,9 +127,12 @@ const SLIDER_MARKS = [0, 25, 50, 75, 100];
 
 interface BuyTokenWidgetProps {
   pool: AnyPool;
+  // When set, that side of the widget is blocked and the reason is shown
+  buyDisabledReason?: string | null;
+  sellDisabledReason?: string | null;
 }
 
-const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
+const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool, buyDisabledReason, sellDisabledReason }) => {
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -238,7 +241,21 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
     [mode, usdtBalanceBig, rwaBalanceBig]
   );
 
+  const disabledReason = mode === 'buy' ? buyDisabledReason : sellDisabledReason;
+
+  // Land on the side that is actually available (e.g. Sell once a fixed pool is sold out)
+  useEffect(() => {
+    if (mode === 'buy' && buyDisabledReason && !sellDisabledReason) {
+      setMode('sell');
+      setInputValue('');
+    } else if (mode === 'sell' && sellDisabledReason && !buyDisabledReason) {
+      setMode('buy');
+      setInputValue('');
+    }
+  }, [mode, buyDisabledReason, sellDisabledReason]);
+
   const handleBuy = async () => {
+    if (buyDisabledReason) return;
     if (!address || !poolAddress || !pool) return;
     if (inputWei === ZERO) {
       toast('Enter an amount', 'error');
@@ -328,6 +345,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
   };
 
   const handleSell = async () => {
+    if (sellDisabledReason) return;
     if (!address || !poolAddress || !pool) return;
     if (inputWei === ZERO) {
       toast('Enter an amount', 'error');
@@ -361,7 +379,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
   const displayBalance = mode === 'buy' ? formatUsdtAmount(usdtBalanceBig) : formatRwaAmount(rwaBalanceBig);
   const displayBalanceSymbol = mode === 'buy' ? 'USDT' : tokenSymbol;
   const isPoolDeployed = !!poolAddress;
-  const canSubmit = isPoolDeployed && inputWei > ZERO && !isSubmitting;
+  const canSubmit = isPoolDeployed && inputWei > ZERO && !isSubmitting && !disabledReason;
 
   return (
     <div className='bg-white border border-stroke-primary rounded-2xl p-5 flex flex-col gap-4'>
@@ -377,6 +395,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
       <div className='grid grid-cols-2 gap-2 overflow-hidden'>
         <Button
           visualType={mode === 'buy' ? 'quaternary' : 'quinary'}
+          disabled={!!buyDisabledReason}
           onClick={() => {
             if (mode === 'buy') return;
             setMode('buy');
@@ -387,6 +406,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         </Button>
         <Button
           visualType={mode === 'sell' ? 'quaternary' : 'quinary'}
+          disabled={!!sellDisabledReason}
           onClick={() => {
             if (mode === 'sell') return;
             setMode('sell');
@@ -510,6 +530,8 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         </span>
         <span className='text-sm text-grey-dark'>~ {formatUsdtAmount(feeWei)} USDT</span>
       </div>
+
+      {disabledReason && <p className='text-sm text-grey-dark'>{disabledReason}</p>}
 
       {/* Action button */}
       {!address ? (

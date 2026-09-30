@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button, ButtonBorderDash, Card, Title } from '@/components/ui';
 import { GET_POOLS } from '@/lib/pool/operations';
 import { getCollectedHold } from '@/lib/pool/collected';
+import { getPoolStatus } from '@/lib/pool/status';
 import { formatTicker } from '@/lib/formatTicker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,19 +40,6 @@ function formatDate(ts: number | null | undefined): string {
     month: '2-digit',
     year: 'numeric',
   });
-}
-
-function getPoolStatus(pool: Pool): string {
-  if (pool.paused) return 'Paused';
-  if (pool.isFullyReturned) return 'Completed';
-  const now = Date.now() / 1000;
-  if (pool.poolAddress) {
-    if (pool.entryPeriodStart && pool.entryPeriodExpired) {
-      if (now >= pool.entryPeriodStart && now <= pool.entryPeriodExpired) return 'Collecting';
-    }
-    return 'Active';
-  }
-  return 'Pending';
 }
 
 function getProgressPercent(pool: Pool): number {
