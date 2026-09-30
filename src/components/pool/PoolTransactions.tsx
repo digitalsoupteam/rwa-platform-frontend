@@ -2,12 +2,11 @@
 
 import React, { FC, useEffect, useState, useRef } from 'react';
 import { createClient } from 'graphql-sse';
+import { gqlFetch } from '@/lib/gqlFetch';
+import { SSE_ENDPOINT } from '@/lib/config';
+import { getAccessToken } from '@/lib/auth/tokenManager';
 
 // ── GraphQL ──────────────────────────────────────────────────────────────────
-
-const GRAPHQL_ENDPOINT =
-  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:443/gateway/graphql';
-const SSE_ENDPOINT = GRAPHQL_ENDPOINT + '/stream';
 
 const GET_POOL_TRANSACTIONS = `
   query GetPoolTransactions($input: GetPoolTransactionsInput!) {
@@ -43,21 +42,6 @@ const TRANSACTION_UPDATES_SUBSCRIPTION = `
     }
   }
 `;
-
-async function gqlFetch(query: string, variables: Record<string, unknown>) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  const r = await fetch(GRAPHQL_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  const json = await r.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json.data;
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -145,46 +129,58 @@ const PoolTransactions: FC<PoolTransactionsProps> = ({ poolAddress }) => {
   useEffect(() => {
     if (!poolAddress) return;
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const sseClient = createClient({
-      url: SSE_ENDPOINT,
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    let cancelled = false;
+    let dispose: (() => void) | undefined;
 
-    const dispose = sseClient.subscribe(
-      {
-        query: TRANSACTION_UPDATES_SUBSCRIPTION,
-        variables: { poolAddress },
-      },
-      {
-        next: result => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const update = (result as any)?.data?.transactionUpdates;
-          if (!update) return;
+    const connect = async () => {
+      const token = await getAccessToken();
+      if (cancelled) return;
 
-          const newTx: PoolTransaction = {
-            id: `sub-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-            poolAddress: update.poolAddress,
-            transactionType: update.transactionType,
-            userAddress: update.userAddress,
-            timestamp: update.timestamp,
-            rwaAmount: update.rwaAmount,
-            holdAmount: update.holdAmount,
-            bonusAmount: update.bonusAmount ?? '0',
-            holdFee: update.holdFee ?? '0',
-            bonusFee: update.bonusFee ?? '0',
-          };
-
-          setTransactions(prev => [newTx, ...prev].slice(0, 50));
+      const sseClient = createClient({
+        url: SSE_ENDPOINT,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        error: err => console.error('Transactions SSE error:', err),
-        complete: () => {},
-      },
-    );
+      });
 
-    return () => dispose();
+      dispose = sseClient.subscribe(
+        {
+          query: TRANSACTION_UPDATES_SUBSCRIPTION,
+          variables: { poolAddress },
+        },
+        {
+          next: result => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const update = (result as any)?.data?.transactionUpdates;
+            if (!update) return;
+
+            const newTx: PoolTransaction = {
+              id: `sub-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+              poolAddress: update.poolAddress,
+              transactionType: update.transactionType,
+              userAddress: update.userAddress,
+              timestamp: update.timestamp,
+              rwaAmount: update.rwaAmount,
+              holdAmount: update.holdAmount,
+              bonusAmount: update.bonusAmount ?? '0',
+              holdFee: update.holdFee ?? '0',
+              bonusFee: update.bonusFee ?? '0',
+            };
+
+            setTransactions(prev => [newTx, ...prev].slice(0, 50));
+          },
+          error: err => console.error('Transactions SSE error:', err),
+          complete: () => {},
+        },
+      );
+    };
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
   }, [poolAddress]);
 
   if (loading) {
