@@ -30,6 +30,7 @@ import {
   GET_COMPANIES_FOR_WITHDRAWALS,
   GET_WITHDRAWAL_TRANSACTIONS,
 } from '@/lib/withdrawals/operations';
+import { getCollectedHold } from '@/lib/pool/collected';
 import type { TokenBalance, Pool, Business, Company, Transaction } from '@/gql/graphql';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -173,7 +174,7 @@ const WithdrawalsPage: FC = () => {
           companyId: business?.ownerType === 'company' ? business.ownerId : undefined,
           companyName,
           projectName: business?.name ?? '—',
-          collected: Math.round(holdWeiToNum(BigInt(pool.realHoldReserve || '0'))),
+          collected: Math.round(holdWeiToNum(BigInt(getCollectedHold(pool)))),
           goal: Math.round(holdWeiToNum(BigInt(pool.expectedHoldAmount || '0'))),
           status,
           virtualHoldReserve: pool.virtualHoldReserve,

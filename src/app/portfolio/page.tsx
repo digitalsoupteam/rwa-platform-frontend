@@ -29,6 +29,7 @@ import {
   GET_BUSINESSES_FOR_PORTFOLIO,
   GET_COMPANIES_FOR_PORTFOLIO,
 } from '@/lib/portfolio/operations';
+import { getCollectedHold } from '@/lib/pool/collected';
 import type { TokenBalance, Pool, PoolTransaction, IncomingTranche } from '@/gql/graphql';
 
 import 'swiper/css';
@@ -248,7 +249,7 @@ function derivePortfolioData(
     const profitStr = totalBuyHold > 0 ? `${profitNum >= 0 ? '+' : ''}${profitNum.toFixed(1)}%` : '—';
 
     const status = deriveStatus(pool);
-    const collected = holdToNum(pool.realHoldReserve);
+    const collected = holdToNum(getCollectedHold(pool));
     const goal = holdToNum(pool.expectedHoldAmount);
 
     const business = pool.businessId ? businessById.get(pool.businessId) : undefined;

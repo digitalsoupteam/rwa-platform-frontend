@@ -12,6 +12,7 @@ import { CommonLayout, Wrapper } from '@/components/layout';
 import { Button, Card, Title } from '@/components/ui';
 import { MarketplaceCard, type MarketplaceProject } from '@/components/marketplace';
 import { GET_POOLS } from '@/lib/pool/operations';
+import { getCollectedHold } from '@/lib/pool/collected';
 import { formatTicker } from '@/lib/formatTicker';
 import Link from 'next/link';
 
@@ -67,7 +68,7 @@ function poolToProject(pool: AnyPool): MarketplaceProject {
     price,
     priceNum: parseFloat(price) || 0,
     monthlyProfit: getMonthlyProfit(pool.rewardPercent),
-    collected: parseWeiToNum(pool.realHoldReserve),
+    collected: parseWeiToNum(getCollectedHold(pool)),
     total: parseWeiToNum(pool.expectedHoldAmount),
     dueDate: formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
     createdAt: pool.createdAt ?? 0,

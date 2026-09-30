@@ -28,6 +28,7 @@ export const GET_POOL_BY_ID = gql`
       realHoldReserve
       virtualHoldReserve
       virtualRwaReserve
+      isTargetReached
       ownerId
       ownerType
       incomingTranches {
@@ -67,6 +68,7 @@ export const GET_POOL_DETAIL = gql`
       realHoldReserve
       virtualHoldReserve
       virtualRwaReserve
+      isTargetReached
       incomingTranches {
         amount
         expiredAt
@@ -76,7 +78,7 @@ export const GET_POOL_DETAIL = gql`
   }
 `;
 
-export const GET_POOLS = gql`
+export const GET_POOLS= gql`
   query GetPools($input: FilterInput!) {
     getPools(input: $input) {
       id

@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, ButtonBorderDash, Card, Title } from '@/components/ui';
 import { GET_POOLS } from '@/lib/pool/operations';
+import { getCollectedHold } from '@/lib/pool/collected';
 import { formatTicker } from '@/lib/formatTicker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,7 +56,7 @@ function getPoolStatus(pool: Pool): string {
 
 function getProgressPercent(pool: Pool): number {
   try {
-    const current = pool.realHoldReserve ? Number(BigInt(pool.realHoldReserve)) : 0;
+    const current = Number(BigInt(getCollectedHold(pool)));
     const target = pool.expectedHoldAmount ? Number(BigInt(pool.expectedHoldAmount)) : 0;
     if (!target) return 0;
     return Math.min(100, (current / target) * 100);
@@ -133,7 +134,7 @@ const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool, projectId }) =>
             />
           )}
           <span className={'relative z-10 text-sm text-white'}>
-            {formatAmount(pool.realHoldReserve)} / {formatAmount(pool.expectedHoldAmount)}
+            {formatAmount(getCollectedHold(pool))} / {formatAmount(pool.expectedHoldAmount)}
           </span>
         </div>
       </div>

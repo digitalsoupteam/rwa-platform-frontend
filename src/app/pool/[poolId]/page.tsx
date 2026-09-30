@@ -9,6 +9,7 @@ import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Breadcrumbs } from '@/components/dashboard';
 import { NewsList } from '@/components/news';
 import { GET_POOL_BY_ID, GET_RAW_PRICE_DATA } from '@/lib/pool/operations';
+import { getCollectedHold } from '@/lib/pool/collected';
 import { GET_BUSINESS_WITH_RISK } from '@/lib/business/operations';
 import { GET_COMPANY } from '@/lib/company/operations';
 import { Button, Icon, Title } from '@/components/ui';
@@ -53,7 +54,7 @@ function getPoolStatus(pool: AnyPool): string {
 
 function getProgressPercent(pool: AnyPool): number {
   try {
-    const current = pool.realHoldReserve ? Number(BigInt(pool.realHoldReserve)) : 0;
+    const current = Number(BigInt(getCollectedHold(pool)));
     const target = pool.expectedHoldAmount ? Number(BigInt(pool.expectedHoldAmount)) : 0;
     if (!target) return 0;
     return Math.min(100, (current / target) * 100);
@@ -440,7 +441,7 @@ const PoolPage: FC = () => {
                       />
                     )}
                     <span className='relative z-10 text-sm text-white'>
-                      {formatHoldAmount(pool?.realHoldReserve)} / {formatHoldAmount(pool?.expectedHoldAmount)}
+                      {formatHoldAmount(getCollectedHold(pool))} / {formatHoldAmount(pool?.expectedHoldAmount)}
                     </span>
                   </div>
                   <div className='flex items-center justify-between text-sm text-grey-dark'>
