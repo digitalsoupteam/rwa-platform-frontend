@@ -167,6 +167,16 @@ interface BuyTokenWidgetProps {
   sellDisabledReason?: string | null;
 }
 
+const LockIcon: FC = () => (
+  <svg width={'14'} height={'14'} viewBox={'0 0 14 14'} fill={'none'} xmlns={'http://www.w3.org/2000/svg'} aria-hidden>
+    <rect x={'2.5'} y={'6'} width={'9'} height={'6.5'} rx={'1.5'} stroke={'currentColor'} strokeWidth={'1.3'} />
+    <path d={'M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6'} stroke={'currentColor'} strokeWidth={'1.3'} strokeLinecap={'round'} />
+  </svg>
+);
+
+// Inactive look for a trade side the pool currently doesn't allow
+const LOCKED_TAB_CLASS = '!bg-grey-light !text-grey-dark !border-transparent cursor-not-allowed';
+
 const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool, buyDisabledReason, sellDisabledReason }) => {
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
   const [inputValue, setInputValue] = useState('');
@@ -285,6 +295,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool, buyDisabledReason, sell
   );
 
   const disabledReason = mode === 'buy' ? buyDisabledReason : sellDisabledReason;
+  const lockReasons = Array.from(new Set([buyDisabledReason, sellDisabledReason].filter((r): r is string => !!r)));
 
   // Land on the side that is actually available (e.g. Sell once a fixed pool is sold out)
   useEffect(() => {
@@ -438,27 +449,41 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool, buyDisabledReason, sell
       <div className='grid grid-cols-2 gap-2 overflow-hidden'>
         <Button
           visualType={mode === 'buy' ? 'quaternary' : 'quinary'}
+          className={clsx(buyDisabledReason && LOCKED_TAB_CLASS)}
           disabled={!!buyDisabledReason}
+          aria-label={buyDisabledReason ? `Buy (locked): ${buyDisabledReason}` : undefined}
           onClick={() => {
             if (mode === 'buy') return;
             setMode('buy');
             setInputValue('');
           }}
         >
+          {buyDisabledReason && <LockIcon />}
           Buy
         </Button>
         <Button
           visualType={mode === 'sell' ? 'quaternary' : 'quinary'}
+          className={clsx(sellDisabledReason && LOCKED_TAB_CLASS)}
           disabled={!!sellDisabledReason}
+          aria-label={sellDisabledReason ? `Sell (locked): ${sellDisabledReason}` : undefined}
           onClick={() => {
             if (mode === 'sell') return;
             setMode('sell');
             setInputValue('');
           }}
         >
+          {sellDisabledReason && <LockIcon />}
           Sell
         </Button>
       </div>
+
+      {/* Why a side is locked, right under the tabs */}
+      {lockReasons.map(reason => (
+        <p key={reason} className='text-sm text-grey-dark flex items-start gap-1.5'>
+          <span className='mt-0.5 shrink-0'><LockIcon /></span>
+          {reason}
+        </p>
+      ))}
 
       {/* Input */}
       <div className='flex flex-col gap-1.5'>
@@ -574,7 +599,6 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool, buyDisabledReason, sell
         <span className='text-sm text-grey-dark'>~ {formatUsdtAmount(feeWei)} USDT</span>
       </div>
 
-      {disabledReason && <p className='text-sm text-grey-dark'>{disabledReason}</p>}
 
       {/* Action button */}
       {!address ? (
