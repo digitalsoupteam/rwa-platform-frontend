@@ -155,9 +155,11 @@ const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool, projectId }) =>
 
 interface PoolsSectionProps {
   projectId: string;
+  // When set, "Add pool" is inactive and this text explains why (project not deployed on-chain yet).
+  addPoolDisabledReason?: string;
 }
 
-const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
+const PoolsSection: FC<PoolsSectionProps> = ({ projectId, addPoolDisabledReason }) => {
   const params = useParams();
 
   const { data } = useQuery(GET_POOLS, {
@@ -172,18 +174,30 @@ const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
     <>
       <div className={'flex items-center justify-between mb-6'}>
         <Title size={'xs'} level={2}>Pools</Title>
-        {pools.length > 0 && (
-          <Button visualType={'quaternary'} href={`/add-pool?businessId=${projectId}`}>
-            + Add pool
-          </Button>
-        )}
+        {pools.length > 0 &&
+          (addPoolDisabledReason ? (
+            <Button visualType={'quaternary'} disabled className={'opacity-50 cursor-not-allowed'}>
+              + Add pool
+            </Button>
+          ) : (
+            <Button visualType={'quaternary'} href={`/add-pool?businessId=${projectId}`}>
+              + Add pool
+            </Button>
+          ))}
       </div>
+      {addPoolDisabledReason && <p className={'text-sm text-label-tertiary mb-4'}>{addPoolDisabledReason}</p>}
 
       {pools.length === 0 ? (
         <div className={'max-w-110'}>
-          <ButtonBorderDash href={`/add-pool?businessId=${projectId}`} className={'min-h-74.5'}>
-            Add pool
-          </ButtonBorderDash>
+          {addPoolDisabledReason ? (
+            <ButtonBorderDash disabled className={'min-h-74.5 opacity-50 cursor-not-allowed'}>
+              Add pool
+            </ButtonBorderDash>
+          ) : (
+            <ButtonBorderDash href={`/add-pool?businessId=${projectId}`} className={'min-h-74.5'}>
+              Add pool
+            </ButtonBorderDash>
+          )}
         </div>
       ) : (
         <div className={'grid grid-cols-2 gap-4'}>

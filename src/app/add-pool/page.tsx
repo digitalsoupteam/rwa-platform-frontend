@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { DashboardLayout, Wrapper } from '@/components/layout';
 import { Button, Title, toast } from '@/components/ui';
 import { Calendar, ConfirmModal } from '@/components/common';
-import { useMutation, useApolloClient } from '@apollo/client/react';
+import { useMutation, useApolloClient, useQuery } from '@apollo/client/react';
+import Link from 'next/link';
+import { GET_BUSINESS_DEPLOY_INFO } from '@/lib/business/operations';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import clsx from 'clsx';
@@ -288,6 +290,17 @@ const AddPoolContent: FC = () => {
   const [deployTxHash, setDeployTxHash] = useState<`0x${string}` | undefined>();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: deployTxHash });
 
+  // The pool's on-chain deploy needs the project's RWA contract, so block everything
+  // (including the DB record creation) until the backend reports its tokenAddress.
+  const { data: businessDeployData, loading: businessDeployLoading } = useQuery(GET_BUSINESS_DEPLOY_INFO, {
+    variables: { id: businessId },
+    skip: !businessId,
+    fetchPolicy: 'network-only',
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const projectDeployed = !!(businessDeployData as any)?.getBusiness?.tokenAddress;
+  const projectNotDeployed = !!businessId && !businessDeployLoading && !projectDeployed;
+
   const [createPool] = useMutation(CREATE_POOL);
   const [requestApproval] = useMutation(REQUEST_POOL_APPROVAL_SIGNATURES);
 
@@ -433,6 +446,10 @@ const AddPoolContent: FC = () => {
 
   // ── Validate and open confirmation modal ──────────────────────────────────
   const handleDeployClick = () => {
+    if (projectNotDeployed || businessDeployLoading) {
+      toast('Deploy the project first, then create a pool', 'error');
+      return;
+    }
     if (!walletAddress) {
       toast('Connect your wallet first', 'error');
       return;
@@ -460,6 +477,10 @@ const AddPoolContent: FC = () => {
   // ── Deploy pool ────────────────────────────────────────────────────────────
   const handleDeploy = async () => {
     setShowDeployModal(false);
+    if (!projectDeployed) {
+      toast('Deploy the project first, then create a pool', 'error');
+      return;
+    }
     setIsDeploying(true);
     try {
       const { startUnix, endUnix, completionPeriodExpiredUnix, incomingAmounts, incomingDeadlines, outgoingAmounts, outgoingTimestamps } =
@@ -646,7 +667,7 @@ const AddPoolContent: FC = () => {
                 visualType="quaternary"
                 type="button"
                 onClick={handleDeployClick}
-                disabled={isDeploying || isConfirming}
+                disabled={isDeploying || isConfirming || projectNotDeployed || businessDeployLoading}
               >
                 {isDeploying || isConfirming ? 'Deploying…' : 'Deploy pool'}
               </Button>
@@ -656,6 +677,15 @@ const AddPoolContent: FC = () => {
       </section>
 
       <Wrapper>
+        {projectNotDeployed && (
+          <div className="mb-6 rounded-xl border border-stroke-primary bg-bg-tertiary px-4 py-3 text-sm text-grey-dark">
+            This project isn&apos;t deployed on-chain yet, so a pool can&apos;t be created.{' '}
+            <Link href={`/project/${businessId}`} className="text-blue font-medium hover:underline">
+              Go to the project and deploy it first
+            </Link>
+            .
+          </div>
+        )}
         <div className="flex flex-col gap-10 pb-16">
 
           {/* ── Information ──────────────────────────────────────────────────── */}
