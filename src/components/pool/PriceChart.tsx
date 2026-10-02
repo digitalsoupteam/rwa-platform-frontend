@@ -3,6 +3,9 @@
 import React, { FC, useRef, useEffect, useState } from 'react';
 import { createClient } from 'graphql-sse';
 import { createChart, CandlestickSeries, HistogramSeries, ColorType, CrosshairMode, LineStyle } from 'lightweight-charts';
+import { gqlFetch } from '@/lib/gqlFetch';
+import { SSE_ENDPOINT } from '@/lib/config';
+import { getAccessToken } from '@/lib/auth/tokenManager';
 
 // ── Helpers (from demo utils.js) ──────────────────────────────────────────────
 
@@ -55,10 +58,6 @@ function alignCandleData(data: CandlePoint[]): CandlePoint[] {
 
 // ── GraphQL ──────────────────────────────────────────────────────────────────
 
-const GRAPHQL_ENDPOINT =
-  process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:443/gateway/graphql';
-const SSE_ENDPOINT = GRAPHQL_ENDPOINT + '/stream';
-
 const OHLC_QUERY = `
   query GetOhlcPriceData($input: GetOhlcPriceDataInput!) {
     getOhlcPriceData(input: $input) { timestamp open high low close }
@@ -76,21 +75,6 @@ const PRICE_UPDATES_SUBSCRIPTION = `
     priceUpdates(poolAddress: $poolAddress) { poolAddress timestamp price }
   }
 `;
-
-async function gqlFetch(query: string, variables: Record<string, unknown>) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  const r = await fetch(GRAPHQL_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  const json = await r.json();
-  if (json.errors) throw new Error(json.errors[0].message);
-  return json.data;
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -260,59 +244,71 @@ const PriceChart: FC<PriceChartProps> = ({ poolAddress, interval, fallback = nul
   useEffect(() => {
     if (!poolAddress) return;
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-    const sseClient = createClient({
-      url: SSE_ENDPOINT,
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
+    let cancelled = false;
+    let dispose: (() => void) | undefined;
 
-    const dispose = sseClient.subscribe(
-      {
-        query: PRICE_UPDATES_SUBSCRIPTION,
-        variables: { poolAddress },
-      },
-      {
-        next: (result) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const update = (result as any)?.data?.priceUpdates;
-          if (!update) return;
+    const connect = async () => {
+      const token = await getAccessToken();
+      if (cancelled) return;
 
-          const price = parseWeiPrice(update.price);
-          if (price <= 0) return;
-
-          const intervalSecs = getIntervalSeconds(interval);
-          const candleTime = Math.floor(update.timestamp / intervalSecs) * intervalSecs;
-
-          const candles = candlesRef.current;
-          const lastCandle = candles.length > 0 ? candles[candles.length - 1] : null;
-
-          if (lastCandle && lastCandle.time === candleTime) {
-            // Update existing candle
-            lastCandle.close = price;
-            if (price > lastCandle.high) lastCandle.high = price;
-            if (price < lastCandle.low) lastCandle.low = price;
-            candleSeriesRef.current?.update(lastCandle);
-          } else if (lastCandle && candleTime > lastCandle.time) {
-            // New candle — open = previous close
-            const newCandle: CandlePoint = {
-              time: candleTime,
-              open: lastCandle.close,
-              high: price,
-              low: price,
-              close: price,
-            };
-            candles.push(newCandle);
-            candleSeriesRef.current?.update(newCandle);
-          }
+      const sseClient = createClient({
+        url: SSE_ENDPOINT,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        error: (err) => console.error('SSE error:', err),
-        complete: () => {},
-      }
-    );
+      });
 
-    return () => dispose();
+      dispose = sseClient.subscribe(
+        {
+          query: PRICE_UPDATES_SUBSCRIPTION,
+          variables: { poolAddress },
+        },
+        {
+          next: (result) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const update = (result as any)?.data?.priceUpdates;
+            if (!update) return;
+
+            const price = parseWeiPrice(update.price);
+            if (price <= 0) return;
+
+            const intervalSecs = getIntervalSeconds(interval);
+            const candleTime = Math.floor(update.timestamp / intervalSecs) * intervalSecs;
+
+            const candles = candlesRef.current;
+            const lastCandle = candles.length > 0 ? candles[candles.length - 1] : null;
+
+            if (lastCandle && lastCandle.time === candleTime) {
+              // Update existing candle
+              lastCandle.close = price;
+              if (price > lastCandle.high) lastCandle.high = price;
+              if (price < lastCandle.low) lastCandle.low = price;
+              candleSeriesRef.current?.update(lastCandle);
+            } else if (lastCandle && candleTime > lastCandle.time) {
+              // New candle — open = previous close
+              const newCandle: CandlePoint = {
+                time: candleTime,
+                open: lastCandle.close,
+                high: price,
+                low: price,
+                close: price,
+              };
+              candles.push(newCandle);
+              candleSeriesRef.current?.update(newCandle);
+            }
+          },
+          error: (err) => console.error('SSE error:', err),
+          complete: () => {},
+        }
+      );
+    };
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
   }, [poolAddress, interval]);
 
   // ── Render ──────────────────────────────────────────────────────────────────

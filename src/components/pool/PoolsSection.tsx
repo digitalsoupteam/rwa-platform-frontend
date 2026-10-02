@@ -7,6 +7,8 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button, ButtonBorderDash, Card, Title } from '@/components/ui';
 import { GET_POOLS } from '@/lib/pool/operations';
+import { getCollectedHold } from '@/lib/pool/collected';
+import { getPoolStatus } from '@/lib/pool/status';
 import { formatTicker } from '@/lib/formatTicker';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,22 +42,9 @@ function formatDate(ts: number | null | undefined): string {
   });
 }
 
-function getPoolStatus(pool: Pool): string {
-  if (pool.paused) return 'Paused';
-  if (pool.isFullyReturned) return 'Completed';
-  const now = Date.now() / 1000;
-  if (pool.poolAddress) {
-    if (pool.entryPeriodStart && pool.entryPeriodExpired) {
-      if (now >= pool.entryPeriodStart && now <= pool.entryPeriodExpired) return 'Collecting';
-    }
-    return 'Active';
-  }
-  return 'Pending';
-}
-
 function getProgressPercent(pool: Pool): number {
   try {
-    const current = pool.realHoldReserve ? Number(BigInt(pool.realHoldReserve)) : 0;
+    const current = Number(BigInt(getCollectedHold(pool)));
     const target = pool.expectedHoldAmount ? Number(BigInt(pool.expectedHoldAmount)) : 0;
     if (!target) return 0;
     return Math.min(100, (current / target) * 100);
@@ -133,7 +122,7 @@ const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool, projectId }) =>
             />
           )}
           <span className={'relative z-10 text-sm text-white'}>
-            {formatAmount(pool.realHoldReserve)} / {formatAmount(pool.expectedHoldAmount)}
+            {formatAmount(getCollectedHold(pool))} / {formatAmount(pool.expectedHoldAmount)}
           </span>
         </div>
       </div>
@@ -166,9 +155,11 @@ const PoolCard: FC<{ pool: Pool; projectId: string }> = ({ pool, projectId }) =>
 
 interface PoolsSectionProps {
   projectId: string;
+  // When set, "Add pool" is inactive and this text explains why (project not deployed on-chain yet).
+  addPoolDisabledReason?: string;
 }
 
-const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
+const PoolsSection: FC<PoolsSectionProps> = ({ projectId, addPoolDisabledReason }) => {
   const params = useParams();
 
   const { data } = useQuery(GET_POOLS, {
@@ -183,18 +174,30 @@ const PoolsSection: FC<PoolsSectionProps> = ({ projectId }) => {
     <>
       <div className={'flex items-center justify-between mb-6'}>
         <Title size={'xs'} level={2}>Pools</Title>
-        {pools.length > 0 && (
-          <Button visualType={'quaternary'} href={`/add-pool?businessId=${projectId}`}>
-            + Add pool
-          </Button>
-        )}
+        {pools.length > 0 &&
+          (addPoolDisabledReason ? (
+            <Button visualType={'quaternary'} disabled className={'opacity-50 cursor-not-allowed'}>
+              + Add pool
+            </Button>
+          ) : (
+            <Button visualType={'quaternary'} href={`/add-pool?businessId=${projectId}`}>
+              + Add pool
+            </Button>
+          ))}
       </div>
+      {addPoolDisabledReason && <p className={'text-sm text-label-tertiary mb-4'}>{addPoolDisabledReason}</p>}
 
       {pools.length === 0 ? (
         <div className={'max-w-110'}>
-          <ButtonBorderDash href={`/add-pool?businessId=${projectId}`} className={'min-h-74.5'}>
-            Add pool
-          </ButtonBorderDash>
+          {addPoolDisabledReason ? (
+            <ButtonBorderDash disabled className={'min-h-74.5 opacity-50 cursor-not-allowed'}>
+              Add pool
+            </ButtonBorderDash>
+          ) : (
+            <ButtonBorderDash href={`/add-pool?businessId=${projectId}`} className={'min-h-74.5'}>
+              Add pool
+            </ButtonBorderDash>
+          )}
         </div>
       ) : (
         <div className={'grid grid-cols-2 gap-4'}>

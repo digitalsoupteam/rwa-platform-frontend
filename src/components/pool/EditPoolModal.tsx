@@ -8,14 +8,14 @@ import { EDIT_POOL } from '@/lib/pool/operations';
 import { Button, Input, TextArea, toast } from '@/components/ui';
 import { Modal } from '@/components/common';
 import { CategoryCheckboxes } from '@/components/dashboard';
+import { API_ENDPOINT } from '@/lib/config';
+import { clearSession, getAccessToken } from '@/lib/auth/tokenManager';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPool = any;
 
-const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT ?? 'http://localhost:443';
-
 async function uploadPoolImage(poolId: string, file: File): Promise<string> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const token = await getAccessToken();
   const formData = new FormData();
   formData.append('file', file);
   formData.append('poolId', poolId);
@@ -24,6 +24,8 @@ async function uploadPoolImage(poolId: string, file: File): Promise<string> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
+  if (res.status === 401) clearSession();
+
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || 'Failed to upload image');

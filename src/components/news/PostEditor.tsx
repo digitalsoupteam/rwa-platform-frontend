@@ -8,6 +8,8 @@ import { Icon, toast } from '@/components/ui';
 import clsx from 'clsx';
 import UploadMediaModal from './UploadMediaModal';
 import Image from 'next/image';
+import { API_ENDPOINT } from '@/lib/config';
+import { clearSession, getAccessToken } from '@/lib/auth/tokenManager';
 
 type TextBlock = { type: 'text'; id: string; content: string };
 type ImageBlock = { type: 'image'; id: string; link: string };
@@ -16,10 +18,8 @@ type Block = TextBlock | ImageBlock;
 let blockIdCounter = 0;
 const nextId = () => String(++blockIdCounter);
 
-const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT ?? 'http://localhost:443';
-
 const uploadImageMultipart = async (galleryId: string, file: File): Promise<{ id: string; url: string }> => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const token = await getAccessToken();
 
   const formData = new FormData();
   formData.append('file', file);
@@ -32,6 +32,8 @@ const uploadImageMultipart = async (galleryId: string, file: File): Promise<{ id
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
+
+  if (response.status === 401) clearSession();
 
   if (!response.ok) {
     const text = await response.text();

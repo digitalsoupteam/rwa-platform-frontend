@@ -10,6 +10,7 @@ import type { MarketplaceProject } from '@/components/marketplace';
 import { RISK_SCORE_RANGES, POOL_STAGES, POOL_TYPES, type PoolStage, type PoolType } from '@/components/marketplace/MarketplaceFilters';
 import type { FilterChip } from '@/components/marketplace/MobileFiltersModal';
 import { GET_POOLS } from '@/lib/pool/operations';
+import { getCollectedHold } from '@/lib/pool/collected';
 import { GET_BUSINESSES } from '@/lib/business/operations';
 import { formatTicker } from '@/lib/formatTicker';
 import { getCountryByCode } from '@/lib/countries';
@@ -68,7 +69,7 @@ function poolToProject(pool: AnyPool): MarketplaceProject {
     price,
     priceNum,
     monthlyProfit: getMonthlyProfit(pool.rewardPercent),
-    collected:     parseWeiToNum(pool.realHoldReserve),
+    collected:     parseWeiToNum(getCollectedHold(pool)),
     total:         parseWeiToNum(pool.expectedHoldAmount),
     dueDate:       formatDate(pool.completionPeriodExpired ?? pool.entryPeriodExpired),
     createdAt:     pool.createdAt ?? 0,

@@ -1,4 +1,4 @@
-import React, { FC, HTMLAttributes } from 'react';
+import React, { ButtonHTMLAttributes, FC } from 'react';
 import Link, { LinkProps } from 'next/link';
 
 import PlusTightSVG from '../../../public/icons/plus-tight.svg';
@@ -30,10 +30,10 @@ const innerContent = (children: React.ReactNode) => (
 );
 
 const baseClass =
-  'cursor-pointer relative flex items-center justify-center p-4 с-border-dash rounded-xl w-full text-label-tertiary text-lg font-medium';
+  'not-disabled:cursor-pointer relative flex items-center justify-center p-4 с-border-dash rounded-xl w-full text-label-tertiary text-lg font-medium';
 
 type ButtonBorderDashProps =
-  | (HTMLAttributes<HTMLButtonElement> & { href?: undefined })
+  | (ButtonHTMLAttributes<HTMLButtonElement> & { href?: undefined })
   | (Omit<LinkProps, 'className'> & { className?: string; children?: React.ReactNode; href: string });
 
 const ButtonBorderDash: FC<ButtonBorderDashProps> = ({ className, children, ...props }) => {
@@ -48,7 +48,7 @@ const ButtonBorderDash: FC<ButtonBorderDashProps> = ({ className, children, ...p
   }
 
   return (
-    <button className={clsx(baseClass, className)} {...(props as HTMLAttributes<HTMLButtonElement>)}>
+    <button className={clsx(baseClass, className)} {...(props as ButtonHTMLAttributes<HTMLButtonElement>)}>
       {dashRect}
       {innerContent(children)}
     </button>

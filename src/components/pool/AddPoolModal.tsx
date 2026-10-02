@@ -8,14 +8,14 @@ import clsx from 'clsx';
 import { Modal } from '@/components/common';
 import { Button } from '@/components/ui';
 import { GET_COMPANIES } from '@/lib/company/operations';
-import { GET_BUSINESSES } from '@/lib/business/operations';
+import { GET_BUSINESSES, GET_BUSINESSES_DEPLOY_STATUS } from '@/lib/business/operations';
 import { BusinessOwnerType } from '@/gql/graphql';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 interface SelectProps {
   value: string;
   onChange: (id: string) => void;
-  options: { id: string; name: string }[];
+  options: { id: string; name: string; disabled?: boolean }[];
   placeholder: string;
   disabled?: boolean;
 }
@@ -66,9 +66,11 @@ const Select: FC<SelectProps> = ({ value, onChange, options, placeholder, disabl
             <button
               key={opt.id}
               type={'button'}
+              disabled={opt.disabled}
               onClick={() => { onChange(opt.id); setOpen(false); }}
               className={clsx(
-                'w-full text-left px-3 py-2.5 text-sm cursor-pointer transition-colors hover:bg-blue-light',
+                'w-full text-left px-3 py-2.5 text-sm transition-colors',
+                opt.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-blue-light',
                 value === opt.id && 'text-blue font-medium'
               )}
             >
@@ -105,7 +107,26 @@ const AddPoolModal: FC<AddPoolModalProps> = ({ isOpen, onClose }) => {
   });
 
   const companies = (companiesData?.getCompanies ?? []).map(c => ({ id: c.id, name: c.name }));
-  const businesses = (businessesData?.getBusinesses ?? []).map(b => ({ id: b.id, name: b.name }));
+  // A project can only get pools once it is deployed on-chain (backend has its tokenAddress).
+  const { data: deployStatusData } = useQuery(GET_BUSINESSES_DEPLOY_STATUS, {
+    variables: {
+      input: { filter: { ownerId: selectedCompanyId, ownerType: BusinessOwnerType.Company } },
+    },
+    skip: !selectedCompanyId,
+    fetchPolicy: 'network-only',
+  });
+  const deployedIds = new Set<string>(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ((deployStatusData as any)?.getBusinesses ?? [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((b: any) => !!b.tokenAddress)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((b: any) => b.id as string)
+  );
+  const businesses = (businessesData?.getBusinesses ?? []).map(b => {
+    const deployed = deployedIds.has(b.id);
+    return { id: b.id, name: deployed ? b.name : `${b.name} (not deployed)`, disabled: !deployed };
+  });
 
   useEffect(() => {
     setSelectedBusinessId('');

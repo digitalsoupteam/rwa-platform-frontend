@@ -4,8 +4,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { useAccount, useDisconnect, useConnections, useWalletClient } from 'wagmi';
 import { signTypedData } from 'viem/actions';
 import { authService } from './authService';
-import { AUTH_SESSION_EXPIRED_EVENT, refreshAccessToken } from '../apollo/client';
-import { AuthTokens, User } from '@/gql/graphql';
+import { AUTH_SESSION_EXPIRED_EVENT, clearTokens, currentUser, getAccessToken } from './tokenManager';
+import { User } from '@/gql/graphql';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/Toast';
 
@@ -15,7 +15,6 @@ interface AuthContextType {
   user: User | null;
   login: () => Promise<void>;
   logout: () => void;
-  refreshTokens: () => Promise<AuthTokens | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,7 +23,6 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => {},
   logout: () => {},
-  refreshTokens: async () => null,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -96,37 +94,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      const isAuth = authService.isAuthenticated();
+      // Returns a valid access token, refreshing it beforehand if it is expiring
+      const token = await getAccessToken();
 
-      if (isAuth) {
+      if (token) {
         setIsAuthenticated(true);
-        const userId = authService.getUserId();
-        const wallet = authService.getWallet();
-        if (userId && wallet) {
-          setUser({ userId, wallet, createdAt: 0, updatedAt: 0 });
-        }
+        const identity = currentUser();
+        setUser(
+          identity
+            ? { userId: identity.userId, wallet: identity.wallet, createdAt: 0, updatedAt: 0 }
+            : null
+        );
         setIsLoading(false);
         return;
-      }
-
-      const storedRefreshToken = localStorage.getItem('refreshToken');
-      if (storedRefreshToken) {
-        try {
-          const success = await refreshAccessToken();
-          if (success) {
-            setIsAuthenticated(true);
-            setUser({
-              userId: localStorage.getItem('userId') ?? '',
-              wallet: localStorage.getItem('wallet') ?? '',
-              createdAt: 0,
-              updatedAt: 0,
-            });
-            setIsLoading(false);
-            return;
-          }
-        } catch {
-          // refresh failed, fall through to login
-        }
       }
 
       setIsAuthenticated(false);
@@ -154,43 +134,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [router]);
 
   const logout = () => {
-    authService.logout();
+    clearTokens();
     disconnect();
     setIsAuthenticated(false);
     setUser(null);
     toast('Signed out successfully.');
     router.push('/');
-  };
-
-  const refreshTokens = async () => {
-    try {
-      if (!address) return null;
-
-      setIsLoading(true);
-      const tokens = await authService.refreshTokens();
-
-      if (tokens) {
-        setIsAuthenticated(true);
-        setUser({
-          userId: tokens.userId,
-          wallet: tokens.wallet,
-          createdAt: 0,
-          updatedAt: 0,
-        });
-        return tokens;
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-        return null;
-      }
-    } catch (error) {
-      toast('Session expired. Please sign in again.', 'error');
-      setIsAuthenticated(false);
-      setUser(null);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const value = {
@@ -199,7 +148,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     login,
     logout,
-    refreshTokens,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -90,6 +90,41 @@ function computeRwaFromUsdt(usdtWei: bigint, pool: AnyPool): { rwaWei: bigint; f
   }
 }
 
+// Most USDT (fee included) a buy can spend before a fixed-sell pool runs out of
+// RWA. Returns null when the pool has no such cap (flexible pools).
+function computeMaxBuyUsdt(pool: AnyPool): bigint | null {
+  try {
+    if (!pool?.fixedSell) return null;
+    const expectedRwa = BigInt(pool?.expectedRwaAmount || '0');
+    const awaitingRwa = BigInt(pool?.awaitingRwaAmount || '0');
+    if (expectedRwa <= awaitingRwa) return ZERO;
+    const remainingRwa = expectedRwa - awaitingRwa;
+
+    const virtualHold = BigInt(pool?.virtualHoldReserve || '0');
+    const realHold = BigInt(pool?.realHoldReserve || '0');
+    const virtualRwa = BigInt(pool?.virtualRwaReserve || '0');
+    const entryFee = BigInt(pool?.entryFeePercent || '100');
+    if (!virtualHold || !virtualRwa || remainingRwa >= virtualRwa) return null;
+
+    const effectiveHold = virtualHold + realHold;
+    const k = effectiveHold * virtualRwa;
+    const one = BigInt(1);
+    const bp = BigInt(10000);
+
+    // Round every step up so the capped amount still buys the last token
+    const newRwaReserve = virtualRwa - remainingRwa;
+    const newHoldReserve = (k + newRwaReserve - one) / newRwaReserve;
+    const holdAmount = newHoldReserve - effectiveHold;
+    const withFee = holdAmount + (holdAmount * entryFee + bp - one) / bp;
+
+    // The input shows 4 decimals — round up to that precision too
+    const unit = BigInt(10) ** BigInt(HOLD_DECIMALS - 4);
+    return ((withFee + unit - one) / unit) * unit;
+  } catch {
+    return null;
+  }
+}
+
 function computeUsdtFromRwa(rwaAmt: bigint, pool: AnyPool): { usdtWei: bigint; fee: bigint } {
   try {
     if (!rwaAmt || rwaAmt === ZERO) return { usdtWei: ZERO, fee: ZERO };
@@ -127,9 +162,22 @@ const SLIDER_MARKS = [0, 25, 50, 75, 100];
 
 interface BuyTokenWidgetProps {
   pool: AnyPool;
+  // When set, that side of the widget is blocked and the reason is shown
+  buyDisabledReason?: string | null;
+  sellDisabledReason?: string | null;
 }
 
-const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
+const LockIcon: FC = () => (
+  <svg width={'14'} height={'14'} viewBox={'0 0 14 14'} fill={'none'} xmlns={'http://www.w3.org/2000/svg'} aria-hidden>
+    <rect x={'2.5'} y={'6'} width={'9'} height={'6.5'} rx={'1.5'} stroke={'currentColor'} strokeWidth={'1.3'} />
+    <path d={'M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6'} stroke={'currentColor'} strokeWidth={'1.3'} strokeLinecap={'round'} />
+  </svg>
+);
+
+// Inactive look for a trade side the pool currently doesn't allow
+const LOCKED_TAB_CLASS = '!bg-grey-light !text-grey-dark !border-transparent cursor-not-allowed';
+
+const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool, buyDisabledReason, sellDisabledReason }) => {
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -199,16 +247,24 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
   const usdtBalanceBig = usdtBalance as bigint | undefined;
   const rwaBalanceBig = rwaBalance as bigint | undefined;
 
+  // Buy amount is limited by the wallet balance and by what a fixed pool has left to sell
+  const maxBuyWei = useMemo(() => {
+    const poolCap = computeMaxBuyUsdt(pool);
+    if (poolCap === null) return usdtBalanceBig;
+    if (usdtBalanceBig === undefined) return poolCap;
+    return poolCap < usdtBalanceBig ? poolCap : usdtBalanceBig;
+  }, [pool, usdtBalanceBig]);
+
   // Percent shown/dragged on the slider. Kept as its own state (rather than purely
   // derived from inputWei) so the thumb tracks the pointer 1:1 while dragging, the
   // way Binance's spot/convert sliders do, instead of lagging behind bigint rounding.
   const [sliderPct, setSliderPct] = useState(0);
 
   const computedPct = useMemo(() => {
-    const balance = mode === 'buy' ? usdtBalanceBig : rwaBalanceBig;
+    const balance = mode === 'buy' ? maxBuyWei : rwaBalanceBig;
     if (!balance || balance === ZERO || inputWei === ZERO) return 0;
     return Math.min(100, Math.max(0, Number((inputWei * BigInt(100)) / balance)));
-  }, [mode, inputWei, usdtBalanceBig, rwaBalanceBig]);
+  }, [mode, inputWei, maxBuyWei, rwaBalanceBig]);
 
   // Keeps the slider in sync when the amount is changed some other way
   // (typed manually, tab switch reset, wallet/balance updates, etc).
@@ -222,9 +278,9 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
       setSliderPct(clamped);
 
       if (mode === 'buy') {
-        if (!usdtBalanceBig) return;
+        if (!maxBuyWei) return;
 
-        const wei = clamped === 100 ? usdtBalanceBig : (usdtBalanceBig * BigInt(clamped)) / BigInt(100);
+        const wei = clamped === 100 ? maxBuyWei : (maxBuyWei * BigInt(clamped)) / BigInt(100);
 
         setInputValue(wei === ZERO ? '' : formatUsdtAmount(wei).replace(/\s/g, ''));
       } else {
@@ -235,10 +291,25 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         setInputValue(amt === ZERO ? '' : amt.toString());
       }
     },
-    [mode, usdtBalanceBig, rwaBalanceBig]
+    [mode, maxBuyWei, rwaBalanceBig]
   );
 
+  const disabledReason = mode === 'buy' ? buyDisabledReason : sellDisabledReason;
+  const lockReasons = Array.from(new Set([buyDisabledReason, sellDisabledReason].filter((r): r is string => !!r)));
+
+  // Land on the side that is actually available (e.g. Sell once a fixed pool is sold out)
+  useEffect(() => {
+    if (mode === 'buy' && buyDisabledReason && !sellDisabledReason) {
+      setMode('sell');
+      setInputValue('');
+    } else if (mode === 'sell' && sellDisabledReason && !buyDisabledReason) {
+      setMode('buy');
+      setInputValue('');
+    }
+  }, [mode, buyDisabledReason, sellDisabledReason]);
+
   const handleBuy = async () => {
+    if (buyDisabledReason) return;
     if (!address || !poolAddress || !pool) return;
     if (inputWei === ZERO) {
       toast('Enter an amount', 'error');
@@ -328,6 +399,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
   };
 
   const handleSell = async () => {
+    if (sellDisabledReason) return;
     if (!address || !poolAddress || !pool) return;
     if (inputWei === ZERO) {
       toast('Enter an amount', 'error');
@@ -361,7 +433,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
   const displayBalance = mode === 'buy' ? formatUsdtAmount(usdtBalanceBig) : formatRwaAmount(rwaBalanceBig);
   const displayBalanceSymbol = mode === 'buy' ? 'USDT' : tokenSymbol;
   const isPoolDeployed = !!poolAddress;
-  const canSubmit = isPoolDeployed && inputWei > ZERO && !isSubmitting;
+  const canSubmit = isPoolDeployed && inputWei > ZERO && !isSubmitting && !disabledReason;
 
   return (
     <div className='bg-white border border-stroke-primary rounded-2xl p-5 flex flex-col gap-4'>
@@ -377,25 +449,41 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
       <div className='grid grid-cols-2 gap-2 overflow-hidden'>
         <Button
           visualType={mode === 'buy' ? 'quaternary' : 'quinary'}
+          className={clsx(buyDisabledReason && LOCKED_TAB_CLASS)}
+          disabled={!!buyDisabledReason}
+          aria-label={buyDisabledReason ? `Buy (locked): ${buyDisabledReason}` : undefined}
           onClick={() => {
             if (mode === 'buy') return;
             setMode('buy');
             setInputValue('');
           }}
         >
+          {buyDisabledReason && <LockIcon />}
           Buy
         </Button>
         <Button
           visualType={mode === 'sell' ? 'quaternary' : 'quinary'}
+          className={clsx(sellDisabledReason && LOCKED_TAB_CLASS)}
+          disabled={!!sellDisabledReason}
+          aria-label={sellDisabledReason ? `Sell (locked): ${sellDisabledReason}` : undefined}
           onClick={() => {
             if (mode === 'sell') return;
             setMode('sell');
             setInputValue('');
           }}
         >
+          {sellDisabledReason && <LockIcon />}
           Sell
         </Button>
       </div>
+
+      {/* Why a side is locked, right under the tabs */}
+      {lockReasons.map(reason => (
+        <p key={reason} className='text-sm text-grey-dark flex items-start gap-1.5'>
+          <span className='mt-0.5 shrink-0'><LockIcon /></span>
+          {reason}
+        </p>
+      ))}
 
       {/* Input */}
       <div className='flex flex-col gap-1.5'>
@@ -406,10 +494,10 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
           value={inputValue}
           onChange={e => {
             const raw = e.target.value;
-            if (mode === 'buy' && usdtBalanceBig) {
+            if (mode === 'buy' && maxBuyWei) {
               const parsed = parseUsdtInput(raw);
-              if (parsed > usdtBalanceBig) {
-                setInputValue(formatUsdtAmount(usdtBalanceBig).replace(/\s/g, ''));
+              if (parsed > maxBuyWei) {
+                setInputValue(formatUsdtAmount(maxBuyWei).replace(/\s/g, ''));
                 return;
               }
             }
@@ -510,6 +598,7 @@ const BuyTokenWidget: FC<BuyTokenWidgetProps> = ({ pool }) => {
         </span>
         <span className='text-sm text-grey-dark'>~ {formatUsdtAmount(feeWei)} USDT</span>
       </div>
+
 
       {/* Action button */}
       {!address ? (
