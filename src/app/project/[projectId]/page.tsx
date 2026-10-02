@@ -46,7 +46,8 @@ type DeployStatus =
   | 'waiting-signatures'
   | 'approving-hold'
   | 'sending-tx'
-  | 'waiting-confirmation';
+  | 'waiting-confirmation'
+  | 'waiting-indexing';
 
 const DEPLOY_STATUS_LABELS: Record<DeployStatus, string> = {
   idle: '',
@@ -55,6 +56,7 @@ const DEPLOY_STATUS_LABELS: Record<DeployStatus, string> = {
   'approving-hold': 'Approving HOLD token spend…',
   'sending-tx': 'Sending transaction…',
   'waiting-confirmation': 'Waiting for confirmation…',
+  'waiting-indexing': 'Waiting for the backend to register the project…',
 };
 
 const ProjectPage: FC = () => {
@@ -94,7 +96,7 @@ const ProjectPage: FC = () => {
     skip: !companyId,
   });
 
-  const { data: deployInfoData, refetch: refetchDeployInfo } = useQuery(GET_BUSINESS_DEPLOY_INFO, {
+  const { data: deployInfoData, loading: deployInfoLoading, refetch: refetchDeployInfo } = useQuery(GET_BUSINESS_DEPLOY_INFO, {
     variables: { id: projectId },
     skip: !projectId,
   });
@@ -119,14 +121,36 @@ const ProjectPage: FC = () => {
   const deployInfo = (deployInfoData as any)?.getBusiness;
 
   useEffect(() => {
+    // The tx being mined isn't enough: the project counts as deployed only once the backend
+    // has indexed it and exposes tokenAddress, so keep polling for it before unlocking pools.
     if (txConfirmed && deployStatus === 'waiting-confirmation') {
+      setDeployStatus('waiting-indexing');
+    }
+  }, [txConfirmed, deployStatus]);
+
+  useEffect(() => {
+    if (deployStatus !== 'waiting-indexing') return;
+    if (deployInfo?.tokenAddress) {
       setDeployStatus('idle');
       setDeployTxHash(undefined);
       deployingRef.current = false;
-      refetchDeployInfo();
       toast('Project successfully deployed!');
+      return;
     }
-  }, [txConfirmed, deployStatus, refetchDeployInfo]);
+    const startedAt = Date.now();
+    const id = setInterval(() => {
+      if (Date.now() - startedAt > 120_000) {
+        clearInterval(id);
+        setDeployStatus('idle');
+        setDeployTxHash(undefined);
+        deployingRef.current = false;
+        toast('Transaction confirmed, but the project is not registered yet. Reload the page in a minute.', 'warning');
+        return;
+      }
+      refetchDeployInfo();
+    }, 3000);
+    return () => clearInterval(id);
+  }, [deployStatus, deployInfo?.tokenAddress, refetchDeployInfo]);
 
   const pollUntilComplete = async (taskId: string, timeoutMs = 300_000) => {
     const deadline = Date.now() + timeoutMs;
@@ -353,6 +377,14 @@ const ProjectPage: FC = () => {
 
   const isDeploying = deployStatus !== 'idle';
   const isDeployed = !!deployInfo?.tokenAddress;
+  // Pools can only be created on-chain for an already deployed project.
+  const addPoolDisabledReason = isDeployed
+    ? undefined
+    : deployInfoLoading
+      ? 'Checking project deployment…'
+      : canEdit
+        ? 'Deploy the project first to add pools.'
+        : 'The project is not deployed yet.';
 
   return (
     <DashboardLayout>
@@ -414,7 +446,7 @@ const ProjectPage: FC = () => {
 
       <section className={'mb-12'}>
         <Wrapper>
-          <PoolsSection projectId={projectId} />
+          <PoolsSection projectId={projectId} addPoolDisabledReason={addPoolDisabledReason} />
         </Wrapper>
       </section>
 

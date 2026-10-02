@@ -148,3 +148,14 @@ export const GET_BUSINESSES = graphql(`
     }
   }
 `);
+
+// Deploy status only: a business is deployed on-chain once the backend has stored its
+// tokenAddress (null until the deployRWA event is indexed).
+export const GET_BUSINESSES_DEPLOY_STATUS = gql`
+  query GetBusinessesDeployStatus($input: FilterInput!) {
+    getBusinesses(input: $input) {
+      id
+      tokenAddress
+    }
+  }
+`;
