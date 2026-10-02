@@ -54,12 +54,12 @@ export function getPoolTradeState(
   } else if (!pool.isTargetReached && entryExpired) {
     buyDisabledReason = 'Collecting closed — the entry period has ended';
   } else if (isFixedPoolSoldOut(pool)) {
-    buyDisabledReason = 'Sold out — the fundraising goal has been reached';
+    buyDisabledReason = 'Buying is closed because this pool is fully funded.';
   }
 
   const sellDisabledReason =
     !pool.allowEntryBurn && !pool.isTargetReached && !entryExpired
-      ? 'Selling opens once the goal is reached or the entry period ends'
+      ? 'Selling becomes available when pool funding reaches 100% or the collecting period ends.'
       : null;
 
   return { buyDisabledReason, sellDisabledReason };
