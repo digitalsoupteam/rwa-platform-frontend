@@ -3,29 +3,30 @@
 import React, { FC, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { DashboardLayout, Wrapper } from '@/components/layout';
-import { Button, Title, toast } from '@/components/ui';
+import { Button, Pagination, Title, toast } from '@/components/ui';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { GET_UNLOCK_TIME, REQUEST_GAS, REQUEST_HOLD, REQUEST_PLATFORM } from '@/lib/faucet/operations';
+import { GET_HISTORY, GET_UNLOCK_TIME, REQUEST_GAS, REQUEST_HOLD, REQUEST_PLATFORM } from '@/lib/faucet/operations';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useKeepInViewport } from '@/lib/useKeepInViewport';
+import FaucetHistoryTable, { FaucetHistoryItem } from '@/components/faucet/FaucetHistoryTable';
 
-function formatUnlock(ts: number): string {
-  if (!ts || ts <= Date.now() / 1000) return 'Available now';
-  const diff = Math.ceil(ts - Date.now() / 1000);
-  const h = Math.floor(diff / 3600);
-  const m = Math.floor((diff % 3600) / 60);
-  if (h > 0) return `Available in ${h}h ${m}m`;
-  return `Available in ${m}m`;
-}
-
-// Same duration math as formatUnlock, without the "Available in/now" prefix — used
-// once a token is already claimed, both in the hover tooltip and the click toast below.
-function formatCooldown(ts: number): string {
+// Real time left until the server-reported unlock moment, as HH:MM:SS.
+function formatCountdown(ts: number): string {
   const diff = Math.max(0, Math.ceil(ts - Date.now() / 1000));
   const h = Math.floor(diff / 3600);
   const m = Math.floor((diff % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  const sec = diff % 60;
+  return [h, m, sec].map(n => String(n).padStart(2, '0')).join(':');
 }
+
+function formatUnlock(ts: number): string {
+  if (!ts || ts <= Date.now() / 1000) return 'Available now';
+  return `Available in ${formatCountdown(ts)}`;
+}
+
+// Same countdown without the "Available in/now" prefix — used once a token is already
+// claimed, both in the hover tooltip and the click toast below.
+const formatCooldown = formatCountdown;
 
 // Small hover bubble for a claimed button, mirroring ui/Tooltip's own bubble markup
 // (same arrow, same viewport-clamping hook) without nesting another <button> inside
@@ -71,13 +72,30 @@ const FaucetPage: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const unlockTime = (unlockData as any)?.getUnlockTime;
 
-  // formatUnlock/formatCooldown already read Date.now() fresh on every call — the countdown
-  // was only ever frozen because nothing made the page re-render once mounted. This tick
-  // forces a re-render every 30s (plenty for a minutes-granularity countdown) so the labels,
-  // and the tooltip while it's open, count down for real instead of showing a stale value.
+  // Claim history, newest first; paginated client-side since getHistory returns a plain list.
+  const HISTORY_LIMIT = 100;
+  const HISTORY_PAGE_SIZE = 10;
+  const {
+    data: historyData,
+    loading: historyLoading,
+    refetch: refetchHistory,
+  } = useQuery(GET_HISTORY, {
+    variables: { pagination: { limit: HISTORY_LIMIT, offset: 0, sort: { field: 'createdAt', direction: 'desc' } } },
+    fetchPolicy: 'network-only',
+    skip: !isAuthenticated,
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const history: FaucetHistoryItem[] = (historyData as any)?.getHistory ?? [];
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyTotalPages = Math.max(1, Math.ceil(history.length / HISTORY_PAGE_SIZE));
+  const pagedHistory = history.slice((historyPage - 1) * HISTORY_PAGE_SIZE, historyPage * HISTORY_PAGE_SIZE);
+
+  // formatUnlock/formatCooldown read Date.now() fresh on every call, so this 1s tick just
+  // forces a re-render: the labels and the open tooltip count down in real time against the
+  // unlock time the server reports, and a button flips back to claimable the moment it hits 0.
   const [, forceTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => forceTick(t => t + 1), 30_000);
+    const id = setInterval(() => forceTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -113,7 +131,7 @@ const FaucetPage: FC = () => {
     }
     try {
       await requestHold({ variables: { input: { amount: 500 } } });
-      await refetch();
+      await Promise.all([refetch(), refetchHistory()]);
       toast('500 HOLD tokens sent to your wallet!');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to claim HOLD';
@@ -132,7 +150,7 @@ const FaucetPage: FC = () => {
     }
     try {
       await requestGas({ variables: { input: { amount: 0.01 } } });
-      await refetch();
+      await Promise.all([refetch(), refetchHistory()]);
       toast('0.01 BNB sent to your wallet!');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to claim gas';
@@ -151,7 +169,7 @@ const FaucetPage: FC = () => {
     }
     try {
       await requestPlatform({ variables: { input: { amount: 10000 } } });
-      await refetch();
+      await Promise.all([refetch(), refetchHistory()]);
       toast('10 000 PLT tokens sent to your wallet!');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to claim PLT';
@@ -255,6 +273,20 @@ const FaucetPage: FC = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        </Wrapper>
+      </section>
+
+      <section className={'mb-12'}>
+        <Wrapper>
+          <Title className={'mb-6'} size={'xs'}>Claim history</Title>
+          <div className={'max-w-4xl'}>
+            <FaucetHistoryTable items={pagedHistory} isLoading={authLoading || historyLoading} />
+            {history.length > HISTORY_PAGE_SIZE && (
+              <div className={'mt-4 flex justify-center'}>
+                <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
+              </div>
+            )}
           </div>
         </Wrapper>
       </section>

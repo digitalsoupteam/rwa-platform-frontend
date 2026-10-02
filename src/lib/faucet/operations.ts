@@ -42,3 +42,15 @@ export const REQUEST_PLATFORM = gql`
     }
   }
 `;
+
+export const GET_HISTORY = gql`
+  query GetHistory($pagination: PaginationInput) {
+    getHistory(pagination: $pagination) {
+      id
+      tokenType
+      amount
+      transactionHash
+      createdAt
+    }
+  }
+`;
